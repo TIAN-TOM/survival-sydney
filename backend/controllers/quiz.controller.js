@@ -1,6 +1,6 @@
 const Question = require('../models/Question');
 const Score = require('../models/Score');
-const { success } = require('../utils/responseEnvelope');
+const { ok, fail } = require('../utils/responseEnvelope');
 
 /**
  * GET /api/quiz/start
@@ -14,12 +14,12 @@ const startQuiz = async (req, res, next) => {
         $project: {
           questionText: 1,
           options: 1,
-          explanation: 1, 
+          explanation: 1,
         },
       },
     ]);
 
-    return res.json(success(questions));
+    return res.json(ok(questions));
   } catch (err) {
     next(err);
   }
@@ -33,10 +33,7 @@ const submitQuiz = async (req, res, next) => {
     const { answers } = req.body;
 
     if (!answers || !Array.isArray(answers)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid answers format',
-      });
+      return res.status(400).json(fail('Invalid answers format'));
     }
 
     let score = 0;
@@ -60,13 +57,13 @@ const submitQuiz = async (req, res, next) => {
     }
 
     const scoreRecord = await Score.create({
-      userId: req.user.id, 
+      userId: req.user.id,
       score,
       answers: detailedAnswers,
     });
 
     return res.json(
-      success({
+      ok({
         score,
         scoreId: scoreRecord._id,
         answers: detailedAnswers,
