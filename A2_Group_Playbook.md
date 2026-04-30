@@ -494,7 +494,7 @@ Pair sync 保留为深度同步,但 quiz 流程跨两个 pair(A 登录 → B 开
 
 **Week 1 内全员要做的事:**
 
-- 4 人各自跑 repo audit prompt,verify commit author email 是绑定到本人 `github.sydney.edu.au` 账号的悉尼大学邮箱(学生通常是 `*@uni.sydney.edu.au`)
+- 4 人各自跑 repo audit checklist,verify commit author email 是绑定到本人 `github.sydney.edu.au` 账号的悉尼大学邮箱(学生通常是 `*@uni.sydney.edu.au`)
 - 配 main branch protection(禁止 force push、PR 需 1 人 review approval)
 - 决定 quiz 长度(推荐 fixed 10)+ leaderboard scope(推荐 best-per-user),写进 README placeholder
 - D 主导写上面 6 个共享基础设施(A 协助 middleware 相关)
@@ -944,7 +944,7 @@ PDF 原话:
 
 | 风险 | 后果 | 缓解 |
 |------|------|------|
-| Commits 的 author email 不是绑定到 `github.sydney.edu.au` 账号的悉尼大学邮箱 | GitHub Enterprise contribution stats 不归 uni 身份 → Spec §15 *"may result in 0% contribution"* 触发可能 | **Week 1 早期 4 人各自跑 repo audit prompt**;本地 `git config user.email "<unikey>@uni.sydney.edu.au"`(学生用 `@uni.sydney.edu.au`;`@sydney.edu.au` 是 staff 域,配错会让 commits 不归到学生 uni 身份);如果历史 commits 邮箱错了,用 `git rebase -i` 或 `git filter-branch` 修正(注意:force push 要谨慎) |
+| Commits 的 author email 不是绑定到 `github.sydney.edu.au` 账号的悉尼大学邮箱 | GitHub Enterprise contribution stats 不归 uni 身份 → Spec §15 *"may result in 0% contribution"* 触发可能 | **Week 1 早期 4 人各自跑 repo audit checklist**;本地 `git config user.email "<unikey>@uni.sydney.edu.au"`(学生用 `@uni.sydney.edu.au`;`@sydney.edu.au` 是 staff 域,配错会让 commits 不归到学生 uni 身份);如果历史 commits 邮箱错了,用 `git rebase -i` 或 `git filter-branch` 修正(注意:force push 要谨慎) |
 | Tutor 同意单 repo / variation 仅有口头记录 | 万一交付时换 marker / 投诉升级,无书面证据 | 下次 tutorial 后在 Ed 给 tutor 发一条**私信**同时确认两件事:(1) variation = Review Mode;(2) single repo at `wege8390/...` instead of Org。对方点 ✓ 即可 |
 | `shared/schemas/` 跨前后端 import 配置卡住 | Week 1 进度延迟,可能拖累所有人 | **30 分钟时间盒**:D 在 Week 1 早期尝试,跑不通就立刻回退到前后端各自维护 schema + B/C pair 同步(详见 §7 第 3 项) |
 | 第三方 auth 库(Auth0/Firebase/Clerk)误用 | Auth subsystem 直接违规,10 分 Security 重灾 | **Tracy 必读 §3 Authentication 必须**;只用 `bcrypt + jsonwebtoken` 手搓 |

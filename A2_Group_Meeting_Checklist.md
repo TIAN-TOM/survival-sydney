@@ -31,7 +31,7 @@
 | 2.1 | Repo 是否已重命名（去 typo `COMP5437`） | Raven 操作 | ❓ 未知 — 我之前先说"不用改"后又说"建议改"，需要确认实际状态。如已改，4 人需要 `git remote set-url origin <新URL>` |
 | 2.2 | tutor 已加 collaborator | Raven | ❓ 假设已做但需验证 |
 | 2.3 | `main` branch protection | Tom | ⏳ Pending（10 分钟工程：Settings → Branches → Add rule → Require PR + 1 approval） |
-| 2.4 | 4 人 commit author email 是绑定到 `github.sydney.edu.au` 账号的悉尼大学邮箱（学生通常是 `*@uni.sydney.edu.au`，**不是** `@sydney.edu.au` staff 域） | 4 人各自 | ⏳ Audit prompt 已写好待发；3 人跑完截图回传 |
+| 2.4 | 4 人 commit author email 是绑定到 `github.sydney.edu.au` 账号的悉尼大学邮箱（学生通常是 `*@uni.sydney.edu.au`，**不是** `@sydney.edu.au` staff 域） | 4 人各自 | ⏳ Audit checklist 已写好待发；3 人跑完截图回传 |
 | 2.5 | Tom 的 GitHub username | Tom 自填 | ✅ Done — `ytia0619`，已落 Playbook §6 + Guide §2 |
 | 2.6 | `.gitignore` cover `node_modules/` 和 `.env` | Day 1 谁先建谁配 | ⏳ 第一次 push 之前必须就位 |
 | 2.7 | `.env.example` 入库（无敏感值） | D / 任一人 | ⏳ Phase 1 |
@@ -154,29 +154,20 @@
 
 ---
 
-## 7. AI 使用透明（A1 习惯延续）
+## 7. 之前给过的建议但状态不明（需要 Tom 当场 check）
 
-- [ ] AI 协助写的代码 → README 或 `AI_USAGE.md` 声明（含工具：Claude / Codex / Copilot）
-- [ ] AI 生成的非代码资产（图、草稿、文档）→ 单独 declare
-- [ ] **保留所有 AI 对话记录 ≥ 1 年**（学术诚信审查可能追溯）
-- [ ] Individual Reflection 里诚实写 AI 用法 — 隐瞒比承认风险大得多
-
----
-
-## 8. 之前给过的建议但状态不明（需要 Tom 当场 check）
-
-- [ ] Audit prompt 是否已发给 Tracy/Raven/Allen？是否收到 3 份截图？
+- [ ] Audit checklist 是否已发给 Tracy/Raven/Allen？是否收到 3 份截图？
 - [ ] Repo 是否已重命名？我建议过改为 `comp5347-a2-quiz-game` 但用户没确认
 - [ ] Repo 是否已邀请 tutor 当 collaborator？
 
 ---
 
-## 9. 不在本次会议处理但记录在案（提醒 Tom 后续）
+## 8. 不在本次会议处理但记录在案（提醒 Tom 后续）
 
 > 不需要会议讨论，但容易忘 — Tom 自己跟踪。
 
 - [ ] Tom 个人 daily journal `docs/private-journal/ytia0619.md`（**进 git**）**从 Week 1 第一天就开始写**（不是 Week 2 末才补），按 Playbook §8.6 4 行格式
-- [ ] Phase 1 D 的 6 个 shared contract 代码骨架（如需 Claude 帮忙写，提选项 B）
+- [ ] Phase 1 D 的 6 个 shared contract 代码骨架
 - [ ] Phase 4 Bonus features 收集时盯 What/Why/How 是否齐 — 不齐就 PR 退回
 - [ ] Demo Week 12 提前 1 周组织 walk-through，每人讲自己 + 听别人
 
@@ -193,4 +184,4 @@
 
 ---
 
-*Loose ends checklist — 回扫整个 A2 对话历史聚合而成。Audit trail：v2.5 三处措辞修正（§2.4 邮箱域名、§3 Raven population 红线降级、§3 Allen atomic insert + PATCH endpoint 降级）；v2.7 去日期化以便跨学期复用；v3.0 sync round 1 — §3 全员 journal 描述对齐 Playbook §8.6 / §9 Tom 个人 journal 路径同步 / propagate 路径表 v2.x → v3.x；v3.0 sync round 2（与 ChatGPT 改动记录对比补齐）— §2 加 5 个 v3.0 deliverable 状态项（integration-decisions.md / 4× private-journal / README skeleton owner-tagged / Postman v1 / manual-test-checklist）；§3 各角色段加 v3.0 ownership 边界提醒（Tracy 覆盖 AuthContext+Login+Register；Raven 拥有 Leaderboard 后端 + History；Allen 不负责 History；Tom = D 不是兜底 owner）；新增 §4.5 Cross-Pair Contract Sync（6 项 contract checklist，引用 Playbook §6 不复述）；新增 §4.6 Daily check-in vs Daily journal 对比表；§5 README placeholder 按 v3.0 §9 owner 标注 TODO。组会后清理已 resolve 的项，剩余滚动到下次会议。*
+*Loose ends checklist — 回扫整个 A2 对话历史聚合而成。Audit trail：v2.5 三处措辞修正（§2.4 邮箱域名、§3 Raven population 红线降级、§3 Allen atomic insert + PATCH endpoint 降级）；v2.7 去日期化以便跨学期复用；v3.0 sync round 1 — §3 全员 journal 描述对齐 Playbook §8.6 / §9 Tom 个人 journal 路径同步 / propagate 路径表 v2.x → v3.x；v3.0 sync round 2 — §2 加 5 个 v3.0 deliverable 状态项（integration-decisions.md / 4× private-journal / README skeleton owner-tagged / Postman v1 / manual-test-checklist）；§3 各角色段加 v3.0 ownership 边界提醒（Tracy 覆盖 AuthContext+Login+Register；Raven 拥有 Leaderboard 后端 + History；Allen 不负责 History；Tom = D 不是兜底 owner）；新增 §4.5 Cross-Pair Contract Sync（6 项 contract checklist，引用 Playbook §6 不复述）；新增 §4.6 Daily check-in vs Daily journal 对比表；§5 README placeholder 按 v3.0 §9 owner 标注 TODO。组会后清理已 resolve 的项，剩余滚动到下次会议。*

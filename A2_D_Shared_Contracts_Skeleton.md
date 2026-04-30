@@ -1,6 +1,6 @@
 # D's 6 Shared Contracts — Phase 1 Skeleton Reference
 
-> **Audience:** Tom (D — Integration Lead). Reference material to take into Claude Code for actual implementation.
+> **Audience:** Tom (D — Integration Lead). Reference material for implementing the Phase 1 shared contracts.
 >
 > **Purpose:** All 6 files that must land in `main` by end of Phase 1 (Week 1 前半) so A/B/C can build on a stable foundation. Per Playbook §7.
 >
@@ -479,4 +479,4 @@ After all 6 contracts land in `main`:
 
 ---
 
-*Synced with Playbook v3.0. Audit trail: v2.5 removed misleading SSR comment in §5 (this is a Vite SPA, not SSR); v2.6 (a) §3b questionSchema added `.refine(distinct)` on the four options as a team safeguard, (b) §4 axios response interceptor fixed silent fall-through on 2xx + `success: false` (now throws), endpoint example aligned to `/quiz/start` per Playbook §8; v2.7 de-dated inline references (Day-1-4 → Week 1 前半); v2.9 §6 example router added `/history` route (History page now owned by B in Playbook v2.8 role table — Skeleton route map was missing this entry); v3.0 sync — no contract-level code changes (the 6 shared contracts in this Skeleton remain unchanged in v3.0); v3.0 only adds Jest unit-test deliverables for D (`tests/envelope.test.js` + `tests/errorHandler.test.js`) per Playbook §8.5 — these are NOT shared contracts and are intentionally NOT in this Skeleton (write them in Phase 4, see Tom Guide §4 Phase 4). Source: Group_Playbook §7 + Tom_Personal_Guide §4 Phase 1. Take this into Claude Code for the actual implementation; don't paste blindly — adapt to your final folder layout, lint config, and the team's Week 1 早期 monorepo decision.*
+*Synced with Playbook v3.0. Audit trail: v2.5 removed misleading SSR comment in §5 (this is a Vite SPA, not SSR); v2.6 (a) §3b questionSchema added `.refine(distinct)` on the four options as a team safeguard, (b) §4 axios response interceptor fixed silent fall-through on 2xx + `success: false` (now throws), endpoint example aligned to `/quiz/start` per Playbook §8; v2.7 de-dated inline references (Day-1-4 → Week 1 前半); v2.9 §6 example router added `/history` route (History page now owned by B in Playbook v2.8 role table — Skeleton route map was missing this entry); v3.0 sync — no contract-level code changes (the 6 shared contracts in this Skeleton remain unchanged in v3.0); v3.0 only adds Jest unit-test deliverables for D (`tests/envelope.test.js` + `tests/errorHandler.test.js`) per Playbook §8.5 — these are NOT shared contracts and are intentionally NOT in this Skeleton (write them in Phase 4, see Tom Guide §4 Phase 4). Source: Group_Playbook §7 + Tom_Personal_Guide §4 Phase 1. Use this as an implementation reference; adapt it to the final folder layout, lint config, and team decisions.*
