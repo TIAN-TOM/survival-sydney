@@ -1,0 +1,10 @@
+{
+  "name": "comp5347-a2-quiz-game",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "start:backend": "npm --prefix backend start"
+  }
+}
