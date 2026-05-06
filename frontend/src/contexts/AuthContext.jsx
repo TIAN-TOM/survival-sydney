@@ -28,6 +28,19 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const register = useCallback(async (username, password) => {
+    setLoading(true);
+    try {
+      const data = await api.post('/auth/register', { username, password });
+      localStorage.setItem('jwt', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+      return data.user;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -35,8 +48,9 @@ export function AuthProvider({ children }) {
       isAuthenticated: Boolean(user),
       isAdmin: user?.role === 'admin',
       login,
+      register,
     }),
-    [user, loading, login]
+    [user, loading, login, register]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
