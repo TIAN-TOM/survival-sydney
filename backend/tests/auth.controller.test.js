@@ -24,4 +24,18 @@ describe('POST /api/auth/register', () => {
     expect(res.body.data.user.username).toBe('alice');
     expect(res.body.data.user.role).toBe('user');
   });
+
+  test('returns 409 when username is already taken', async () => {
+    await request(app)
+      .post('/api/auth/register')
+      .send({ username: 'alice', password: 'secret123' });
+
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ username: 'alice', password: 'another123' });
+
+    expect(res.status).toBe(409);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toMatch(/already taken/i);
+  });
 });
