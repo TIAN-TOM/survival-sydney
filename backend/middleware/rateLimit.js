@@ -10,4 +10,13 @@ const loginLimiter = rateLimit({
     res.status(429).json(fail('Too many login attempts, try again in a few minutes')),
 });
 
-module.exports = { loginLimiter };
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) =>
+    res.status(429).json(fail('Too many accounts created, try again later')),
+});
+
+module.exports = { loginLimiter, registerLimiter };
