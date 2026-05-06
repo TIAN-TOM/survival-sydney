@@ -41,6 +41,12 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('user');
+    setUser(null);
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -49,8 +55,9 @@ export function AuthProvider({ children }) {
       isAdmin: user?.role === 'admin',
       login,
       register,
+      logout,
     }),
-    [user, loading, login, register]
+    [user, loading, login, register, logout]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
