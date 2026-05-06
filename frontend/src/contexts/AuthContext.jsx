@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import api from '../api/api.js';
 
 const AuthContext = createContext(null);
@@ -45,6 +45,31 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('jwt');
     localStorage.removeItem('user');
     setUser(null);
+  }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem('jwt')) return;
+    let cancelled = false;
+    setLoading(true);
+    api
+      .get('/auth/me')
+      .then((data) => {
+        if (cancelled) return;
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        localStorage.removeItem('jwt');
+        localStorage.removeItem('user');
+        setUser(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const value = useMemo(
