@@ -6,6 +6,7 @@ const loginLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
   handler: (req, res) =>
     res.status(429).json(fail('Too many login attempts, try again in a few minutes')),
 });
@@ -15,6 +16,7 @@ const registerLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
   handler: (req, res) =>
     res.status(429).json(fail('Too many accounts created, try again later')),
 });
