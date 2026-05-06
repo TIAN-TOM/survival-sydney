@@ -6,6 +6,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 
 const connectDb = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
+const authRoutes = require('./routes/auth.routes');
 const healthRoutes = require('./routes/health.routes');
 const quizRoutes = require('./routes/quiz.routes');
 
@@ -18,6 +19,7 @@ app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(mongoSanitize());
 
+app.use('/api/auth', authRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/quiz', quizRoutes);
 
