@@ -55,4 +55,18 @@ describe('POST /api/auth/login', () => {
     expect(res.body.data.token).toEqual(expect.any(String));
     expect(res.body.data.user.username).toBe('bob');
   });
+
+  test('returns 401 on wrong password', async () => {
+    await request(app)
+      .post('/api/auth/register')
+      .send({ username: 'bob', password: 'secret123' });
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'bob', password: 'wrongpass' });
+
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+    expect(res.body.error).toMatch(/invalid credentials/i);
+  });
 });
