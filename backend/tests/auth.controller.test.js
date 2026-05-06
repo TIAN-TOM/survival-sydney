@@ -84,4 +84,11 @@ describe('GET /api/auth/me', () => {
     expect(res.body.success).toBe(true);
     expect(res.body.data.user.username).toBe('carol');
   });
+
+  test('returns 401 when no token is provided', async () => {
+    const res = await request(app).get('/api/auth/me');
+
+    expect(res.status).toBe(401);
+    expect(res.body.success).toBe(false);
+  });
 });
