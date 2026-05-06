@@ -70,3 +70,18 @@ describe('POST /api/auth/login', () => {
     expect(res.body.error).toMatch(/invalid credentials/i);
   });
 });
+
+describe('GET /api/auth/me', () => {
+  test('returns user when token is valid', async () => {
+    const reg = await request(app)
+      .post('/api/auth/register')
+      .send({ username: 'carol', password: 'secret123' });
+    const token = reg.body.data.token;
+
+    const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.user.username).toBe('carol');
+  });
+});
