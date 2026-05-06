@@ -1,3 +1,6 @@
+import { Route, Routes } from 'react-router-dom';
+import Login from './components/Login.jsx';
+import Register from './components/Register.jsx';
 import { useTheme } from './contexts/ThemeContext.jsx';
 import Home from './pages/Home.jsx';
 
@@ -15,7 +18,11 @@ export default function App() {
           {theme === 'dark' ? 'Light mode' : 'Dark mode'}
         </button>
       </header>
-      <Home />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
     </main>
   );
 }
