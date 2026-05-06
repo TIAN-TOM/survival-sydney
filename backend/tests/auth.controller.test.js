@@ -39,3 +39,20 @@ describe('POST /api/auth/register', () => {
     expect(res.body.error).toMatch(/already taken/i);
   });
 });
+
+describe('POST /api/auth/login', () => {
+  test('returns token on valid credentials', async () => {
+    await request(app)
+      .post('/api/auth/register')
+      .send({ username: 'bob', password: 'secret123' });
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ username: 'bob', password: 'secret123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.token).toEqual(expect.any(String));
+    expect(res.body.data.user.username).toBe('bob');
+  });
+});
