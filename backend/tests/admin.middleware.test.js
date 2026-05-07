@@ -1,0 +1,24 @@
+const adminOnly = require('../middleware/admin.middleware');
+
+describe('admin middleware', () => {
+  let req, res, next;
+
+  beforeEach(() => {
+    req = {};
+    res = {
+      status: jest.fn().mockReturnThis(),
+      json: jest.fn().mockReturnThis(),
+    };
+    next = jest.fn();
+  });
+
+  test('rejects with 403 when req.user is missing', () => {
+    adminOnly(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ success: false, error: expect.any(String) })
+    );
+    expect(next).not.toHaveBeenCalled();
+  });
+});
