@@ -21,4 +21,12 @@ describe('admin middleware', () => {
     );
     expect(next).not.toHaveBeenCalled();
   });
+
+  test('rejects with 403 when user role is not admin', () => {
+    req.user = { userId: 'abc123', role: 'user' };
+    adminOnly(req, res, next);
+
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
+  });
 });
