@@ -29,4 +29,12 @@ describe('admin middleware', () => {
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
   });
+
+  test('calls next when user role is admin', () => {
+    req.user = { userId: 'abc123', role: 'admin' };
+    adminOnly(req, res, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(res.status).not.toHaveBeenCalled();
+  });
 });
