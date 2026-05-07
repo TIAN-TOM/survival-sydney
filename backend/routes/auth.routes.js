@@ -28,6 +28,29 @@ const router = express.Router();
  *       429: { description: Rate limit exceeded }
  */
 router.post('/register', registerLimiter, register);
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Authenticate a user and return a JWT
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [username, password]
+ *             properties:
+ *               username: { type: string }
+ *               password: { type: string }
+ *     responses:
+ *       200: { description: OK, returns JWT and user }
+ *       400: { description: Missing fields }
+ *       401: { description: Invalid credentials }
+ *       429: { description: Rate limit exceeded }
+ */
 router.post('/login', loginLimiter, login);
 router.get('/me', auth, me);
 
