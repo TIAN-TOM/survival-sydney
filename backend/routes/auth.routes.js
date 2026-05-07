@@ -52,6 +52,20 @@ router.post('/register', registerLimiter, register);
  *       429: { description: Rate limit exceeded }
  */
 router.post('/login', loginLimiter, login);
+
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Return the currently authenticated user
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200: { description: OK, returns user }
+ *       401: { description: Missing or invalid token }
+ *       404: { description: User no longer exists }
+ */
 router.get('/me', auth, me);
 
 module.exports = router;
