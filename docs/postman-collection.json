@@ -1,0 +1,264 @@
+{
+  "info": {
+    "name": "COMP5347 Quiz API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5001/api" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "attemptId", "value": "" },
+    { "key": "questionId1", "value": "" },
+    { "key": "questionId2", "value": "" },
+    { "key": "questionId3", "value": "" },
+    { "key": "questionId4", "value": "" },
+    { "key": "questionId5", "value": "" },
+    { "key": "questionId6", "value": "" },
+    { "key": "questionId7", "value": "" },
+    { "key": "questionId8", "value": "" },
+    { "key": "questionId9", "value": "" },
+    { "key": "questionId10", "value": "" },
+    { "key": "selectedAnswer1", "value": "" },
+    { "key": "selectedAnswer2", "value": "" },
+    { "key": "selectedAnswer3", "value": "" },
+    { "key": "selectedAnswer4", "value": "" },
+    { "key": "selectedAnswer5", "value": "" },
+    { "key": "selectedAnswer6", "value": "" },
+    { "key": "selectedAnswer7", "value": "" },
+    { "key": "selectedAnswer8", "value": "" },
+    { "key": "selectedAnswer9", "value": "" },
+    { "key": "selectedAnswer10", "value": "" },
+    { "key": "adminQuestionId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth - Register player",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/register",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"demo\",\n  \"email\": \"demo@example.com\",\n  \"password\": \"Password123\"\n}"
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.success && json.data?.token) pm.collectionVariables.set('token', json.data.token);"] } }]
+    },
+    {
+      "name": "Auth - Login seeded player",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"player1\",\n  \"password\": \"PlayerPass123\"\n}"
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.success && json.data?.token) pm.collectionVariables.set('token', json.data.token);"] } }]
+    },
+    {
+      "name": "Quiz - Start",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        },
+        "url": "{{baseUrl}}/quiz/start"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const data = pm.response.json().data;",
+              "pm.collectionVariables.set('sessionId', data.sessionId);",
+              "data.questions.forEach((question, index) => {",
+              "  const position = index + 1;",
+              "  pm.collectionVariables.set(`questionId${position}`, question.id);",
+              "  pm.collectionVariables.set(`selectedAnswer${position}`, question.options[0]);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quiz - Submit",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/quiz/submit",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sessionId\": \"{{sessionId}}\",\n  \"answers\": [\n    { \"questionId\": \"{{questionId1}}\", \"selectedAnswer\": \"{{selectedAnswer1}}\" },\n    { \"questionId\": \"{{questionId2}}\", \"selectedAnswer\": \"{{selectedAnswer2}}\" },\n    { \"questionId\": \"{{questionId3}}\", \"selectedAnswer\": \"{{selectedAnswer3}}\" },\n    { \"questionId\": \"{{questionId4}}\", \"selectedAnswer\": \"{{selectedAnswer4}}\" },\n    { \"questionId\": \"{{questionId5}}\", \"selectedAnswer\": \"{{selectedAnswer5}}\" },\n    { \"questionId\": \"{{questionId6}}\", \"selectedAnswer\": \"{{selectedAnswer6}}\" },\n    { \"questionId\": \"{{questionId7}}\", \"selectedAnswer\": \"{{selectedAnswer7}}\" },\n    { \"questionId\": \"{{questionId8}}\", \"selectedAnswer\": \"{{selectedAnswer8}}\" },\n    { \"questionId\": \"{{questionId9}}\", \"selectedAnswer\": \"{{selectedAnswer9}}\" },\n    { \"questionId\": \"{{questionId10}}\", \"selectedAnswer\": \"{{selectedAnswer10}}\" }\n  ]\n}"
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.success && json.data?.attemptId) pm.collectionVariables.set('attemptId', json.data.attemptId);"] } }]
+    },
+    {
+      "name": "Quiz - History",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        },
+        "url": "{{baseUrl}}/quiz/history"
+      }
+    },
+    {
+      "name": "Quiz - Review",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+        },
+        "url": "{{baseUrl}}/quiz/review/{{attemptId}}"
+      }
+    },
+    {
+      "name": "Quiz - Leaderboard",
+      "request": { "method": "GET", "url": "{{baseUrl}}/quiz/leaderboard" }
+    },
+    {
+      "name": "Auth - Login admin",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"AdminPass123\"\n}"
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.success && json.data?.token) pm.collectionVariables.set('adminToken', json.data.token);"] } }]
+    },
+    {
+      "name": "Admin - List questions",
+      "request": {
+        "method": "GET",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "url": "{{baseUrl}}/admin/questions"
+      }
+    },
+    {
+      "name": "Admin - Create question",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/questions",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"在悉尼，常见 public transport 包括哪些？\",\n  \"options\": [\"只有火车\", \"只有公交\", \"Train、bus、light rail、ferry 等\", \"只有 Uber\"],\n  \"correctAnswer\": \"Train、bus、light rail、ferry 等\",\n  \"topic\": \"Transport\",\n  \"difficulty\": \"foundation\",\n  \"explanation\": \"Sydney transport includes several public transport modes.\",\n  \"active\": true\n}"
+        }
+      },
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "const id = json.data?.question?.id || json.data?.question?._id;", "if (json.success && id) pm.collectionVariables.set('adminQuestionId', id);"] } }]
+    },
+    {
+      "name": "Admin - Edit question",
+      "request": {
+        "method": "PUT",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/questions/{{adminQuestionId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"在悉尼，坐 train、bus、light rail 或 ferry 时通常需要注意什么？\",\n  \"options\": [\"使用同一张卡或 device tap on/off\", \"只 tap on 不 tap off\", \"可以随便换卡\", \"永远免费乘车\"],\n  \"correctAnswer\": \"使用同一张卡或 device tap on/off\",\n  \"topic\": \"Transport\",\n  \"difficulty\": \"application\",\n  \"explanation\": \"Using the same card or device avoids incorrect fare calculation.\",\n  \"active\": true\n}"
+        }
+      }
+    },
+    {
+      "name": "Admin - Toggle active",
+      "request": {
+        "method": "PATCH",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/questions/{{adminQuestionId}}/toggle",
+        "body": { "mode": "raw", "raw": "{\n  \"active\": false\n}" }
+      }
+    },
+    {
+      "name": "Admin - Delete question",
+      "request": {
+        "method": "DELETE",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "url": "{{baseUrl}}/admin/questions/{{adminQuestionId}}"
+      }
+    },
+    {
+      "name": "Admin - Bulk import",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/bulk-import",
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"text\": \"在 NSW 租房时，rental bond 通常最多是多少？\",\n    \"options\": [\"1 周租金\", \"2 周租金\", \"4 周租金\", \"6 个月租金\"],\n    \"correctAnswer\": \"4 周租金\",\n    \"topic\": \"Housing & Consumer Rights\",\n    \"difficulty\": \"application\",\n    \"explanation\": \"This reflects the standard NSW rental bond cap used by the demo bank.\",\n    \"active\": true\n  }\n]"
+        }
+      }
+    },
+    {
+      "name": "Admin - Bulk import invalid item",
+      "request": {
+        "method": "POST",
+        "auth": {
+          "type": "bearer",
+          "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+        },
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/admin/bulk-import",
+        "body": {
+          "mode": "raw",
+          "raw": "[\n  {\n    \"text\": \"留学生通常什么时候可以创建 USI？\",\n    \"options\": [\"拿到 offer 前\", \"抵达澳洲并完成入境后\", \"毕业后\", \"只有澳洲公民可以\"],\n    \"correctAnswer\": \"抵达澳洲并完成入境后\",\n    \"topic\": \"Arrival Basics\",\n    \"difficulty\": \"foundation\",\n    \"explanation\": \"Valid Sydney life row.\",\n    \"active\": true\n  },\n  {\n    \"text\": \"如果坐车忘记 tap off，可能会发生什么？\",\n    \"options\": [\"系统自动免费\", \"可能被收取 default fare / 最高可能票价\", \"车站会退钱\", \"永久封号\"],\n    \"correctAnswer\": \"可能被收取 default fare / 最高可能票价\",\n    \"topic\": \"Transport\",\n    \"difficulty\": \"application\",\n    \"explanation\": \"Valid Sydney life row.\",\n    \"active\": true\n  },\n  {\n    \"text\": \"Invalid Sydney life question?\",\n    \"options\": [\"A\", \"B\", \"C\", \"D\"],\n    \"correctAnswer\": \"Z\",\n    \"topic\": \"Safety, Beaches & Scams\",\n    \"difficulty\": \"analysis\",\n    \"explanation\": \"This row should fail because the answer is not one of the options.\",\n    \"active\": true\n  }\n]"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('invalid bulk import returns 400', () => pm.response.to.have.status(400));",
+              "const json = pm.response.json();",
+              "pm.test('failure envelope is returned', () => pm.expect(json.success).to.equal(false));",
+              "pm.test('invalid row index is reported', () => {",
+              "  const issues = json.details?.issues || [];",
+              "  pm.expect(issues.some((issue) => issue.index === 5)).to.equal(true);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    { "name": "Docs - Swagger", "request": { "method": "GET", "url": "http://localhost:5001/api-docs" } }
+  ]
+}
