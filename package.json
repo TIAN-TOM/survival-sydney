@@ -1,0 +1,15 @@
+{
+  "name": "comp5347-a2-quiz-game",
+  "private": true,
+  "scripts": {
+    "demo": "bash scripts/demo.sh",
+    "demo:stop": "bash scripts/demo-stop.sh",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "test": "npm test --prefix backend",
+    "build": "npm run build --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
