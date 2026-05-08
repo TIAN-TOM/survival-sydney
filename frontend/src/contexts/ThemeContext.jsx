@@ -1,35 +1,60 @@
+// Subsystem D - Integration, Robustness & Documentation (Tom Tian):
+// shared theme state used across player and admin interfaces.
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const ThemeContext = createContext(null);
+const STORAGE_KEY = 'comp5347-theme';
 
-const getInitialTheme = () => {
-  const stored = localStorage.getItem('theme');
-  return stored === 'dark' ? 'dark' : 'light';
-};
+function getInitialTheme() {
+  if (typeof localStorage === 'undefined') {
+    return 'light';
+  }
 
-export function ThemeProvider({ children }) {
+  const storedTheme = localStorage.getItem(STORAGE_KEY);
+  if (storedTheme === 'light' || storedTheme === 'dark') {
+    return storedTheme;
+  }
+
+  if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+
+  return 'light';
+}
+
+function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(getInitialTheme);
 
   useEffect(() => {
-    localStorage.setItem('theme', theme);
     document.documentElement.dataset.theme = theme;
+    localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    function toggleTheme() {
+      setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
+    }
+
+    return {
       theme,
-      toggleTheme: () => setTheme((current) => (current === 'dark' ? 'light' : 'dark')),
-    }),
-    [theme]
-  );
+      isDarkMode: theme === 'dark',
+      setTheme,
+      toggleTheme,
+    };
+  }, [theme]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
-export function useTheme() {
+function useTheme() {
   const context = useContext(ThemeContext);
+
   if (!context) {
-    throw new Error('useTheme must be used inside ThemeProvider');
+    throw new Error('useTheme must be used within ThemeProvider');
   }
+
   return context;
 }
+
+export { ThemeProvider, useTheme };
+export default ThemeContext;
