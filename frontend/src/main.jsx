@@ -1,17 +1,22 @@
+// Subsystem D - Integration, Robustness & Documentation (Tom Tian):
+// React root bootstrap and provider composition.
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { AuthProvider } from './contexts/AuthContext.jsx';
+import { QuizProvider } from './contexts/QuizContext.jsx';
 import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import './styles.css';
 
-createRoot(document.getElementById('root')).render(
+ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <ThemeProvider>
         <AuthProvider>
-          <App />
+          <QuizProvider>
+            <App />
+          </QuizProvider>
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
