@@ -1,0 +1,97 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import api from '../api/api.js';
+
+const AuthContext = createContext(null);
+
+const readStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+};
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(readStoredUser);
+  const [loading, setLoading] = useState(false);
+
+  const login = useCallback(async (username, password) => {
+    setLoading(true);
+    try {
+      const data = await api.post('/auth/login', { username, password });
+      localStorage.setItem('jwt', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+      return data.user;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const register = useCallback(async (username, password) => {
+    setLoading(true);
+    try {
+      const data = await api.post('/auth/register', { username, password });
+      localStorage.setItem('jwt', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      setUser(data.user);
+      return data.user;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('user');
+    setUser(null);
+  }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem('jwt')) return;
+    let cancelled = false;
+    setLoading(true);
+    api
+      .get('/auth/me')
+      .then((data) => {
+        if (cancelled) return;
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        localStorage.removeItem('jwt');
+        localStorage.removeItem('user');
+        setUser(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      user,
+      loading,
+      isAuthenticated: Boolean(user),
+      isAdmin: user?.role === 'admin',
+      login,
+      register,
+      logout,
+    }),
+    [user, loading, login, register, logout]
+  );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used inside AuthProvider');
+  }
+  return context;
+}
