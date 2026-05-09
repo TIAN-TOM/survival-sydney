@@ -31,7 +31,8 @@ export default function Login({ adminMode = false }) {
         setServerError('Admin access required');
         return;
       }
-      navigate(adminMode ? '/admin' : '/');
+      const target = adminMode ? '/admin' : (location.state?.from || '/');
+      navigate(target, { replace: true });
     } catch (err) {
       setServerError(err.message || 'Login failed');
     }
