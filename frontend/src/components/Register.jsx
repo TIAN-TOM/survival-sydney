@@ -7,8 +7,16 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 
 const registerSchema = z
   .object({
-    username: z.string().min(3, 'Username must be at least 3 characters').max(30),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    username: z
+      .string()
+      .min(3, 'Username must be at least 3 characters')
+      .max(30)
+      .regex(/^[a-zA-Z0-9_-]+$/, 'Username may only contain letters, numbers, hyphen, and underscore'),
+    email: z.string().email('Enter a valid email address'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(72, 'Password must be at most 72 characters'),
     confirmPassword: z.string(),
   })
   .refine((values) => values.password === values.confirmPassword, {
@@ -27,10 +35,10 @@ export default function Register() {
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(registerSchema) });
 
-  const onSubmit = async ({ username, password }) => {
+  const onSubmit = async ({ username, email, password }) => {
     setServerError('');
     try {
-      await registerUser(username, password);
+      await registerUser({ username, email, password });
       navigate('/');
     } catch (err) {
       setServerError(err.message || 'Registration failed');
@@ -45,6 +53,12 @@ export default function Register() {
           Username
           <input type="text" autoComplete="username" {...register('username')} />
           {errors.username && <span className="field-error">{errors.username.message}</span>}
+        </label>
+
+        <label>
+          Email
+          <input type="email" autoComplete="email" {...register('email')} />
+          {errors.email && <span className="field-error">{errors.email.message}</span>}
         </label>
 
         <label>

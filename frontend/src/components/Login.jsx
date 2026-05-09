@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 const loginSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters').max(30),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  username: z.string().min(1, 'Username is required'),
+  password: z.string().min(1, 'Password is required'),
 });
 
-export default function Login() {
-  const { login } = useAuth();
+export default function Login({ adminMode = false }) {
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [serverError, setServerError] = useState('');
 
   const {
@@ -24,16 +25,32 @@ export default function Login() {
   const onSubmit = async ({ username, password }) => {
     setServerError('');
     try {
-      await login(username, password);
-      navigate('/');
+      const signedInUser = await login(username, password);
+      if (adminMode && signedInUser.role !== 'admin') {
+        logout();
+        setServerError('Admin access required');
+        return;
+      }
+      const target = adminMode ? '/admin' : (location.state?.from || '/');
+      navigate(target, { replace: true });
     } catch (err) {
       setServerError(err.message || 'Login failed');
     }
   };
 
+  const heading = adminMode ? 'Admin sign in' : 'Login';
+  const submitLabel = adminMode ? 'Sign in as admin' : 'Sign in';
+  const notice = location.state?.notice;
+  const noticeTone = location.state?.noticeTone;
+
   return (
     <section className="auth-panel">
-      <h2>Login</h2>
+      <h2>{heading}</h2>
+      {notice && (
+        <p className={`auth-notice auth-notice--${noticeTone || 'info'}`} role="status">
+          {notice}
+        </p>
+      )}
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <label>
           Username
@@ -54,12 +71,14 @@ export default function Login() {
         )}
 
         <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Signing in...' : 'Sign in'}
+          {isSubmitting ? 'Signing in...' : submitLabel}
         </button>
       </form>
-      <p>
-        Don&apos;t have an account? <Link to="/register">Register</Link>
-      </p>
+      {!adminMode && (
+        <p>
+          Don&apos;t have an account? <Link to="/register">Register</Link>
+        </p>
+      )}
     </section>
   );
 }

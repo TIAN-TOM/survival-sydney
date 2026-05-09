@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
@@ -11,6 +11,13 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       minlength: 3,
       maxlength: 30,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
     },
     passwordHash: {
       type: String,
@@ -25,9 +32,9 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.statics.hashPassword = async function (plain) {
+userSchema.methods.setPassword = async function (plain) {
   const rounds = parseInt(process.env.BCRYPT_ROUNDS, 10) || 10;
-  return bcrypt.hash(plain, rounds);
+  this.passwordHash = await bcrypt.hash(plain, rounds);
 };
 
 userSchema.methods.comparePassword = async function (plain) {
@@ -36,8 +43,9 @@ userSchema.methods.comparePassword = async function (plain) {
 
 userSchema.methods.toSafeObject = function () {
   return {
-    id: this._id,
+    id: this._id.toString(),
     username: this.username,
+    email: this.email,
     role: this.role,
     createdAt: this.createdAt,
   };

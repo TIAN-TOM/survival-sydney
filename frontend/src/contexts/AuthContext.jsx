@@ -28,10 +28,10 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const register = useCallback(async (username, password) => {
+  const register = useCallback(async ({ username, email, password }) => {
     setLoading(true);
     try {
-      const data = await api.post('/auth/register', { username, password });
+      const data = await api.post('/auth/register', { username, email, password });
       localStorage.setItem('jwt', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       setUser(data.user);
