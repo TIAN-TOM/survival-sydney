@@ -49,3 +49,15 @@ exports.login = async (req, res, next) => {
     return next(err);
   }
 };
+
+exports.me = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json(fail('User not found', 404));
+    }
+    return res.json(ok({ user: user.toSafeObject() }));
+  } catch (err) {
+    return next(err);
+  }
+};
