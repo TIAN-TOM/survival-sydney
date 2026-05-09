@@ -49,8 +49,8 @@ router.post('/register', loginLimiter, validate(registerSchema), register);
  *               password: { type: string }
  *     responses:
  *       200: { description: OK, returns JWT and user }
- *       400: { description: Missing fields }
- *       401: { description: Invalid credentials }
+ *       400: { description: Validation error }
+ *       401: { description: Invalid username or password }
  *       429: { description: Rate limit exceeded }
  */
 router.post('/login', loginLimiter, validate(loginSchema), login);
@@ -65,8 +65,7 @@ router.post('/login', loginLimiter, validate(loginSchema), login);
  *       - bearerAuth: []
  *     responses:
  *       200: { description: OK, returns user }
- *       401: { description: Missing or invalid token }
- *       404: { description: User no longer exists }
+ *       401: { description: Missing or invalid token, or user no longer exists }
  */
 router.get('/me', auth, me);
 
