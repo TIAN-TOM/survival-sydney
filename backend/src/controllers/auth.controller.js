@@ -46,12 +46,12 @@ exports.login = async (req, res, next) => {
     const { username, password } = req.body;
     const user = await User.findOne({ username: username.toLowerCase().trim() });
     if (!user) {
-      return res.status(401).json(fail('Invalid credentials', 401));
+      return res.status(401).json(fail('Invalid username or password', 401));
     }
 
     const valid = await user.comparePassword(password);
     if (!valid) {
-      return res.status(401).json(fail('Invalid credentials', 401));
+      return res.status(401).json(fail('Invalid username or password', 401));
     }
 
     const token = signToken(user);
