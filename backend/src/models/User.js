@@ -43,7 +43,7 @@ userSchema.methods.comparePassword = async function (plain) {
 
 userSchema.methods.toSafeObject = function () {
   return {
-    id: this._id,
+    id: this._id.toString(),
     username: this.username,
     email: this.email,
     role: this.role,
