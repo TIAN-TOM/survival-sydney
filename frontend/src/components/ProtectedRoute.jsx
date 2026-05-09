@@ -1,12 +1,12 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
-// Frontend-only routing/UX guard. Backend middleware must still enforce authentication and admin authorisation on every protected request.
 export default function ProtectedRoute({ adminOnly = false, children }) {
+  const location = useLocation();
   const token = localStorage.getItem('jwt');
   const user = JSON.parse(localStorage.getItem('user') || 'null');
 
   if (!token) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   if (adminOnly && user?.role !== 'admin') {
