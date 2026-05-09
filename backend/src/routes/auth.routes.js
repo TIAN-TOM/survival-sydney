@@ -24,7 +24,7 @@ const router = express.Router();
  *               email: { type: string, format: email }
  *               password: { type: string, minLength: 8, maxLength: 72 }
  *     responses:
- *       201: { description: Created, returns JWT and user }
+ *       201: { description: 'Created, returns JWT and user' }
  *       400: { description: Validation error }
  *       409: { description: Username or email already taken }
  *       429: { description: Rate limit exceeded }
@@ -48,9 +48,9 @@ router.post('/register', loginLimiter, validate(registerSchema), register);
  *               username: { type: string }
  *               password: { type: string }
  *     responses:
- *       200: { description: OK, returns JWT and user }
- *       400: { description: Missing fields }
- *       401: { description: Invalid credentials }
+ *       200: { description: 'OK, returns JWT and user' }
+ *       400: { description: Validation error }
+ *       401: { description: Invalid username or password }
  *       429: { description: Rate limit exceeded }
  */
 router.post('/login', loginLimiter, validate(loginSchema), login);
@@ -64,9 +64,8 @@ router.post('/login', loginLimiter, validate(loginSchema), login);
  *     security:
  *       - bearerAuth: []
  *     responses:
- *       200: { description: OK, returns user }
- *       401: { description: Missing or invalid token }
- *       404: { description: User no longer exists }
+ *       200: { description: 'OK, returns user' }
+ *       401: { description: 'Missing or invalid token, or user no longer exists' }
  */
 router.get('/me', auth, me);
 
