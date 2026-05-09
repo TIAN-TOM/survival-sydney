@@ -1,4 +1,4 @@
- const Question = require('../models/Question');
+const Question = require('../models/Question');
 const Score = require('../models/Score');
 const { ok, fail } = require('../utils/responseEnvelope');
 
@@ -13,7 +13,7 @@ const startQuiz = async (req, res, next) => {
       { $sample: { size: 10 } },
       {
         $project: {
-          text: 1,
+          questionText: 1,
           options: 1,
         },
       },
@@ -60,6 +60,7 @@ const submitQuiz = async (req, res, next) => {
       if (!ans.questionId) {
         return res.status(400).json(fail('Missing questionId'));
       }
+
       if (
         typeof ans.selectedAnswer !== 'number' ||
         !Number.isInteger(ans.selectedAnswer) ||
@@ -111,9 +112,10 @@ const submitQuiz = async (req, res, next) => {
     // --- build review data for Review Mode ---
     const review = detailedAnswers.map(da => {
       const q = questionMap[da.questionId.toString()];
+
       return {
         questionId: da.questionId,
-        questionText: q.text,
+        questionText: q.questionText,
         options: q.options,
         selectedAnswer: da.selectedAnswer,
         correctAnswer: q.correctAnswer,
@@ -176,6 +178,7 @@ const getAttemptDetail = async (req, res, next) => {
 
     const review = attempt.answers.map(a => {
       const q = qMap[a.questionId.toString()];
+
       if (!q) {
         return {
           questionId: a.questionId,
@@ -187,9 +190,10 @@ const getAttemptDetail = async (req, res, next) => {
           explanation: null,
         };
       }
+
       return {
         questionId: a.questionId,
-        questionText: q.text,
+        questionText: q.questionText,
         options: q.options,
         selectedAnswer: a.selectedAnswer,
         correctAnswer: q.correctAnswer,
