@@ -123,16 +123,45 @@ export default function AdminPage() {
       </section>
 
       {showForm && (
-        <section className="admin-section">
-          <h2>{editingQuestion ? 'Edit Question' : 'Create Question'}</h2>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={editingQuestion ? 'Edit question' : 'Create question'}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '24px',
+          }}
+        >
+          <section
+            className="admin-section"
+            style={{
+              width: 'min(760px, 100%)',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+          >
+            <div className="button-row">
+              <h2>{editingQuestion ? 'Edit Question' : 'Create Question'}</h2>
 
-          <QuestionForm
-            initialQuestion={editingQuestion}
-            isSubmitting={submitting}
-            onCancel={handleCancelForm}
-            onSubmit={handleSubmitQuestion}
-          />
-        </section>
+              <button type="button" onClick={handleCancelForm}>
+                Close
+              </button>
+            </div>
+
+            <QuestionForm
+              initialQuestion={editingQuestion}
+              isSubmitting={submitting}
+              onCancel={handleCancelForm}
+              onSubmit={handleSubmitQuestion}
+            />
+          </section>
+        </div>
       )}
 
       <section className="admin-section">

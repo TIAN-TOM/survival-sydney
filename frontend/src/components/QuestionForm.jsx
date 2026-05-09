@@ -10,7 +10,7 @@ const questionFormSchema = z.object({
   optionC: z.string().trim().min(1, 'Option C is required.'),
   optionD: z.string().trim().min(1, 'Option D is required.'),
   correctAnswer: z.coerce.number().int().min(0).max(3),
-  active: z.boolean().default(true),
+  active: z.coerce.boolean().default(true),
   explanation: z.string().optional(),
 });
 
