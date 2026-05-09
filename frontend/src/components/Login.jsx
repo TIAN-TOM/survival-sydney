@@ -11,7 +11,7 @@ const loginSchema = z.object({
 });
 
 export default function Login({ adminMode = false }) {
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState('');
@@ -27,6 +27,7 @@ export default function Login({ adminMode = false }) {
     try {
       const signedInUser = await login(username, password);
       if (adminMode && signedInUser.role !== 'admin') {
+        logout();
         setServerError('Admin access required');
         return;
       }
