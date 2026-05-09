@@ -9,28 +9,7 @@ const Score = require('../models/Score');
 const User = require('../models/User');
 const questionBank = require('./data/sydney_life_survival_quiz_50_questions.json');
 
-const CATEGORY_TOPIC_LABELS = {
-  arrival_basics: 'Arrival Basics',
-  transport: 'Transport',
-  housing_consumers: 'Housing & Consumer Rights',
-  work_tax_health: 'Work, Tax & Health',
-  safety_beach_scams: 'Safety, Beaches & Scams'
-};
-
-const DIFFICULTY_SEQUENCE = ['foundation', 'application', 'analysis'];
 const syntheticUsernamePattern = /^(smoke-?\d+|browser\d+|bonus\d+|edcheck-\d+)$/;
-
-function categoryToTopic(category) {
-  if (CATEGORY_TOPIC_LABELS[category]) {
-    return CATEGORY_TOPIC_LABELS[category];
-  }
-
-  return String(category || 'Sydney Life')
-    .split('_')
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
 
 function validateSourceQuestion(sourceQuestion, index) {
   const label = sourceQuestion?.id || `question ${index + 1}`;
@@ -49,6 +28,7 @@ function validateSourceQuestion(sourceQuestion, index) {
 
   const trimmedOptions = sourceQuestion.options.map((option) => String(option).trim());
   const correctAnswer = String(sourceQuestion.correctAnswer || '').trim();
+
   if (trimmedOptions.some((option) => option.length === 0)) {
     throw new Error(`Seed question ${label} must not include blank options`);
   }
@@ -65,13 +45,24 @@ function validateSourceQuestion(sourceQuestion, index) {
 function normalizeSourceQuestion(sourceQuestion, index) {
   validateSourceQuestion(sourceQuestion, index);
 
+  const options = sourceQuestion.options.map((option) => String(option).trim());
+  const correctAnswerText = String(sourceQuestion.correctAnswer).trim();
+  const correctAnswerIndex = options.indexOf(correctAnswerText);
+
+  if (correctAnswerIndex === -1) {
+    throw new Error(
+      `Seed question ${sourceQuestion?.id || index + 1} correctAnswer must match one option exactly`
+    );
+  }
+
   return {
-    topic: categoryToTopic(sourceQuestion.category),
-    difficulty: DIFFICULTY_SEQUENCE[index % DIFFICULTY_SEQUENCE.length],
-    text: sourceQuestion.question.trim(),
-    options: sourceQuestion.options.map((option) => String(option).trim()),
-    correctAnswer: String(sourceQuestion.correctAnswer).trim(),
-    explanation: ''
+    questionText: sourceQuestion.question.trim(),
+    options,
+    correctAnswer: correctAnswerIndex,
+    active: true,
+    explanation: sourceQuestion.explanation
+      ? String(sourceQuestion.explanation).trim()
+      : ''
   };
 }
 
@@ -80,23 +71,14 @@ if (!Array.isArray(questionBank.questions) || questionBank.questions.length < 10
 }
 
 const questions = questionBank.questions.map(normalizeSourceQuestion);
-const sourceQuestionTexts = questions.map((question) => question.text);
+const sourceQuestionTexts = questions.map((question) => question.questionText);
 
 if (new Set(sourceQuestionTexts).size !== sourceQuestionTexts.length) {
   throw new Error('Seed question bank must not include duplicate question text');
 }
 
 const nonSourceQuestionFilter = {
-  text: { $nin: sourceQuestionTexts }
-};
-
-const nonSourceAttemptFilter = {
-  $or: [
-    { answers: { $exists: false } },
-    { answers: { $size: 0 } },
-    { 'answers.questionSnapshot.text': { $exists: false } },
-    { answers: { $elemMatch: { 'questionSnapshot.text': { $nin: sourceQuestionTexts } } } }
-  ]
+  questionText: { $nin: sourceQuestionTexts }
 };
 
 const demoUsers = [
@@ -140,6 +122,7 @@ async function seed() {
     { username: { $regex: syntheticUsernamePattern } },
     { _id: 1 }
   ).lean();
+
   const syntheticIds = syntheticUserIds.map((user) => user._id);
 
   if (syntheticIds.length > 0) {
@@ -148,13 +131,15 @@ async function seed() {
   }
 
   await Question.deleteMany(nonSourceQuestionFilter);
-  await Score.deleteMany(nonSourceAttemptFilter);
+
+  // Clear previous quiz attempts so demo data stays consistent with the current seeded questions.
+  await Score.deleteMany({});
 
   await Question.bulkWrite(
     questions.map((question) => ({
       updateOne: {
-        filter: { text: question.text },
-        update: { $set: { ...question, active: true } },
+        filter: { questionText: question.questionText },
+        update: { $set: question },
         upsert: true
       }
     }))
@@ -165,6 +150,7 @@ async function seed() {
   console.log(
     `Seeded ${questions.length} active Sydney life questions, admin/AdminPass123, and player1/player2/PlayerPass123`
   );
+
   await mongoose.disconnect();
 }
 

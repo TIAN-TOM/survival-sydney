@@ -100,9 +100,9 @@ export default function AdminPage() {
   };
 
   return (
-    <main className="page page--admin">
-      <section className="card">
-        <div className="section-header">
+    <main>
+      <section className="admin-section">
+        <div className="button-row">
           <div>
             <h1>Admin Question Management</h1>
             <p>
@@ -110,36 +110,66 @@ export default function AdminPage() {
             </p>
           </div>
 
-          <button className="button button--primary" type="button" onClick={handleCreateClick}>
+          <button type="button" onClick={handleCreateClick}>
             Add Question
           </button>
         </div>
 
         {message && (
-          <div className={`notice notice--${message.type}`} role="status">
+          <p className={message.type === 'error' ? 'error-message' : 'success-message'}>
             {message.text}
-          </div>
+          </p>
         )}
       </section>
 
       {showForm && (
-        <section className="card">
-          <h2>{editingQuestion ? 'Edit Question' : 'Create Question'}</h2>
-          <QuestionForm
-            initialQuestion={editingQuestion}
-            isSubmitting={submitting}
-            onCancel={handleCancelForm}
-            onSubmit={handleSubmitQuestion}
-          />
-        </section>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={editingQuestion ? 'Edit question' : 'Create question'}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '24px',
+          }}
+        >
+          <section
+            className="admin-section"
+            style={{
+              width: 'min(760px, 100%)',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+          >
+            <div className="button-row">
+              <h2>{editingQuestion ? 'Edit Question' : 'Create Question'}</h2>
+
+              <button type="button" onClick={handleCancelForm}>
+                Close
+              </button>
+            </div>
+
+            <QuestionForm
+              initialQuestion={editingQuestion}
+              isSubmitting={submitting}
+              onCancel={handleCancelForm}
+              onSubmit={handleSubmitQuestion}
+            />
+          </section>
+        </div>
       )}
 
-      <section className="card">
+      <section className="admin-section">
         <h2>Bulk Import</h2>
         <BulkImport onImportSuccess={handleBulkImportSuccess} />
       </section>
 
-      <section className="card">
+      <section className="admin-section">
         <h2>Question List</h2>
 
         {loading ? (
@@ -147,63 +177,56 @@ export default function AdminPage() {
         ) : questions.length === 0 ? (
           <p>No questions found.</p>
         ) : (
-          <div className="table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Question</th>
-                  <th>Correct</th>
-                  <th>Status</th>
-                  <th>Explanation</th>
-                  <th>Actions</th>
+          <table>
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Correct</th>
+                <th>Status</th>
+                <th>Explanation</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {questions.map(question => (
+                <tr key={question._id}>
+                  <td>
+                    <strong>{question.questionText}</strong>
+                    <ol type="A">
+                      {question.options.map((option, index) => (
+                        <li key={`${question._id}-${index}`}>{option}</li>
+                      ))}
+                    </ol>
+                  </td>
+
+                  <td>
+                    Option {String.fromCharCode(65 + Number(question.correctAnswer))}
+                  </td>
+
+                  <td>{question.active ? 'Active' : 'Inactive'}</td>
+
+                  <td>{question.explanation || '-'}</td>
+
+                  <td>
+                    <div className="button-row">
+                      <button type="button" onClick={() => handleEditClick(question)}>
+                        Edit
+                      </button>
+
+                      <button type="button" onClick={() => handleToggleQuestion(question._id)}>
+                        {question.active ? 'Deactivate' : 'Activate'}
+                      </button>
+
+                      <button type="button" onClick={() => handleDeleteQuestion(question._id)}>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {questions.map(question => (
-                  <tr key={question._id}>
-                    <td>
-                      <strong>{question.questionText}</strong>
-                      <ol type="A">
-                        {question.options.map(option => (
-                          <li key={option}>{option}</li>
-                        ))}
-                      </ol>
-                    </td>
-                    <td>
-                      Option {String.fromCharCode(65 + Number(question.correctAnswer))}
-                    </td>
-                    <td>{question.active ? 'Active' : 'Inactive'}</td>
-                    <td>{question.explanation || '-'}</td>
-                    <td>
-                      <div className="button-row">
-                        <button
-                          className="button button--secondary"
-                          type="button"
-                          onClick={() => handleEditClick(question)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="button button--secondary"
-                          type="button"
-                          onClick={() => handleToggleQuestion(question._id)}
-                        >
-                          {question.active ? 'Deactivate' : 'Activate'}
-                        </button>
-                        <button
-                          className="button button--danger"
-                          type="button"
-                          onClick={() => handleDeleteQuestion(question._id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
       </section>
     </main>
