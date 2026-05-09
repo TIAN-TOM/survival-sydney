@@ -12,6 +12,13 @@ const userSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 30,
     },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
     passwordHash: {
       type: String,
       required: true,
@@ -25,9 +32,9 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-userSchema.statics.hashPassword = async function (plain) {
+userSchema.methods.setPassword = async function (plain) {
   const rounds = parseInt(process.env.BCRYPT_ROUNDS, 10) || 10;
-  return bcrypt.hash(plain, rounds);
+  this.passwordHash = await bcrypt.hash(plain, rounds);
 };
 
 userSchema.methods.comparePassword = async function (plain) {
@@ -38,6 +45,7 @@ userSchema.methods.toSafeObject = function () {
   return {
     id: this._id,
     username: this.username,
+    email: this.email,
     role: this.role,
     createdAt: this.createdAt,
   };
