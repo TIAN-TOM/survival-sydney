@@ -29,3 +29,23 @@ exports.register = async (req, res, next) => {
     return next(err);
   }
 };
+
+exports.login = async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username: username.toLowerCase().trim() });
+    if (!user) {
+      return res.status(401).json(fail('Invalid credentials', 401));
+    }
+
+    const valid = await user.comparePassword(password);
+    if (!valid) {
+      return res.status(401).json(fail('Invalid credentials', 401));
+    }
+
+    const token = signToken(user);
+    return res.json(ok({ token, user: user.toSafeObject() }));
+  } catch (err) {
+    return next(err);
+  }
+};
