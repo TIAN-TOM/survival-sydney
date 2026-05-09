@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,5 +24,23 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+userSchema.statics.hashPassword = async function (plain) {
+  const rounds = parseInt(process.env.BCRYPT_ROUNDS, 10) || 10;
+  return bcrypt.hash(plain, rounds);
+};
+
+userSchema.methods.comparePassword = async function (plain) {
+  return bcrypt.compare(plain, this.passwordHash);
+};
+
+userSchema.methods.toSafeObject = function () {
+  return {
+    id: this._id,
+    username: this.username,
+    role: this.role,
+    createdAt: this.createdAt,
+  };
+};
 
 module.exports = mongoose.model('User', userSchema);
