@@ -12,16 +12,27 @@ const signToken = (user) =>
 
 exports.register = async (req, res, next) => {
   try {
-    const { username, password } = req.body;
-    const normalized = username.toLowerCase().trim();
+    const { username, email, password } = req.body;
+    const normalizedUsername = username.toLowerCase().trim();
+    const normalizedEmail = email.toLowerCase().trim();
 
-    const existing = await User.findOne({ username: normalized });
+    const existing = await User.findOne({
+      $or: [{ username: normalizedUsername }, { email: normalizedEmail }],
+    });
     if (existing) {
-      return res.status(409).json(fail('Username already taken', 409));
+      const message = existing.username === normalizedUsername
+        ? 'Username already taken'
+        : 'Email already registered';
+      return res.status(409).json(fail(message, 409));
     }
 
-    const passwordHash = await User.hashPassword(password);
-    const user = await User.create({ username: normalized, passwordHash });
+    const user = new User({
+      username: normalizedUsername,
+      email: normalizedEmail,
+      role: 'user',
+    });
+    await user.setPassword(password);
+    await user.save();
 
     const token = signToken(user);
     return res.status(201).json(ok({ token, user: user.toSafeObject() }));
