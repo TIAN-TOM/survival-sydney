@@ -48,7 +48,7 @@ export default function Register() {
   return (
     <section className="auth-panel">
       <h2>Register</h2>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <label>
           Username
           <input type="text" autoComplete="username" {...register('username')} />

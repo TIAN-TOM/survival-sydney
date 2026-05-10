@@ -51,7 +51,7 @@ export default function Login({ adminMode = false }) {
           {notice}
         </p>
       )}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <label>
           Username
           <input type="text" autoComplete="username" {...register('username')} />

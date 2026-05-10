@@ -1,6 +1,6 @@
 // Subsystem D - Integration, Robustness & Documentation (Tom Tian):
 // application shell, route wiring, navigation, and cross-subsystem layout.
-import { Link, Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
+import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import Login from './components/Login.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -43,6 +43,8 @@ function App() {
   const { isAdmin, isAuthenticated, logout, user } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const hideAppHeader = location.pathname === '/quiz';
   const navLinkClass = ({ isActive }) => `app-header__nav-link${isActive ? ' is-active' : ''}`;
   const handleSignOut = () => {
     logout();
@@ -56,40 +58,42 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
-      <header className="app-header">
-        <Link className="app-header__brand" to="/">
-          <span className="app-header__brand-logo" aria-hidden="true">
-            <img src="/sydney-life-quiz-icon.png" alt="" />
-          </span>
-          <span>Sydney Life Quiz</span>
-        </Link>
-        <nav className="app-header__nav" aria-label="Primary navigation">
-          <NavLink className={navLinkClass} to="/history">History</NavLink>
-          <NavLink className={navLinkClass} to="/leaderboard">Leaderboard</NavLink>
-          {isAdmin && <NavLink className={navLinkClass} to="/admin">Admin</NavLink>}
-        </nav>
-        <div className="app-header__actions">
-          <button
-            className={`button app-header__theme-toggle ${isDarkMode ? 'is-dark' : 'is-light'}`}
-            type="button"
-            onClick={toggleTheme}
-            aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
-            aria-pressed={isDarkMode}
-            title={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
-          >
-            <ThemeSplitIcon />
-            <span className="theme-toggle__label">{isDarkMode ? 'Dark' : 'Light'}</span>
-          </button>
-          {isAuthenticated ? (
-            <button className="button button--secondary" type="button" onClick={handleSignOut}>
-              Sign out {user?.username ? `(${user.username})` : ''}
+    <div className={`app-shell${hideAppHeader ? ' app-shell--quiz-fullscreen' : ''}`}>
+      {!hideAppHeader ? (
+        <header className="app-header">
+          <Link className="app-header__brand" to="/">
+            <span className="app-header__brand-logo" aria-hidden="true">
+              <img src="/sydney-life-quiz-icon.png" alt="" />
+            </span>
+            <span>Sydney Life Quiz</span>
+          </Link>
+          <nav className="app-header__nav" aria-label="Primary navigation">
+            <NavLink className={navLinkClass} to="/history">History</NavLink>
+            <NavLink className={navLinkClass} to="/leaderboard">Leaderboard</NavLink>
+            {isAdmin && <NavLink className={navLinkClass} to="/admin">Admin</NavLink>}
+          </nav>
+          <div className="app-header__actions">
+            <button
+              className={`button app-header__theme-toggle ${isDarkMode ? 'is-dark' : 'is-light'}`}
+              type="button"
+              onClick={toggleTheme}
+              aria-label={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+              aria-pressed={isDarkMode}
+              title={isDarkMode ? 'Switch to light theme' : 'Switch to dark theme'}
+            >
+              <ThemeSplitIcon />
+              <span className="theme-toggle__label">{isDarkMode ? 'Dark' : 'Light'}</span>
             </button>
-          ) : (
-            <Link className="button button--primary app-header__login" to="/login">Sign in</Link>
-          )}
-        </div>
-      </header>
+            {isAuthenticated ? (
+              <button className="button button--secondary" type="button" onClick={handleSignOut}>
+                Sign out {user?.username ? `(${user.username})` : ''}
+              </button>
+            ) : (
+              <Link className="button button--primary app-header__login" to="/login">Sign in</Link>
+            )}
+          </div>
+        </header>
+      ) : null}
 
       <Routes>
         <Route path="/" element={<HomePage />} />
