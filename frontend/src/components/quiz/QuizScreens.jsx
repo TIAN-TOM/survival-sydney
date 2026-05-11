@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useQuiz } from '../../contexts/QuizContext.jsx';
+import { useTheme } from '../../contexts/ThemeContext.jsx';
 
-const QUIZ_KANGAROO_JUMP_MS = 540;
-const QUIZ_ADVANCE_DELAY_MS = 500;
+const QUIZ_ADVANCE_DELAY_MS = 860;
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -16,26 +16,14 @@ const TOPIC_MAP = {
   Riddle: { cls: 'tp-rid', label: 'Riddle 🧩' },
 };
 
-const JOURNEY_STOP_POOL = [
-  { icon: '🚢', label: 'Circular Quay' },
-  { icon: '🏛️', label: 'Opera House' },
-  { icon: '🌉', label: 'Harbour Bridge' },
-  { icon: '🚌', label: 'Bus Stop' },
-  { icon: '🏖️', label: 'Bondi' },
-  { icon: '🦁', label: 'Taronga Zoo' },
-  { icon: '🌿', label: 'Botanic Gardens' },
-  { icon: '⛴️', label: 'Manly Ferry' },
-  { icon: '🏙️', label: 'CBD' },
-  { icon: '🎪', label: 'Luna Park' },
-];
+const JOURNEY_STOP_POOL = ['🚉', '🏠', '🏥', '📋', '💼', '🔍', '⏰', '⚠️', '🏖️', '💊'];
 
 function stopsForCount(n) {
-  if (n <= JOURNEY_STOP_POOL.length) return JOURNEY_STOP_POOL.slice(0, Math.max(0, n));
-  const out = [...JOURNEY_STOP_POOL];
-  while (out.length < n) {
-    out.push({ icon: '📍', label: `Stop ${out.length + 1}` });
-  }
-  return out.slice(0, n);
+  const total = Math.max(0, n);
+  return Array.from({ length: total }, (_, i) => ({
+    icon: JOURNEY_STOP_POOL[i] || '📍',
+    label: `Q${i + 1}`,
+  }));
 }
 
 function TopicPill({ topic, style }) {
@@ -94,6 +82,70 @@ function JourneyStrip({ total, current }) {
             <div className="stop-label">{stop.label}</div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function CandleIcon({ state }) {
+  return (
+    <svg className="c-svg" viewBox="0 0 28 64" width="28" height="64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect x="6" y="48" width="16" height="11" rx="3" fill="#B09050" />
+      <rect x="4" y="55" width="20" height="6" rx="2" fill="#C4A868" />
+      <rect x="8" y="18" width="12" height="32" rx="3" fill="#201838" />
+      <path d="M8 28 Q6 34 7 40" stroke="#2A2048" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+      <path d="M20 24 Q22 30 21 36" stroke="#2A2048" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <line x1="14" y1="18" x2="14" y2="13" stroke="#5A3A18" strokeWidth="1.5" strokeLinecap="round" />
+      <path className="c-fl" d="M14 13 Q17 7.5 14 2 Q11 7.5 14 13Z" fill="#F8A820" />
+      <path className="c-fi" d="M14 12 Q16 8.5 14 5 Q12 8.5 14 12Z" fill="#F8E060" />
+      <circle className="c-gl" cx="14" cy="7" r="7" fill="rgba(248,168,32,.2)" />
+    </svg>
+  );
+}
+
+function QuizProgressStrip({ total, current }) {
+  const stops = useMemo(() => stopsForCount(total), [total]);
+  const denom = Math.max(total - 1, 1);
+  const fillPct = (current / denom) * 100;
+
+  return (
+    <div className="quiz-progress-strip">
+      <div className="quiz-progress-wrap">
+        <div className="progress-seals" aria-hidden="true">
+          <div className="seal-track">
+            <div className="seal-floor">
+              <div className="seal-floor-fill" style={{ width: `${fillPct}%` }} />
+            </div>
+            {stops.map((stop, i) => {
+              const state = i < current ? 'done' : i === current ? 'current' : 'locked';
+              return (
+                <div className={`seal-stop ${state}`} key={`seal-${stop.label}-${i}`}>
+                  <div className="seal-item">
+                    <span className="seal-inner">{i < current ? '✓' : i + 1}</span>
+                  </div>
+                  <div className="seal-num">{stop.label}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="progress-candles" aria-hidden="true">
+          <div className="candle-track">
+            <div className="candle-floor">
+              <div className="candle-floor-fill" style={{ width: `${fillPct}%` }} />
+            </div>
+            {stops.map((stop, i) => {
+              const state = i < current ? 'done' : i === current ? 'current' : 'locked';
+              return (
+                <div className={`candle-stop ${state}`} key={`candle-${stop.label}-${i}`}>
+                  <CandleIcon state={state} />
+                  <div className="c-lbl">Q{i + 1}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -165,95 +217,123 @@ export function StartScreen() {
 export function QuizScreen() {
   const { state, lockAnswer, submitAnswer } = useQuiz();
   const { questions, currentQ, answers, answered } = state;
-  const kangarooRef = useRef(null);
+  const { isDarkMode, toggleTheme } = useTheme();
+  const [pendingAnswer, setPendingAnswer] = useState(null);
+  const [featherBurst, setFeatherBurst] = useState(false);
 
-  const animateKangaroo = useCallback(() => {
-    const el = kangarooRef.current;
-    if (!el) return;
-    el.classList.remove('quiz-kangaroo--jump');
-    void el.offsetWidth;
-    el.classList.add('quiz-kangaroo--jump');
-    window.setTimeout(() => {
-      el.classList.remove('quiz-kangaroo--jump');
-    }, QUIZ_KANGAROO_JUMP_MS);
-  }, []);
+  useEffect(() => {
+    setPendingAnswer(null);
+    setFeatherBurst(false);
+  }, [currentQ]);
 
   const handleSelect = useCallback(
     (cardIdx, optIdx) => {
       if (answered || cardIdx !== currentQ) return;
-
+      setPendingAnswer(optIdx);
+      setFeatherBurst(true);
+      setTimeout(() => setFeatherBurst(false), 620);
       lockAnswer();
-      animateKangaroo();
-
       setTimeout(() => {
         submitAnswer(optIdx);
       }, QUIZ_ADVANCE_DELAY_MS);
     },
-    [animateKangaroo, answered, currentQ, lockAnswer, submitAnswer],
+    [answered, currentQ, lockAnswer, submitAnswer],
   );
 
-  const getCardState = (i) => {
-    if (i < currentQ) return 'answered';
-    if (i === currentQ) return 'active';
-    return 'locked';
-  };
-
   const n = questions.length;
+  const currentQuestion = questions[currentQ];
+  const currentTopic = currentQuestion?.category || currentQuestion?.topic || 'Sydney Life';
 
   return (
     <div className="qf-screen quiz-screen">
-      <JourneyStrip total={n} current={currentQ} />
+      <div className="quiz-gothic-shell">
+        <div className="quiz-top-navbar">
+          <a className="quiz-top-logo" href="/">
+            <span className="quiz-top-logo-seal" aria-hidden="true">📜</span>
+            Sydney Life Quiz
+          </a>
+          <div className="quiz-top-links">
+            <a className="quiz-top-link" href="/history">History</a>
+            <a className="quiz-top-link" href="/leaderboard">Leaderboard</a>
+          </div>
+          <div className="quiz-top-right">
+            <div className="mode-row">
+              <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
+              <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
+              <button
+                type="button"
+                className="mode-sw"
+                onClick={toggleTheme}
+                aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
+                aria-pressed={!isDarkMode}
+              >
+                <span className="mode-kn" />
+              </button>
+            </div>
+          </div>
+        </div>
+        <main className="quiz-gothic-main">
+          <QuizProgressStrip total={n} current={currentQ} />
 
-      <div className="quiz-body">
-        <div
-          className="quiz-track"
-          style={{ transform: `translateX(-${currentQ * 100}%)` }}
-        >
-          {questions.map((q, i) => {
-            const cardState = getCardState(i);
-            const savedAnswer = answers[i];
+          <div className="quiz-gothic-topbar">
+            <div className="gothic-ornament" aria-hidden="true">✦ ✦ ✦</div>
+          </div>
 
-            const topicLabel = q.category || q.topic || 'Sydney Life';
+          <section className="quiz-gothic-question">
+            <div className="quiz-body">
+              <div className="quiz-fade-wrap" key={currentQuestion?._id || currentQ}>
+                <div className="quiz-slide">
+                  <div className="q-card framed active">
+                    <div className={`mystic-feather-burst${featherBurst ? ' active' : ''}`} aria-hidden="true">
+                      <span>🪶</span>
+                      <span>✦</span>
+                      <span>🪶</span>
+                    </div>
+                    <svg className="bracket tl" viewBox="0 0 20 20" width="20" height="20">
+                      <polyline points="19,1 1,1 1,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+                    </svg>
+                    <svg className="bracket tr" viewBox="0 0 20 20" width="20" height="20">
+                      <polyline points="1,1 19,1 19,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+                    </svg>
+                    <svg className="bracket bl" viewBox="0 0 20 20" width="20" height="20">
+                      <polyline points="19,19 1,19 1,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+                    </svg>
+                    <svg className="bracket br" viewBox="0 0 20 20" width="20" height="20">
+                      <polyline points="1,19 19,19 19,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+                    </svg>
+                    <div className="q-meta">
+                      <span className="q-num">Q{currentQ + 1}</span>
+                      <TopicPill topic={currentTopic} />
+                    </div>
 
-            return (
-              <div className="quiz-slide" key={q._id || i}>
-                <div className={`q-card ${cardState}`}>
-                  <div className="q-meta">
-                    <span className="q-num">
-                      Question {i + 1} / {questions.length}
-                    </span>
-                    <TopicPill topic={topicLabel} />
-                  </div>
+                    <div className="q-text">{currentQuestion?.questionText}</div>
 
-                  <div className="q-text">{q.questionText}</div>
+                    <div className="q-divider">◆ ◆ ◆</div>
+                    <div className="q-hint"><span>🪶</span> Choose one correct answer.</div>
 
-                  <div className="q-hint">Pick one answer</div>
-
-                  <div className="opts">
-                    {(q.options || []).map((opt, j) => {
-                      const isSelected = savedAnswer?.sel === j;
-                      return (
-                        <button
-                          key={j}
-                          type="button"
-                          className={`opt ${isSelected ? 'selected' : ''}`}
-                          disabled={cardState !== 'active' || answered}
-                          onClick={() => handleSelect(i, j)}
-                        >
-                          <span className="opt-badge">{LETTERS[j]}</span>
-                          {opt}
-                        </button>
-                      );
-                    })}
+                    <div className="opts">
+                      {(currentQuestion?.options || []).map((opt, j) => {
+                        const isSelected = pendingAnswer === j;
+                        return (
+                          <button
+                            key={j}
+                            type="button"
+                            className={`opt ${isSelected ? 'selected' : ''}`}
+                            disabled={answered}
+                            onClick={() => handleSelect(currentQ, j)}
+                          >
+                            <span className="opt-badge">{LETTERS[j]}</span>
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-      <div className="quiz-kangaroo" ref={kangarooRef} aria-hidden="true">
-        <img src="/Kangaroo.png" alt="" width="132" height="132" />
+            </div>
+          </section>
+        </main>
       </div>
     </div>
   );
@@ -264,7 +344,7 @@ export function CalculatingScreen() {
     <div className="qf-screen calculating-screen">
       <div className="calc-inner">
         <div className="calc-roo" aria-hidden="true">
-          🦘
+          🕯️
         </div>
         <div className="calc-title">Tallying Results</div>
         <div className="calc-sub">Crunching your scores…</div>
@@ -351,7 +431,7 @@ export function ResultScreen() {
       <div className="confetti-layer" ref={confettiRef} />
       <div className="result-inner">
         <div className={`result-hero-icon${heroHigh ? ' is-high' : ' is-low'}`} aria-hidden="true">
-          🦘
+          {heroHigh ? '🦉' : '📜'}
         </div>
 
         <div className="result-card">

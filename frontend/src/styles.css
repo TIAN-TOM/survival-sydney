@@ -1,73 +1,347 @@
-/* Sydney Life Quiz — Animal Crossing–inspired: saturated, playful, soft toy shadows */
+/* Sydney Life Quiz — Gothic Academia: stone texture, gilded UI, candlelit contrast */
 :root {
   color-scheme: dark;
-  --qf-bg: #051a28;
-  --qf-sf: rgba(18, 36, 56, 0.78);
-  --qf-sf2: rgba(28, 48, 72, 0.88);
-  --qf-bd: rgba(56, 232, 255, 0.35);
-  --qf-txt: #ecf9ff;
-  --qf-mut: #8ecae6;
-  --qf-gold: #ffb454;
-  --qf-teal: #22d3ee;
-  --qf-grass: #6ee7b7;
-  --qf-cor: #86efac;
-  --qf-wrg: #fb7185;
-  --color-bg: #051a28;
-  --color-surface: rgba(18, 36, 56, 0.78);
-  --color-text: #ecf9ff;
-  --color-muted: #8ecae6;
-  --color-border: rgba(56, 232, 255, 0.28);
-  --color-brand: #22d3ee;
-  --color-primary: #22d3ee;
-  --color-primary-hover: #67e8f9;
-  --color-on-primary: #ffffff;
-  --color-link: #5eead4;
-  --color-secondary: #22d3ee;
-  --color-accent: #ffb454;
-  --color-success: #86efac;
-  --color-warm-bg: #051a28;
-  --color-primary-soft: rgba(34, 211, 238, 0.22);
-  --color-accent-soft: rgba(255, 180, 84, 0.22);
-  --shadow-panel: 0 18px 0 rgba(0, 0, 0, 0.2), 0 22px 48px rgba(0, 40, 60, 0.55);
-  --shadow-control: 0 0 32px rgba(34, 211, 238, 0.38), 0 10px 0 rgba(0, 0, 0, 0.25), 0 14px 28px rgba(0, 0, 0, 0.45);
-  --shadow-card: 0 12px 0 rgba(0, 30, 45, 0.35), 0 18px 40px rgba(0, 0, 0, 0.42);
-  --radius-control: 999px;
+  --qf-bg: #080610;
+  --qf-sf: rgba(18, 16, 42, 0.9);
+  --qf-sf2: rgba(28, 24, 64, 0.95);
+  --qf-bd: rgba(212, 168, 50, 0.28);
+  --qf-txt: #ead8b0;
+  --qf-mut: #9a86c8;
+  --qf-gold: #d4a832;
+  --qf-teal: #7050e8;
+  --qf-grass: #30b870;
+  --qf-cor: #30b870;
+  --qf-wrg: #e04848;
+  --color-bg: #080610;
+  --color-surface: rgba(18, 16, 42, 0.9);
+  --color-text: #ead8b0;
+  --color-muted: #9a86c8;
+  --color-border: rgba(212, 168, 50, 0.26);
+  --color-brand: #d4a832;
+  --color-primary: #d4a832;
+  --color-primary-hover: #e8c45b;
+  --color-on-primary: #0a0810;
+  --color-link: #e8c45b;
+  --color-secondary: #7050e8;
+  --color-accent: #e87830;
+  --color-success: #30b870;
+  --color-warm-bg: #080610;
+  --color-primary-soft: rgba(212, 168, 50, 0.16);
+  --color-accent-soft: rgba(232, 120, 48, 0.16);
+  --shadow-panel: 0 8px 0 rgba(0, 0, 0, 0.38), 0 0 48px rgba(212, 168, 50, 0.15);
+  --shadow-control: 0 5px 0 rgba(0, 0, 0, 0.42), 0 0 30px rgba(212, 168, 50, 0.22);
+  --shadow-card: 0 5px 0 rgba(0, 0, 0, 0.34), 0 0 28px rgba(212, 168, 50, 0.12);
+  --radius-control: 8px;
   --home-content-max: 1120px;
   --home-content-gutter: 1rem;
 }
 
+/* ════════════════════════════════════
+   V6 Harry-Potter/Gothic UI pass for every non-quiz page
+   Mirrors sydney-quiz-v6.html tokens while preserving React structure.
+════════════════════════════════════ */
+
+body {
+  --hp-bg: var(--color-bg);
+  --hp-sf: var(--color-surface);
+  --hp-sf2: var(--qf-sf2);
+  --hp-sf3: var(--qf-sf2);
+  --hp-bd: var(--color-border);
+  --hp-bd2: color-mix(in srgb, var(--color-border) 72%, var(--color-primary));
+  --hp-txt: var(--color-text);
+  --hp-mut: var(--color-muted);
+  --hp-gold: var(--color-primary);
+  --hp-gold2: color-mix(in srgb, var(--color-primary) 76%, #000);
+  --hp-maroon: color-mix(in srgb, var(--color-accent) 16%, transparent);
+  --hp-glow: var(--color-primary-soft);
+}
+
+.app-shell:not(.app-shell--quiz-fullscreen) {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 82% 10%, var(--hp-glow), transparent 12%),
+    repeating-linear-gradient(90deg, transparent, transparent 52px, rgba(255, 255, 255, 0.016) 52px, rgba(255, 255, 255, 0.016) 54px),
+    repeating-linear-gradient(180deg, transparent, transparent 28px, rgba(255, 255, 255, 0.016) 28px, rgba(255, 255, 255, 0.016) 30px);
+}
+
+html[data-theme='light'] .app-shell:not(.app-shell--quiz-fullscreen) {
+  background:
+    radial-gradient(circle at 82% 10%, rgba(192, 88, 40, 0.14), transparent 12%),
+    repeating-linear-gradient(90deg, transparent, transparent 52px, rgba(0, 0, 0, 0.018) 52px, rgba(0, 0, 0, 0.018) 54px),
+    repeating-linear-gradient(180deg, transparent, transparent 28px, rgba(0, 0, 0, 0.018) 28px, rgba(0, 0, 0, 0.018) 30px);
+}
+
+.app-header__brand-logo {
+  border-radius: 8px;
+  background: var(--hp-sf2);
+  color: var(--hp-gold);
+}
+
+.app-header__brand-logo::before {
+  content: '⚜';
+  position: absolute;
+  color: var(--hp-gold);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+}
+
+.app-header__brand-logo img {
+  opacity: 0;
+}
+
+.button,
+.auth-form button[type='submit'],
+.bulk-import-form button[type='submit'],
+.button-row button,
+.leaderboard__header button,
+.history-page__header button,
+.history-page__item a,
+.table-actions button,
+.segmented-control button,
+.pagination button {
+  border: 1.5px solid var(--hp-bd2);
+  border-radius: 7px;
+  background: var(--hp-sf2);
+  color: var(--hp-txt);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.28);
+}
+
+.button--primary,
+.auth-form button[type='submit'],
+.bulk-import-form button[type='submit'],
+.button-row button[type='submit'],
+.home-hero__cta {
+  border-color: var(--hp-gold);
+  background: var(--hp-maroon);
+  color: var(--hp-gold);
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.42), 0 0 30px var(--hp-glow);
+}
+
+html[data-theme='light'] .button--primary,
+html[data-theme='light'] .auth-form button[type='submit'],
+html[data-theme='light'] .bulk-import-form button[type='submit'],
+html[data-theme='light'] .button-row button[type='submit'],
+html[data-theme='light'] .home-hero__cta {
+  background: var(--hp-gold);
+  color: var(--color-on-primary);
+  box-shadow: 0 5px 0 var(--hp-gold2), 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.button:hover,
+.auth-form button[type='submit']:hover,
+.bulk-import-form button[type='submit']:hover,
+.button-row button:hover,
+.leaderboard__header button:hover,
+.history-page__header button:hover,
+.history-page__item a:hover,
+.table-actions button:hover,
+.pagination button:hover {
+  border-color: var(--hp-gold);
+  background: var(--hp-sf3, var(--hp-sf2));
+  color: var(--hp-gold);
+  transform: translateY(-2px);
+}
+
+.home-page,
+.auth-panel,
+.admin-section,
+.home-panel {
+  position: relative;
+}
+
+.home-hero,
+.home-section,
+.home-footer,
+.home-quiz-card,
+.practice-card,
+.auth-panel,
+.admin-section,
+.leaderboard,
+.history-page,
+.history-page__item,
+.review-page__summary,
+.review-page__question,
+.quiz-complete,
+.form,
+.bulk-import-form {
+  border: 1.5px solid var(--hp-bd);
+  border-radius: 10px;
+  background:
+    radial-gradient(ellipse at 10% 8%, var(--hp-glow), transparent 44%),
+    var(--hp-sf);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.28), 0 0 36px color-mix(in srgb, var(--hp-glow) 70%, transparent);
+}
+
+html[data-theme='light'] .home-hero,
+html[data-theme='light'] .home-section,
+html[data-theme='light'] .home-footer,
+html[data-theme='light'] .home-quiz-card,
+html[data-theme='light'] .practice-card,
+html[data-theme='light'] .auth-panel,
+html[data-theme='light'] .admin-section,
+html[data-theme='light'] .leaderboard,
+html[data-theme='light'] .history-page,
+html[data-theme='light'] .history-page__item,
+html[data-theme='light'] .review-page__summary,
+html[data-theme='light'] .review-page__question,
+html[data-theme='light'] .quiz-complete,
+html[data-theme='light'] .form,
+html[data-theme='light'] .bulk-import-form {
+  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.1), 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.home-hero::before,
+.home-section::before,
+.home-quiz-card::before,
+.auth-panel::before,
+.admin-section::before,
+.leaderboard::before,
+.history-page__item::before,
+.review-page__question::before {
+  content: '✦';
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  color: var(--hp-bd2);
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.home-hero h1,
+.home-section__header h2,
+.auth-panel h1,
+.auth-panel h2,
+.admin-section h1,
+.admin-section h2,
+.admin-section h3,
+.leaderboard__header h1,
+.history-page__header h1,
+.review-page__header h1,
+.quiz-complete h1 {
+  color: var(--hp-txt);
+  font-family: 'Cinzel', Georgia, serif;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+}
+
+.eyebrow,
+.home-quiz-card__topline,
+.meta-label,
+.form label,
+.auth-form label,
+.table-header,
+th {
+  color: var(--hp-gold);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.home-hero__lead,
+.auth-panel p,
+.history-page__item p,
+.review-page__question p,
+.empty-state,
+.loading-state {
+  color: var(--hp-mut);
+  font-family: 'Lora', Georgia, serif;
+  font-style: italic;
+}
+
+input,
+textarea,
+select,
+.form input,
+.form textarea,
+.form select,
+.auth-form input {
+  border: 1.5px solid var(--hp-bd);
+  border-radius: 8px;
+  background: var(--hp-sf2);
+  color: var(--hp-txt);
+  font-family: 'Lora', Georgia, serif;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.auth-form input:focus,
+.form input:focus,
+.form textarea:focus,
+.form select:focus {
+  border-color: var(--hp-gold);
+  box-shadow: 0 0 0 3px var(--hp-glow);
+}
+
+table,
+.leaderboard table {
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid var(--hp-bd);
+  border-radius: 10px;
+  background: var(--hp-sf);
+}
+
+th {
+  border-bottom: 1px solid var(--hp-bd);
+  background: var(--hp-sf2);
+}
+
+td {
+  border-bottom: 1px solid rgba(184, 152, 64, 0.22);
+  color: var(--hp-txt);
+}
+
+.notice,
+.auth-notice,
+.server-error,
+.field-error,
+.form-error,
+.error-message {
+  border-radius: 8px;
+  font-family: 'Lora', Georgia, serif;
+}
+
 :root[data-theme='light'] {
   color-scheme: light;
-  --qf-bg: #c8f4fc;
-  --qf-sf: rgba(255, 255, 255, 0.82);
-  --qf-sf2: rgba(255, 255, 255, 0.94);
-  --qf-bd: rgba(0, 168, 216, 0.35);
-  --qf-txt: #21405c;
-  --qf-mut: #4a8fb8;
-  --qf-gold: #ff8f6b;
-  --qf-teal: #00a8e8;
-  --qf-grass: #3ecf8f;
-  --qf-cor: #22c55e;
-  --qf-wrg: #f43f5e;
-  --color-bg: #c8f4fc;
-  --color-surface: rgba(255, 255, 255, 0.82);
-  --color-text: #21405c;
-  --color-muted: #4a8fb8;
-  --color-border: rgba(0, 168, 216, 0.38);
-  --color-brand: #00a8e8;
-  --color-primary: #00a8e8;
-  --color-primary-hover: #00c3ff;
-  --color-on-primary: #ffffff;
-  --color-link: #0096c7;
-  --color-secondary: #00a8e8;
-  --color-accent: #ff8f6b;
-  --color-success: #22c55e;
-  --color-warm-bg: #c8f4fc;
-  --color-primary-soft: rgba(0, 168, 232, 0.2);
-  --color-accent-soft: rgba(255, 143, 107, 0.22);
-  --shadow-panel: 0 14px 0 rgba(0, 135, 180, 0.12), 0 20px 44px rgba(0, 170, 220, 0.22);
-  --shadow-control: 0 8px 0 rgba(0, 140, 185, 0.18), 0 12px 28px rgba(0, 180, 220, 0.28);
-  --shadow-card: 0 10px 0 rgba(0, 150, 195, 0.14), 0 16px 36px rgba(0, 170, 210, 0.2);
+  --qf-bg: #ede0b8;
+  --qf-sf: rgba(253, 246, 224, 0.92);
+  --qf-sf2: rgba(232, 216, 168, 0.94);
+  --qf-bd: rgba(184, 152, 64, 0.55);
+  --qf-txt: #281808;
+  --qf-mut: #7a5838;
+  --qf-gold: #8a5820;
+  --qf-teal: #18308a;
+  --qf-grass: #1a8840;
+  --qf-cor: #1a8840;
+  --qf-wrg: #a02828;
+  --color-bg: #ede0b8;
+  --color-surface: rgba(253, 246, 224, 0.92);
+  --color-text: #281808;
+  --color-muted: #7a5838;
+  --color-border: rgba(184, 152, 64, 0.55);
+  --color-brand: #8a5820;
+  --color-primary: #8a5820;
+  --color-primary-hover: #a96a28;
+  --color-on-primary: #fdf6e0;
+  --color-link: #8a5820;
+  --color-secondary: #18308a;
+  --color-accent: #c05818;
+  --color-success: #1a8840;
+  --color-warm-bg: #ede0b8;
+  --color-primary-soft: rgba(138, 88, 32, 0.15);
+  --color-accent-soft: rgba(192, 88, 24, 0.14);
+  --shadow-panel: 0 8px 0 rgba(76, 44, 13, 0.18), 0 0 38px rgba(138, 88, 32, 0.16);
+  --shadow-control: 0 5px 0 rgba(84, 48, 14, 0.22), 0 0 24px rgba(138, 88, 32, 0.18);
+  --shadow-card: 0 4px 0 rgba(84, 48, 14, 0.18), 0 0 24px rgba(138, 88, 32, 0.12);
 }
 
 :root[data-theme='dark'] {
@@ -82,34 +356,33 @@ body {
   margin: 0;
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: 'DM Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Lora', Georgia, serif;
   overflow-x: hidden;
   transition: background-color 0.35s ease, color 0.25s ease;
+  background-image:
+    repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(255, 255, 255, 0.022) 48px, rgba(255, 255, 255, 0.022) 50px),
+    repeating-linear-gradient(180deg, transparent, transparent 22px, rgba(255, 255, 255, 0.022) 22px, rgba(255, 255, 255, 0.022) 24px);
 }
 
 html[data-theme='dark'] body {
-  background-color: #051a28;
-  background-image: none;
+  background-color: #080610;
 }
 
-/* Dark: blurred light blobs + subtle stars / particle tile + gentle pulse */
+/* Dark: candlelit gothic texture + faint magical glow */
 html[data-theme='dark'] body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-color: #051a28;
+  background-color: #080610;
   background-image:
-    radial-gradient(ellipse 42% 38% at 14% 24%, rgba(34, 211, 238, 0.38), transparent 56%),
-    radial-gradient(ellipse 38% 36% at 86% 18%, rgba(251, 146, 234, 0.18), transparent 52%),
-    radial-gradient(ellipse 48% 42% at 72% 82%, rgba(110, 231, 183, 0.22), transparent 58%),
-    radial-gradient(ellipse 44% 48% at 18% 88%, rgba(34, 211, 238, 0.28), transparent 52%),
-    radial-gradient(ellipse 88% 58% at 50% -10%, rgba(125, 211, 252, 0.26), transparent 58%),
-    url('/stars-particles-dark.svg');
-  background-size: auto, auto, auto, auto, auto, 420px 420px;
-  background-position: center, center, center, center, center, 0 0;
-  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, repeat;
+    radial-gradient(circle at 80% 12%, rgba(212, 168, 50, 0.16), transparent 14%),
+    radial-gradient(ellipse 58% 46% at 50% 112%, rgba(112, 80, 232, 0.24), transparent 60%),
+    radial-gradient(ellipse 42% 38% at 12% 22%, rgba(212, 168, 50, 0.08), transparent 56%),
+    repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(255, 255, 255, 0.022) 48px, rgba(255, 255, 255, 0.022) 50px),
+    repeating-linear-gradient(180deg, transparent, transparent 22px, rgba(255, 255, 255, 0.022) 22px, rgba(255, 255, 255, 0.022) 24px);
+  background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat;
   animation: dark-sky-twinkle 12s ease-in-out infinite alternate;
 }
 
@@ -129,7 +402,7 @@ html[data-theme='dark'] body::before {
   }
 }
 
-/* Dark: Harbour Bridge silhouette */
+/* Dark: USYD-inspired gothic quadrangle silhouette */
 html[data-theme='dark'] body::after {
   content: '';
   position: fixed;
@@ -137,45 +410,32 @@ html[data-theme='dark'] body::after {
   right: 0;
   bottom: 0;
   z-index: 0;
-  height: min(36vh, 300px);
+  height: min(34vh, 280px);
   pointer-events: none;
-  background: url('/harbour-bridge-dark.svg') no-repeat center bottom;
-  background-size: min(1200px, 100%) auto;
-  opacity: 1;
+  background:
+    linear-gradient(180deg, transparent 0 18%, #1a1430 18% 28%, transparent 28%),
+    linear-gradient(90deg, transparent 0 8%, #12102a 8% 30%, transparent 30% 40%, #12102a 40% 60%, transparent 60% 70%, #12102a 70% 92%, transparent 92%),
+    repeating-linear-gradient(90deg, transparent 0 58px, rgba(212, 168, 50, 0.12) 58px 76px, transparent 76px 112px),
+    linear-gradient(180deg, #1c1840 0%, #0e0c1e 100%);
+  clip-path: polygon(0 34%, 40% 34%, 50% 0, 60% 34%, 100% 34%, 100% 100%, 0 100%);
+  opacity: 0.75;
 }
 
-/* Light: sunny / mint Animal Crossing–style sky bands */
+/* Light: parchment academy texture */
 html[data-theme='light'] body {
   background:
-    linear-gradient(
-      180deg,
-      #fff8e6 0%,
-      #e8fbff 12%,
-      #baf0ff 28%,
-      #a8eecf 48%,
-      #9ee0ff 68%,
-      #7fd9ff 100%
-    )
+    radial-gradient(circle at 78% 12%, rgba(248, 192, 48, 0.28), transparent 14%),
+    repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(0, 0, 0, 0.04) 48px, rgba(0, 0, 0, 0.04) 50px),
+    repeating-linear-gradient(180deg, transparent, transparent 22px, rgba(0, 0, 0, 0.04) 22px, rgba(0, 0, 0, 0.04) 24px),
+    linear-gradient(180deg, #f7e9bf 0%, #ede0b8 55%, #d8bf80 100%)
     fixed;
-  background-color: #c8f4fc;
+  background-color: #ede0b8;
 }
 
-/* Light: faint Opera-inspired line art above the water */
 html[data-theme='light'] body::before {
-  content: '';
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-  height: min(42vh, 340px);
-  pointer-events: none;
-  background: url('/opera-light.svg') no-repeat center bottom 52px;
-  background-size: min(320px, 78vw);
-  opacity: 1;
+  display: none;
 }
 
-/* Light: wave SVG along the bottom edge */
 html[data-theme='light'] body::after {
   content: '';
   position: fixed;
@@ -183,11 +443,11 @@ html[data-theme='light'] body::after {
   right: 0;
   bottom: 0;
   z-index: 0;
-  height: min(26vh, 200px);
+  height: min(30vh, 230px);
   pointer-events: none;
-  background: url('/waves-light.svg') no-repeat center bottom;
-  background-size: 100% auto;
-  opacity: 1;
+  background: linear-gradient(180deg, #caa867 0%, #b8944f 100%);
+  clip-path: polygon(0 36%, 38% 36%, 50% 8%, 62% 36%, 100% 36%, 100% 100%, 0 100%);
+  opacity: 0.62;
 }
 
 a {
@@ -226,24 +486,26 @@ a {
 }
 
 html[data-theme='light'] .app-header {
-  background: rgba(255, 255, 255, 0.72);
-  border-bottom-color: rgba(0, 168, 232, 0.18);
-  box-shadow: 0 8px 32px rgba(15, 76, 117, 0.08);
+  background: rgba(237, 224, 184, 0.9);
+  border-bottom-color: rgba(184, 152, 64, 0.42);
+  box-shadow: 0 6px 0 rgba(84, 48, 14, 0.12), 0 0 28px rgba(138, 88, 32, 0.12);
 }
 
 html[data-theme='dark'] .app-header {
-  background: rgba(16, 24, 40, 0.55);
-  border-bottom-color: rgba(34, 211, 238, 0.3);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  background: rgba(8, 6, 16, 0.86);
+  border-bottom-color: rgba(212, 168, 50, 0.26);
+  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.32), 0 0 28px rgba(212, 168, 50, 0.12);
 }
 
 .app-header__brand {
   display: inline-flex;
   gap: 0.7rem;
   align-items: center;
-  color: var(--color-text);
+  color: var(--color-brand);
+  font-family: 'Cinzel', Georgia, serif;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-decoration: none;
 }
 
@@ -255,15 +517,16 @@ html[data-theme='dark'] .app-header {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--color-surface) 85%, var(--qf-teal) 15%);
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 0 16px var(--color-primary-soft);
 }
 
 .app-header__brand-logo img {
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 8px;
+  border-radius: 6px;
   object-fit: cover;
 }
 
@@ -288,10 +551,12 @@ html[data-theme='dark'] .app-header {
   border-radius: 8px;
   min-height: 40px;
   align-items: center;
-  padding: 0 0.15rem;
+  padding: 0 0.35rem;
   color: var(--color-muted);
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-decoration: none;
   transition: color 160ms ease;
 }
@@ -299,6 +564,7 @@ html[data-theme='dark'] .app-header {
 .app-header__nav-link:hover,
 .app-header__nav-link.is-active {
   color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
 }
 
 .app-header__nav-link::after {
