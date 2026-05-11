@@ -2,7 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 
-const PATH_MARKER_JUMP_MS = 480;
+const QUIZ_KANGAROO_JUMP_MS = 620;
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -76,25 +76,13 @@ function JourneyStrip({ total, current }) {
     return () => ro.disconnect();
   }, [updateLayout]);
 
-  useEffect(() => {
-    const el = markerRef.current;
-    if (!el || total < 1) return undefined;
-    el.classList.remove('path-marker--jump');
-    void el.offsetWidth;
-    el.classList.add('path-marker--jump');
-    const t = window.setTimeout(() => {
-      el.classList.remove('path-marker--jump');
-    }, PATH_MARKER_JUMP_MS);
-    return () => clearTimeout(t);
-  }, [current, total]);
-
   return (
     <div className="journey-strip">
       <div className="journey-track" ref={trackRef}>
         <div className="journey-line" />
         <div className="journey-line-fill" ref={fillRef} />
         <span className="path-marker" ref={markerRef} aria-hidden="true">
-          <img className="path-marker-img" src="/Kangaroo.png" alt="" width="48" height="48" />
+          ⛵
         </span>
         {stops.map((stop, i) => (
           <div
@@ -177,6 +165,7 @@ export function QuizScreen() {
   const { state, lockAnswer, submitAnswer } = useQuiz();
   const { questions, currentQ, answers, answered } = state;
   const cardRefs = useRef([]);
+  const kangarooRef = useRef(null);
 
   useEffect(() => {
     if (currentQ > 0 && currentQ < questions.length) {
@@ -193,6 +182,18 @@ export function QuizScreen() {
     }
     return undefined;
   }, [currentQ, questions.length]);
+
+  useEffect(() => {
+    const el = kangarooRef.current;
+    if (!el || currentQ < 1) return undefined;
+    el.classList.remove('quiz-kangaroo--jump');
+    void el.offsetWidth;
+    el.classList.add('quiz-kangaroo--jump');
+    const t = window.setTimeout(() => {
+      el.classList.remove('quiz-kangaroo--jump');
+    }, QUIZ_KANGAROO_JUMP_MS);
+    return () => clearTimeout(t);
+  }, [currentQ]);
 
   const handleSelect = useCallback(
     (cardIdx, optIdx) => {
@@ -265,6 +266,9 @@ export function QuizScreen() {
             </div>
           );
         })}
+      </div>
+      <div className="quiz-kangaroo" ref={kangarooRef} aria-hidden="true">
+        <img src="/Kangaroo.png" alt="" width="132" height="132" />
       </div>
     </div>
   );

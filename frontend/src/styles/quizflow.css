@@ -103,14 +103,19 @@ html[data-theme='dark'] .quiz-flow-scope {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    var(--sq-sky1) 0%,
-    var(--sq-sky2) 60%,
-    var(--sq-horizon) 85%,
-    var(--sq-ground) 100%
-  );
+  background-color: var(--sq-sky1);
+  background-image: url('/background.png');
+  background-position: center calc(100% + 40px);
+  background-repeat: no-repeat;
+  background-size: cover;
   transition: background 0.6s;
+}
+
+.quiz-flow-scope .sq-cloud,
+.quiz-flow-scope .sq-stars,
+.quiz-flow-scope .sq-vivid,
+.quiz-flow-scope .sq-skyline {
+  display: none;
 }
 
 .quiz-flow-scope .sq-cloud {
@@ -367,7 +372,7 @@ html[data-theme='dark'] .quiz-flow-scope .start-title em {
 
 /* ═══ JOURNEY ═══ */
 .quiz-flow-scope .journey-strip {
-  background: var(--sq-path-bg);
+  background: color-mix(in srgb, var(--sq-path-bg) 50%, transparent);
   border-bottom: 1.5px solid var(--sq-path-bd);
   /* Top padding reserves space so the path marker (above the track) isn’t clipped by .quiz-screen overflow:hidden */
   padding: 2.35rem 1.5rem 0.85rem;
@@ -481,56 +486,15 @@ html[data-theme='dark'] .quiz-flow-scope .journey-stop.done .stop-icon {
 
 .quiz-flow-scope .path-marker {
   position: absolute;
-  top: -36px;
+  top: -24px;
   z-index: 15;
+  font-size: 1.55rem;
+  line-height: 1;
   left: 0;
-  display: inline-flex;
-  align-items: flex-end;
-  justify-content: center;
-  line-height: 0;
   transform: translateX(-50%);
   transition: left 0.5s var(--ease-out-back);
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.28));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
   pointer-events: none;
-  animation: path-marker-idle 2.8s ease-in-out infinite;
-}
-
-.quiz-flow-scope .path-marker-img {
-  display: block;
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-
-.quiz-flow-scope .path-marker.path-marker--jump {
-  animation: path-marker-hop 0.48s var(--ease-out-back);
-}
-
-@keyframes path-marker-idle {
-  0%,
-  100% {
-    transform: translateX(-50%) translateY(0);
-  }
-  50% {
-    transform: translateX(-50%) translateY(-4px);
-  }
-}
-
-@keyframes path-marker-hop {
-  0% {
-    transform: translateX(-50%) translateY(0) scaleY(1) scaleX(1);
-  }
-  30% {
-    transform: translateX(-50%) translateY(-20px) scaleY(1.12) scaleX(0.9);
-  }
-  55% {
-    transform: translateX(-50%) translateY(-8px) scaleY(0.92) scaleX(1.05);
-  }
-  100% {
-    transform: translateX(-50%) translateY(0) scaleY(1) scaleX(1);
-  }
 }
 
 /* ═══ QUIZ BODY ═══ */
@@ -556,6 +520,48 @@ html[data-theme='dark'] .quiz-flow-scope .journey-stop.done .stop-icon {
   -webkit-overflow-scrolling: touch;
   scroll-padding-top: 1.25rem;
   scroll-padding-bottom: 2rem;
+}
+
+.quiz-flow-scope .quiz-kangaroo {
+  position: absolute;
+  right: max(1rem, calc(50vw - 540px));
+  bottom: clamp(1rem, 3vh, 2rem);
+  z-index: 11;
+  width: clamp(190px, 24vw, 320px);
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.28));
+}
+
+.quiz-flow-scope .quiz-kangaroo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.quiz-flow-scope .quiz-kangaroo--jump {
+  animation: quiz-kangaroo-hop 0.62s var(--ease-out-back);
+}
+
+@keyframes quiz-kangaroo-hop {
+  0% {
+    transform: translateY(0) scaleY(1) scaleX(1) rotate(0);
+  }
+  28% {
+    transform: translateY(-42px) scaleY(1.08) scaleX(0.94) rotate(-5deg);
+  }
+  58% {
+    transform: translateY(-16px) scaleY(0.94) scaleX(1.05) rotate(4deg);
+  }
+  82% {
+    transform: translateY(2px) scaleY(0.92) scaleX(1.06) rotate(0);
+  }
+  100% {
+    transform: translateY(0) scaleY(1) scaleX(1) rotate(0);
+  }
 }
 
 .quiz-flow-scope .q-card {
