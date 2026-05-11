@@ -2,7 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 
-const QUIZ_KANGAROO_JUMP_MS = 620;
+const QUIZ_KANGAROO_JUMP_MS = 540;
+const QUIZ_ADVANCE_DELAY_MS = 500;
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -164,48 +165,31 @@ export function StartScreen() {
 export function QuizScreen() {
   const { state, lockAnswer, submitAnswer } = useQuiz();
   const { questions, currentQ, answers, answered } = state;
-  const cardRefs = useRef([]);
   const kangarooRef = useRef(null);
 
-  useEffect(() => {
-    if (currentQ > 0 && currentQ < questions.length) {
-      const el = cardRefs.current[currentQ];
-      if (!el) return undefined;
-      const id = requestAnimationFrame(() => {
-        el.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'nearest',
-        });
-      });
-      return () => cancelAnimationFrame(id);
-    }
-    return undefined;
-  }, [currentQ, questions.length]);
-
-  useEffect(() => {
+  const animateKangaroo = useCallback(() => {
     const el = kangarooRef.current;
-    if (!el || currentQ < 1) return undefined;
+    if (!el) return;
     el.classList.remove('quiz-kangaroo--jump');
     void el.offsetWidth;
     el.classList.add('quiz-kangaroo--jump');
-    const t = window.setTimeout(() => {
+    window.setTimeout(() => {
       el.classList.remove('quiz-kangaroo--jump');
     }, QUIZ_KANGAROO_JUMP_MS);
-    return () => clearTimeout(t);
-  }, [currentQ]);
+  }, []);
 
   const handleSelect = useCallback(
     (cardIdx, optIdx) => {
       if (answered || cardIdx !== currentQ) return;
 
       lockAnswer();
+      animateKangaroo();
 
       setTimeout(() => {
         submitAnswer(optIdx);
-      }, 480);
+      }, QUIZ_ADVANCE_DELAY_MS);
     },
-    [answered, currentQ, lockAnswer, submitAnswer],
+    [animateKangaroo, answered, currentQ, lockAnswer, submitAnswer],
   );
 
   const getCardState = (i) => {
@@ -221,51 +205,52 @@ export function QuizScreen() {
       <JourneyStrip total={n} current={currentQ} />
 
       <div className="quiz-body">
-        {questions.map((q, i) => {
-          const cardState = getCardState(i);
-          const savedAnswer = answers[i];
+        <div
+          className="quiz-track"
+          style={{ transform: `translateX(-${currentQ * 100}%)` }}
+        >
+          {questions.map((q, i) => {
+            const cardState = getCardState(i);
+            const savedAnswer = answers[i];
 
-          const topicLabel = q.category || q.topic || 'Sydney Life';
+            const topicLabel = q.category || q.topic || 'Sydney Life';
 
-          return (
-            <div
-              key={q._id || i}
-              ref={(el) => {
-                cardRefs.current[i] = el;
-              }}
-              className={`q-card ${cardState}`}
-            >
-              <div className="q-meta">
-                <span className="q-num">
-                  Question {i + 1} / {questions.length}
-                </span>
-                <TopicPill topic={topicLabel} />
+            return (
+              <div className="quiz-slide" key={q._id || i}>
+                <div className={`q-card ${cardState}`}>
+                  <div className="q-meta">
+                    <span className="q-num">
+                      Question {i + 1} / {questions.length}
+                    </span>
+                    <TopicPill topic={topicLabel} />
+                  </div>
+
+                  <div className="q-text">{q.questionText}</div>
+
+                  <div className="q-hint">Pick one answer</div>
+
+                  <div className="opts">
+                    {(q.options || []).map((opt, j) => {
+                      const isSelected = savedAnswer?.sel === j;
+                      return (
+                        <button
+                          key={j}
+                          type="button"
+                          className={`opt ${isSelected ? 'selected' : ''}`}
+                          disabled={cardState !== 'active' || answered}
+                          onClick={() => handleSelect(i, j)}
+                        >
+                          <span className="opt-badge">{LETTERS[j]}</span>
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-
-              <div className="q-text">{q.questionText}</div>
-
-              <div className="q-hint">Pick one answer</div>
-
-              <div className="opts">
-                {(q.options || []).map((opt, j) => {
-                  const isSelected = savedAnswer?.sel === j;
-                  return (
-                    <button
-                      key={j}
-                      type="button"
-                      className={`opt ${isSelected ? 'selected' : ''}`}
-                      disabled={cardState !== 'active' || answered}
-                      onClick={() => handleSelect(i, j)}
-                    >
-                      <span className="opt-badge">{LETTERS[j]}</span>
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
       <div className="quiz-kangaroo" ref={kangarooRef} aria-hidden="true">
         <img src="/Kangaroo.png" alt="" width="132" height="132" />

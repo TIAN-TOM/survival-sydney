@@ -105,7 +105,7 @@ html[data-theme='dark'] .quiz-flow-scope {
   pointer-events: none;
   background-color: var(--sq-sky1);
   background-image: url('/background.png');
-  background-position: center calc(100% + 40px);
+  background-position: center calc(100% + 70px);
   background-repeat: no-repeat;
   background-size: cover;
   transition: background 0.6s;
@@ -372,14 +372,13 @@ html[data-theme='dark'] .quiz-flow-scope .start-title em {
 
 /* ═══ JOURNEY ═══ */
 .quiz-flow-scope .journey-strip {
-  background: color-mix(in srgb, var(--sq-path-bg) 50%, transparent);
-  border-bottom: 1.5px solid var(--sq-path-bd);
+  background: transparent;
+  border-bottom: none;
   /* Top padding reserves space so the path marker (above the track) isn’t clipped by .quiz-screen overflow:hidden */
-  padding: 2.35rem 1.5rem 0.85rem;
+  padding: 2.45rem clamp(1.25rem, 4vw, 3rem) 0.95rem;
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  backdrop-filter: blur(8px);
   z-index: 10;
   overflow: visible;
 }
@@ -389,38 +388,43 @@ html[data-theme='dark'] .quiz-flow-scope .start-title em {
   align-items: center;
   flex: 1;
   position: relative;
-  min-height: 52px;
+  min-height: 66px;
 }
 
 .quiz-flow-scope .journey-line {
   position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--sq-card-bd) 0,
-    var(--sq-card-bd) 8px,
-    transparent 8px,
-    transparent 16px
-  );
+  top: 38%;
+  left: 1.25rem;
+  right: 1.25rem;
+  height: 13px;
+  background: linear-gradient(180deg, #fff8dc 0%, #ead39a 100%);
+  border: 2px solid rgba(178, 130, 48, 0.28);
+  border-radius: 999px;
   transform: translateY(-50%);
   z-index: 0;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -2px 0 rgba(153, 105, 34, 0.12),
+    0 3px 7px rgba(95, 61, 20, 0.18);
 }
 
 .quiz-flow-scope .journey-line-fill {
   position: absolute;
-  top: 50%;
-  left: 0;
-  height: 3px;
+  top: 38%;
+  left: 1.25rem;
+  height: 13px;
   width: 0%;
-  background: var(--sq-btn-a);
+  max-width: calc(100% - 2.5rem);
+  background: linear-gradient(180deg, #7ee053 0%, #35b82e 100%);
   transform: translateY(-50%);
   z-index: 1;
-  transition: width 0.5s var(--ease-out-back);
-  border-radius: 2px;
-  box-shadow: 0 0 8px var(--sq-btn-a);
+  transition: width 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 2px solid rgba(31, 128, 33, 0.28);
+  border-radius: 999px;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -2px 0 rgba(21, 97, 26, 0.16),
+    0 3px 8px rgba(47, 151, 42, 0.24);
 }
 
 .quiz-flow-scope .journey-stop {
@@ -429,29 +433,40 @@ html[data-theme='dark'] .quiz-flow-scope .start-title em {
   flex-direction: column;
   align-items: center;
   position: relative;
-  z-index: 2;
-  gap: 0.2rem;
+  z-index: 3;
+  gap: 0.28rem;
 }
 
 .quiz-flow-scope .stop-icon {
-  width: 32px;
-  height: 32px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  border: 2.5px solid var(--sq-card-bd);
-  background: var(--sq-card);
+  border: 4px solid #fff4cf;
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.9) 0 18%, transparent 19%),
+    linear-gradient(180deg, #fff8df 0%, #ead7a4 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 1.15rem;
   transition: all 0.3s var(--ease-out-back);
-  box-shadow: 0 2px 6px var(--sq-card-sh);
+  color: #8a612b;
+  box-shadow:
+    0 4px 0 rgba(134, 90, 26, 0.22),
+    0 6px 12px rgba(92, 58, 18, 0.18),
+    inset 0 0 0 2px rgba(154, 106, 38, 0.08);
 }
 
 .quiz-flow-scope .journey-stop.done .stop-icon {
-  background: var(--sq-btn-a);
-  border-color: var(--sq-btn-a2);
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.72) 0 18%, transparent 19%),
+    linear-gradient(180deg, #7be05a 0%, #2fb437 100%);
+  border-color: #eaffd7;
   color: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 128, 64, 0.2), 0 2px 8px var(--sq-card-sh);
+  box-shadow:
+    0 4px 0 rgba(30, 112, 32, 0.28),
+    0 0 0 4px rgba(88, 204, 76, 0.22),
+    0 7px 14px rgba(47, 151, 42, 0.25);
 }
 
 html[data-theme='dark'] .quiz-flow-scope .journey-stop.done .stop-icon {
@@ -459,23 +474,31 @@ html[data-theme='dark'] .quiz-flow-scope .journey-stop.done .stop-icon {
 }
 
 .quiz-flow-scope .journey-stop.current .stop-icon {
-  background: var(--sq-card);
-  border-color: var(--sq-btn-a);
-  border-width: 3px;
-  transform: scale(1.2);
-  box-shadow: 0 0 0 4px rgba(255, 128, 64, 0.2), 0 4px 12px var(--sq-card-sh);
+  background:
+    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.78) 0 18%, transparent 19%),
+    linear-gradient(180deg, #ffbd42 0%, #ff991f 100%);
+  border-color: #fff3c9;
+  transform: scale(1.16);
+  color: #fff;
+  box-shadow:
+    0 5px 0 rgba(173, 100, 18, 0.32),
+    0 0 0 5px rgba(255, 190, 64, 0.26),
+    0 8px 18px rgba(177, 105, 20, 0.25);
 }
 
 .quiz-flow-scope .stop-label {
-  font-size: 0.45rem;
-  font-weight: 800;
-  color: var(--sq-txt2);
+  font-size: clamp(0.62rem, 0.82vw, 0.78rem);
+  font-weight: 900;
+  color: #68401c;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.055em;
   text-align: center;
-  max-width: 44px;
-  line-height: 1.1;
+  max-width: 82px;
+  line-height: 1.05;
   display: none;
+  text-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.82),
+    0 3px 6px rgba(83, 52, 16, 0.2);
 }
 
 @media (min-width: 600px) {
@@ -486,13 +509,13 @@ html[data-theme='dark'] .quiz-flow-scope .journey-stop.done .stop-icon {
 
 .quiz-flow-scope .path-marker {
   position: absolute;
-  top: -24px;
+  top: -20px;
   z-index: 15;
-  font-size: 1.55rem;
+  font-size: 1.65rem;
   line-height: 1;
   left: 0;
   transform: translateX(-50%);
-  transition: left 0.5s var(--ease-out-back);
+  transition: left 0.95s cubic-bezier(0.22, 1, 0.36, 1);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
   pointer-events: none;
 }
@@ -510,24 +533,37 @@ html[data-theme='dark'] .quiz-flow-scope .journey-stop.done .stop-icon {
 .quiz-flow-scope .quiz-body {
   flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.quiz-flow-scope .quiz-track {
   display: flex;
-  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.95s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.quiz-flow-scope .quiz-slide {
+  flex: 0 0 100%;
+  min-width: 0;
+  height: 100%;
+  display: flex;
   align-items: center;
+  justify-content: center;
   padding: 1.25rem 1.5rem 3rem;
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-  scroll-padding-top: 1.25rem;
-  scroll-padding-bottom: 2rem;
+  scroll-padding-block: 2rem;
 }
 
 .quiz-flow-scope .quiz-kangaroo {
   position: absolute;
-  right: max(1rem, calc(50vw - 540px));
-  bottom: clamp(1rem, 3vh, 2rem);
-  z-index: 11;
-  width: clamp(190px, 24vw, 320px);
+  right: max(1rem, calc(50vw - 520px));
+  bottom: clamp(2rem, 5vh, 3.5rem);
+  z-index: 30;
+  width: clamp(260px, 30vw, 420px);
   pointer-events: none;
   transform-origin: 50% 100%;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.28));
@@ -538,26 +574,26 @@ html[data-theme='dark'] .quiz-flow-scope .journey-stop.done .stop-icon {
   width: 100%;
   height: auto;
   object-fit: contain;
+  -webkit-user-select: none;
   user-select: none;
-  -webkit-user-drag: none;
 }
 
 .quiz-flow-scope .quiz-kangaroo--jump {
-  animation: quiz-kangaroo-hop 0.62s var(--ease-out-back);
+  animation: quiz-kangaroo-hop 0.54s cubic-bezier(0.18, 0.9, 0.2, 1);
 }
 
 @keyframes quiz-kangaroo-hop {
   0% {
     transform: translateY(0) scaleY(1) scaleX(1) rotate(0);
   }
-  28% {
-    transform: translateY(-42px) scaleY(1.08) scaleX(0.94) rotate(-5deg);
+  24% {
+    transform: translateY(-48px) scaleY(1.08) scaleX(0.94) rotate(-4deg);
   }
   58% {
-    transform: translateY(-16px) scaleY(0.94) scaleX(1.05) rotate(4deg);
+    transform: translateY(3px) scaleY(0.88) scaleX(1.1) rotate(2deg);
   }
-  82% {
-    transform: translateY(2px) scaleY(0.92) scaleX(1.06) rotate(0);
+  78% {
+    transform: translateY(-5px) scaleY(1.02) scaleX(0.98) rotate(0);
   }
   100% {
     transform: translateY(0) scaleY(1) scaleX(1) rotate(0);
@@ -567,7 +603,7 @@ html[data-theme='dark'] .quiz-flow-scope .journey-stop.done .stop-icon {
 .quiz-flow-scope .q-card {
   width: 100%;
   max-width: 620px;
-  margin-bottom: 1.25rem;
+  margin: 0;
   scroll-margin-top: 1rem;
   scroll-margin-bottom: 1.5rem;
   background: var(--sq-card);
@@ -1194,6 +1230,7 @@ html[data-theme='dark'] .quiz-flow-scope .review-screen {
   padding: 1.5rem 1rem;
   background: var(--sq-nav-bg);
   border-right: 1.5px solid var(--sq-card-bd);
+  -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
