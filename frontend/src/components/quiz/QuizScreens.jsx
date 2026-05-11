@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
 
@@ -253,8 +255,8 @@ export function QuizScreen() {
             Sydney Life Quiz
           </a>
           <div className="quiz-top-links">
-            <a className="quiz-top-link" href="/history">History</a>
-            <a className="quiz-top-link" href="/leaderboard">Leaderboard</a>
+            <Link className="quiz-top-link" to="/history">History</Link>
+            <Link className="quiz-top-link" to="/leaderboard">Leaderboard</Link>
           </div>
           <div className="quiz-top-right">
             <div className="mode-row">
@@ -493,105 +495,77 @@ export function ResultScreen() {
   );
 }
 
-function FlipCard({ item, index }) {
-  const frontRef = useRef(null);
-  const backRef = useRef(null);
-  const flipped = useRef(false);
-
-  const flip = () => {
-    const from = flipped.current ? backRef.current : frontRef.current;
-    const to = flipped.current ? frontRef.current : backRef.current;
-    const toBack = !flipped.current;
-
-    from.style.opacity = '0';
-    from.style.transform = `rotateY(${toBack ? '90deg' : '-90deg'}) scale(.98)`;
-
-    setTimeout(() => {
-      from.style.display = 'none';
-      from.style.opacity = '';
-      from.style.transform = '';
-      to.style.display = 'block';
-      to.style.opacity = '0';
-      to.style.transform = `rotateY(${toBack ? '-90deg' : '90deg'}) scale(.98)`;
-      flipped.current = !flipped.current;
-
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          to.style.opacity = '1';
-          to.style.transform = 'rotateY(0deg) scale(1)';
-        }),
-      );
-    }, 190);
-  };
-
+function ReviewV7Card({ item, index, explanationOpenIndex, onToggleExplanation }) {
   const questionText = item.questionText;
   const options = item.options || [];
   const correctIdx = item.correctAnswer;
-  const explanation = item.explanation || '';
+  const explanation = String(item.explanation ?? '').trim();
+  const hasExplanation = Boolean(explanation);
   const topic = item.category || item.topic || 'Sydney Life';
   const isCorrect = item.isCorrect;
+  const topicShort = String(topic).toUpperCase();
+  const open = hasExplanation && explanationOpenIndex === index;
 
   return (
-    <div className="rv-card" id={`rvc-${index}`}>
-      <div ref={frontRef} className="fc-front">
-        <div className="fc-head">
-          <div className={`fc-si ${isCorrect ? 'ok' : 'bad'}`}>{isCorrect ? '✓' : '✕'}</div>
-          <div className="fc-q-lbl">
-            Q{index + 1}
-            {' '}
-            ·
-            {' '}
-            <TopicPill topic={topic} style={{ fontSize: '.55rem', padding: '.15rem .52rem' }} />
-          </div>
-          {explanation ? (
-            <button type="button" className="flip-btn" onClick={flip}>
-              📖 Explanation →
-            </button>
-          ) : null}
-        </div>
-        <div className="fc-body">
-          <div className="fc-q-txt">{questionText}</div>
-          <div className="fc-opts">
-            {options.map((opt, j) => {
-              const isSel = j === item.selectedAnswer;
-              const isCor = j === correctIdx;
-              let cls = 'neutral';
-              let tag = null;
-              if (isCor && isSel) {
-                cls = 'ok-ans';
-                tag = <span className="fc-opt-tag">Your Answer ✓</span>;
-              } else if (isCor) {
-                cls = 'ok-ans';
-                tag = <span className="fc-opt-tag">Correct</span>;
-              } else if (isSel && !isCor) {
-                cls = 'ur-bad';
-                tag = <span className="fc-opt-tag">Your Answer ✗</span>;
-              }
-              return (
-                <div key={j} className={`fc-opt ${cls}`}>
-                  <span className="fc-ol">{LETTERS[j]}</span>
-                  {opt}
-                  {tag}
-                </div>
-              );
-            })}
-          </div>
+    <div className={`rv-card-v7 rv-card ${isCorrect ? 'card-cor' : 'card-wrg'}`} id={`rvc-${index}`}>
+      <div className="rvc-head">
+        <div className={`rvc-si ${isCorrect ? 'ok' : 'bad'}`}>{isCorrect ? '✓' : '✕'}</div>
+        <span className="rvc-qn">Q{index + 1}</span>
+        <span className="rvc-sep">·</span>
+        <span className="rvc-topic">{topicShort}</span>
+        <span className={`rvc-result ${isCorrect ? 'ok' : 'bad'}`}>{isCorrect ? 'Correct' : 'Incorrect'}</span>
+      </div>
+      <div className="rvc-body">
+        <div className="rvc-q">{questionText}</div>
+        <div className="rvc-opts">
+          {options.map((opt, j) => {
+            const isSel = j === item.selectedAnswer;
+            const isCor = j === correctIdx;
+            let cls = 'neutral';
+            let tag = null;
+            if (isCor && isSel) {
+              cls = 'ok-ans';
+              tag = <span className="rvc-opt-tag">Your Answer ✓</span>;
+            } else if (isCor) {
+              cls = 'ok-ans';
+              tag = <span className="rvc-opt-tag">Correct</span>;
+            } else if (isSel && !isCor) {
+              cls = 'ur-bad';
+              tag = <span className="rvc-opt-tag">Your Answer ✗</span>;
+            }
+            return (
+              <div key={j} className={`rvc-opt ${cls}`}>
+                <span className="rvc-ol">{LETTERS[j]}</span>
+                {opt}
+                {tag}
+              </div>
+            );
+          })}
         </div>
       </div>
-
-      {explanation ? (
-        <div ref={backRef} className="fc-back" style={{ display: 'none' }}>
-          <div className="fc-back-head">
-            <div className="fc-back-lbl">
-              📖 Explanation — Q{index + 1}
-            </div>
-            <button type="button" className="flip-back-btn" onClick={flip}>
-              ← Answer
-            </button>
+      <button
+        type="button"
+        className={`rvc-exp-btn${open ? ' open' : ''}`}
+        disabled={!hasExplanation}
+        onClick={() => onToggleExplanation(index)}
+        aria-expanded={hasExplanation ? open : undefined}
+      >
+        <span className="exp-arrow" aria-hidden="true">▼</span>
+        <span className="rvc-exp-label">
+          {!hasExplanation
+            ? 'No explanation for this trial'
+            : open
+              ? 'Hide Explanation'
+              : 'View Explanation'}
+        </span>
+      </button>
+      {hasExplanation ? (
+        <div className={`rvc-exp-panel${open ? ' open' : ''}`}>
+          <div className="rvc-exp-lbl">
+            <span aria-hidden="true">📜</span>
+            Explanation
           </div>
-          <div className="fc-back-body">
-            <p className="fc-exp-txt">{explanation}</p>
-          </div>
+          <p className="rvc-exp-text">{explanation}</p>
         </div>
       ) : null}
     </div>
@@ -601,68 +575,121 @@ function FlipCard({ item, index }) {
 export function ReviewScreen() {
   const { state, restart, backToResults } = useQuiz();
   const { review } = state;
+  const { user } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const safeReview = review || [];
   const correct = safeReview.filter((r) => r.isCorrect).length;
+  const total = safeReview.length;
+  const [activeDot, setActiveDot] = useState(0);
+  const [explanationOpenIndex, setExplanationOpenIndex] = useState(null);
+
+  const initials = (user?.username || 'P').slice(0, 1).toUpperCase();
 
   const jumpTo = (i) => {
+    setActiveDot(i);
+    setExplanationOpenIndex(null);
     document.getElementById(`rvc-${i}`)?.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
     });
   };
 
-  return (
-    <div className="qf-screen review-screen">
-      <aside className="rv-sidebar">
-        <div className="rv-sb-title">Debrief</div>
-        <div className="rv-sb-sub">Mission Review</div>
+  const toggleExplanation = useCallback((i) => {
+    const row = safeReview[i];
+    if (!String(row?.explanation ?? '').trim()) return;
 
-        <div className="rv-summary">
-          <div className="rv-sum-chip">
-            <div className="rv-sum-n c">{correct}</div>
-            <div className="rv-sum-l">Correct</div>
+    setExplanationOpenIndex((cur) => {
+      if (cur === i) return null;
+      requestAnimationFrame(() => {
+        document.getElementById(`rvc-${i}`)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+        });
+      });
+      return i;
+    });
+  }, [safeReview]);
+
+  return (
+    <div className="qf-screen review-screen review-v7">
+      <div className="quiz-top-navbar">
+        <Link className="quiz-top-logo" to="/">
+          <span className="quiz-top-logo-seal" aria-hidden="true">🕯️</span>
+          SYDNEY LIFE QUIZ
+        </Link>
+        <div className="quiz-top-right">
+          <div className="review-v7-player">
+            <span className="review-v7-av" aria-hidden="true">{initials}</span>
+            <span className="review-v7-pname">{user?.username || 'player'}</span>
           </div>
-          <div className="rv-sum-chip">
-            <div className="rv-sum-n w">{safeReview.length - correct}</div>
-            <div className="rv-sum-l">Wrong</div>
-          </div>
-          <div className="rv-sum-chip">
-            <div className="rv-sum-n t">{safeReview.length}</div>
-            <div className="rv-sum-l">Total</div>
+          <div className="mode-row">
+            <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
+            <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
+            <button
+              type="button"
+              className="mode-sw"
+              onClick={toggleTheme}
+              aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
+              aria-pressed={!isDarkMode}
+            >
+              <span className="mode-kn" />
+            </button>
           </div>
         </div>
+      </div>
 
-        <div className="rv-nav">
+      <div className="q-dot-bar">
+        <span className="qdb-score">
+          {correct}
+          /
+          {total}
+          {' '}
+          Correct
+        </span>
+        <div className="qdb-dots" role="tablist" aria-label="Jump to question">
           {safeReview.map((row, i) => (
-            <button key={row.questionId || i} type="button" className="rv-nav-btn" onClick={() => jumpTo(i)}>
-              <span className={`rv-dot ${row.isCorrect ? 'c' : 'w'}`} />
-              <span className="rv-nav-txt">
-                Q{i + 1}. {(row.questionText || '').slice(0, 30)}…
-              </span>
+            <button
+              key={row.questionId || i}
+              type="button"
+              className={`q-dot ${row.isCorrect ? 'cor' : 'wrg'}${activeDot === i ? ' active-dot' : ''}`}
+              onClick={() => jumpTo(i)}
+            >
+              {i + 1}
             </button>
           ))}
         </div>
+        <button type="button" className="qdb-back" onClick={backToResults}>
+          ← Results
+        </button>
+      </div>
 
-        <div className="rv-back-wrap">
-          <button type="button" className="btn-rv-back" onClick={backToResults}>
-            ← Back to Results
-          </button>
-          <button type="button" className="btn-rv-again" onClick={restart}>
-            ↺ Play Again
-          </button>
-        </div>
-      </aside>
-
-      <main className="rv-main">
-        <div className="rv-main-head">
-          <h1>Mission Debrief 📋</h1>
-          <p>All answers revealed. Flip any card to read the explanation.</p>
-        </div>
-        <div className="rv-cards">
-          {safeReview.map((row, i) => (
-            <FlipCard key={row.questionId || i} item={row} index={i} />
-          ))}
+      <main className="rv-main-v7">
+        <div className="rv-center">
+          <div className="rv-head-v7">
+            <h1>
+              Trial
+              {' '}
+              <em>Debrief</em>
+            </h1>
+            <p>All answers revealed. Click ▼ on any card to read the explanation.</p>
+          </div>
+          <div className="rv-cards-v7">
+            {safeReview.map((row, i) => (
+              <ReviewV7Card
+                key={row.questionId || i}
+                item={row}
+                index={i}
+                explanationOpenIndex={explanationOpenIndex}
+                onToggleExplanation={toggleExplanation}
+              />
+            ))}
+          </div>
+          <div className="rv-v7-footer-actions">
+            <button type="button" className="btn-rv-again" onClick={restart}>
+              ↺ Play Again
+            </button>
+          </div>
         </div>
       </main>
     </div>
