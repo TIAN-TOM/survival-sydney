@@ -170,7 +170,7 @@ username: player2
 password: PlayerPass123
 ```
 
-Seed 同时会从 `backend/src/seeds/data/sydney_life_survival_quiz_50_questions.json` 创建 50 道悉尼生活 active questions。题库覆盖抵达基础、交通、租房与消费权益、工作/税务/健康，以及安全/海滩/防诈骗，给固定 10 题 quiz 提供足够余量。
+Seed 会从 `backend/src/seeds/data/wizard_sydney_questions.json` 创建 **50** 道 active 题目（悉尼留学生生活向、带一点趣味叙事），涵盖交通、租房、文化、防骗、安全、饮食、生存技能等主题，为固定 10 题测验提供余量。仓库中的 `sydney_life_survival_quiz_50_questions.json` 仅作参考，**不再**由 `seed.js` 加载。
 
 #### 5. 运行应用
 

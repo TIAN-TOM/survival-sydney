@@ -12,6 +12,7 @@ const questionFormSchema = z.object({
   correctAnswer: z.coerce.number().int().min(0).max(3),
   active: z.coerce.boolean().default(true),
   explanation: z.string().optional(),
+  topic: z.string().optional(),
 });
 
 const emptyDefaults = {
@@ -23,6 +24,7 @@ const emptyDefaults = {
   correctAnswer: 0,
   active: true,
   explanation: '',
+  topic: 'general',
 };
 
 function toFormDefaults(question) {
@@ -37,6 +39,7 @@ function toFormDefaults(question) {
     correctAnswer: Number.isInteger(question.correctAnswer) ? question.correctAnswer : 0,
     active: question.active ?? true,
     explanation: question.explanation || '',
+    topic: question.topic || 'general',
   };
 }
 
@@ -72,6 +75,7 @@ export default function QuestionForm({
       correctAnswer: Number(values.correctAnswer),
       active: Boolean(values.active),
       explanation: values.explanation?.trim() || '',
+      topic: values.topic?.trim() || 'general',
     };
 
     onSubmit(payload);
@@ -120,6 +124,12 @@ export default function QuestionForm({
           <option value={3}>Option D</option>
         </select>
         {errors.correctAnswer && <span className="form-error">{errors.correctAnswer.message}</span>}
+      </label>
+
+      <label>
+        Topic (slug or label, e.g. transport)
+        <input type="text" {...register('topic')} placeholder="general" />
+        {errors.topic && <span className="form-error">{errors.topic.message}</span>}
       </label>
 
       <label>

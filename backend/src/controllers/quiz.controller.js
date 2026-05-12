@@ -1,6 +1,7 @@
 const Question = require('../models/Question');
 const Score = require('../models/Score');
 const { ok, fail } = require('../utils/responseEnvelope');
+const { shuffleQuestion, toStartQuizPayload } = require('../utils/shuffleQuestion');
 
 /**
  * GET /api/quiz/start
@@ -8,22 +9,26 @@ const { ok, fail } = require('../utils/responseEnvelope');
  */
 const startQuiz = async (req, res, next) => {
   try {
-    const questions = await Question.aggregate([
+    const raw = await Question.aggregate([
       { $match: { active: true } },
       { $sample: { size: 10 } },
       {
         $project: {
           questionText: 1,
           options: 1,
+          topic: 1,
+          correctAnswer: 1,
         },
       },
     ]);
 
-    if (questions.length < 10) {
+    if (raw.length < 10) {
       return res
         .status(400)
         .json(fail('Not enough active questions in database (need at least 10)'));
     }
+
+    const questions = raw.map((q) => toStartQuizPayload(shuffleQuestion(q)));
 
     return res.json(ok(questions));
   } catch (err) {
@@ -92,7 +97,8 @@ const submitQuiz = async (req, res, next) => {
       const question = questionMap[ans.questionId];
       if (!question) continue;
 
-      const isCorrect = ans.selectedAnswer === question.correctAnswer;
+      const shuffled = shuffleQuestion(question.toObject());
+      const isCorrect = ans.selectedAnswer === shuffled.correctAnswer;
       if (isCorrect) score++;
 
       detailedAnswers.push({
@@ -112,15 +118,17 @@ const submitQuiz = async (req, res, next) => {
     // --- build review data for Review Mode ---
     const review = detailedAnswers.map(da => {
       const q = questionMap[da.questionId.toString()];
+      const shuffled = shuffleQuestion(q.toObject());
 
       return {
         questionId: da.questionId,
-        questionText: q.questionText,
-        options: q.options,
+        questionText: shuffled.questionText,
+        options: shuffled.options,
         selectedAnswer: da.selectedAnswer,
-        correctAnswer: q.correctAnswer,
+        correctAnswer: shuffled.correctAnswer,
         isCorrect: da.isCorrect,
-        explanation: q.explanation || null,
+        topic: shuffled.topic || 'general',
+        explanation: (q.explanation && String(q.explanation).trim()) || null,
       };
     });
 
@@ -187,18 +195,22 @@ const getAttemptDetail = async (req, res, next) => {
           selectedAnswer: a.selectedAnswer,
           correctAnswer: null,
           isCorrect: a.isCorrect,
+          topic: 'general',
           explanation: null,
         };
       }
 
+      const shuffled = shuffleQuestion(q.toObject());
+
       return {
         questionId: a.questionId,
-        questionText: q.questionText,
-        options: q.options,
+        questionText: shuffled.questionText,
+        options: shuffled.options,
         selectedAnswer: a.selectedAnswer,
-        correctAnswer: q.correctAnswer,
+        correctAnswer: shuffled.correctAnswer,
         isCorrect: a.isCorrect,
-        explanation: q.explanation || null,
+        topic: shuffled.topic || 'general',
+        explanation: (q.explanation && String(q.explanation).trim()) || null,
       };
     });
 

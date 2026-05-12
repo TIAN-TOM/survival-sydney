@@ -170,7 +170,7 @@ username: player2
 password: PlayerPass123
 ```
 
-The seed also creates 50 active Sydney life questions from `backend/src/seeds/data/sydney_life_survival_quiz_50_questions.json`. The bank covers arrival basics, transport, housing and consumer rights, work/tax/health, and safety/scam awareness for international students, giving the fixed 10-question quiz enough surplus inventory for varied attempts.
+The seed creates **50** active questions from `backend/src/seeds/data/wizard_sydney_questions.json` (Sydney-student “wizard” theme: transport, renting, culture, scams, safety, food, survival, etc.), giving the fixed 10-question quiz enough surplus inventory for varied attempts. The older `sydney_life_survival_quiz_50_questions.json` file remains in the repo for reference but is **not** loaded by `seed.js` anymore.
 
 #### 5. Run the App
 
@@ -287,9 +287,9 @@ The SPEC allows up to +5 bonus marks for exceptional UI/UX polish, thoughtful fe
 
 ### Sydney Life Question Bank
 
-- What: the seeded bank contains 50 Sydney/NSW life-survival questions for international students across 5 categories and 3 difficulty levels.
-- Why: the quiz content now matches a practical student-life theme instead of implementation-specific demo questions, while still keeping enough active questions for varied 10-question attempts.
-- How it integrates: `/api/quiz/start` uses the metadata to target 3 foundation, 4 application, and 3 analysis questions while limiting repeated topics when enough active questions exist. This improves variety without creating a second variation, because players still start one standard quiz and do not choose a category.
+- What: the seeded bank contains **50** active questions in `wizard_sydney_questions.json` (student-life topics with a light narrative frame).
+- Why: the quiz content matches a practical Sydney/international-student theme while keeping enough active questions for varied 10-question attempts.
+- How it integrates: `/api/quiz/start` samples **10** random active questions from MongoDB; topics and explanations are returned on submit and in history review payloads.
 
 ### Durable Review Mode Snapshots
 

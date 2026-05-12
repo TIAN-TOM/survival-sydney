@@ -3,6 +3,56 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import api from '../api/api.js';
 
+const LETTERS = ['A', 'B', 'C', 'D'];
+
+function formatReviewCategory(raw) {
+  if (raw == null) return '';
+  const s = String(raw).trim();
+  if (!s) return '';
+  return s
+    .replace(/_/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+/** Correct: explanation folded by default; incorrect: expanded, both toggleable */
+function ReviewAttemptExplanation({ isCorrect, text }) {
+  const trimmed = String(text ?? '').trim();
+  const has = Boolean(trimmed);
+  const [open, setOpen] = useState(() => !isCorrect && has);
+
+  if (!has) {
+    return (
+      <div className="review-attempt-exp review-attempt-exp--empty">
+        <h3 className="review-attempt-exp__lbl">Explanation</h3>
+        <p className="review-attempt-exp__missing">No explanation for this question.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="review-attempt-exp">
+      <button
+        type="button"
+        className={`review-attempt-exp__toggle${open ? ' is-open' : ''}`}
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <span className="review-attempt-exp__arrow" aria-hidden="true">
+          ▼
+        </span>
+        {open ? 'Hide Explanation' : 'View Explanation'}
+      </button>
+      <div className={`review-attempt-exp__panel${open ? ' is-open' : ''}`}>
+        <h3 className="review-attempt-exp__lbl">Explanation</h3>
+        <p>{trimmed}</p>
+      </div>
+    </div>
+  );
+}
+
 function ReviewPage() {
   const navigate = useNavigate();
   const { attemptId } = useParams();
@@ -38,70 +88,90 @@ function ReviewPage() {
     return <p>No attempt found.</p>;
   }
 
+  const correctCount = attempt.review.filter((r) => r.isCorrect).length;
+  const total = attempt.total || attempt.review.length;
+
   return (
-    <main>
-      <section className="admin-section">
-        <h1>Attempt Review</h1>
+    <main className="review-page">
+      <section className="admin-section review-attempt-header">
+        <h1>Review Mode</h1>
 
-        <h2>
-          Score: {attempt.score} / {attempt.total}
-        </h2>
+        <div className="review-attempt-final" role="status">
+          <div className="review-attempt-final__label">Final score</div>
+          <div className="review-attempt-final__value">
+            {attempt.score}
+            <span className="review-attempt-final__slash">/</span>
+            {total}
+          </div>
+          <p className="review-attempt-final__hint">+1 point per correct answer</p>
+        </div>
 
-        <p>Completed: {new Date(attempt.createdAt).toLocaleString()}</p>
+        <p className="review-attempt-meta">
+          Completed: {new Date(attempt.createdAt).toLocaleString()}
+          {' · '}
+          <span className={correctCount === total ? 'review-attempt-meta--ok' : ''}>
+            {correctCount}/{total} correct
+          </span>
+        </p>
+        <p className="review-attempt-hint">
+          Correct answers keep the explanation collapsed — use View Explanation to read it. Incorrect answers show the
+          explanation by default; use Hide Explanation to collapse it.
+        </p>
       </section>
 
-      <section className="admin-section">
-        {attempt.review.map((item, index) => (
-          <div
-            key={item.questionId}
-            style={{
-              border: '1px solid #ccc',
-              padding: '20px',
-              marginBottom: '20px',
-              borderRadius: '8px',
-            }}
-          >
-            <h3>Question {index + 1}</h3>
+      <section className="admin-section review-attempt-list">
+        {attempt.review.map((item, index) => {
+          const opts = item.options || [];
+          const sel = item.selectedAnswer;
+          const cor = item.correctAnswer;
+          return (
+            <article key={item.questionId} className="review-attempt-card">
+              <header className="review-attempt-card__head">
+                <span className={`review-attempt-mark${item.isCorrect ? ' is-ok' : ' is-bad'}`}>
+                  {item.isCorrect ? '✓' : '✕'}
+                </span>
+                <h2 className="review-attempt-card__title">Question {index + 1}</h2>
+                <span className={`review-attempt-verdict${item.isCorrect ? ' is-ok' : ' is-bad'}`}>
+                  {item.isCorrect ? 'Correct' : 'Incorrect'}
+                </span>
+              </header>
 
-            <p>{item.questionText}</p>
+              {(item.category || item.topic) && (
+                <p className="review-page-topic">
+                  <strong>Topic:</strong>{' '}
+                  {formatReviewCategory(item.category || item.topic)}
+                </p>
+              )}
 
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              {item.options.map((option, optionIndex) => {
-                const isSelected = optionIndex === item.selectedAnswer;
-                const isCorrect = optionIndex === item.correctAnswer;
+              <p className="review-attempt-q">{item.questionText}</p>
 
-                return (
-                  <li
-                    key={`${item.questionId}-${optionIndex}`}
-                    style={{
-                      marginBottom: '10px',
-                      padding: '10px',
-                      borderRadius: '6px',
-                      backgroundColor: isCorrect
-                        ? '#d4edda'
-                        : isSelected
-                          ? '#f8d7da'
-                          : '#f1f1f1',
-                    }}
-                  >
-                    {option}
-                    {isCorrect && ' ✅ Correct'}
-                    {!isCorrect && isSelected && ' ❌ Your Answer'}
-                  </li>
-                );
-              })}
-            </ul>
+              <ul className="review-attempt-options">
+                {opts.map((option, optionIndex) => {
+                  const isSelected = optionIndex === sel;
+                  const isCorrectOpt = optionIndex === cor;
 
-            <p>{item.isCorrect ? '✅ Correct' : '❌ Incorrect'}</p>
+                  return (
+                    <li
+                      key={`${item.questionId}-${optionIndex}`}
+                      className={`review-attempt-opt${isCorrectOpt ? ' is-correct' : ''}${
+                        isSelected && !isCorrectOpt ? ' is-wrong' : ''
+                      }${isSelected && isCorrectOpt ? ' is-picked-ok' : ''}`}
+                    >
+                      <span className="review-attempt-opt__letter">{LETTERS[optionIndex]}</span>
+                      <span className="review-attempt-opt__text">{option}</span>
+                      {isCorrectOpt && <span className="review-attempt-opt__tag">Correct</span>}
+                      {!isCorrectOpt && isSelected && (
+                        <span className="review-attempt-opt__tag">Your answer</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
 
-            {item.explanation && (
-              <div>
-                <strong>Explanation:</strong>
-                <p>{item.explanation}</p>
-              </div>
-            )}
-          </div>
-        ))}
+              <ReviewAttemptExplanation isCorrect={item.isCorrect} text={item.explanation} />
+            </article>
+          );
+        })}
       </section>
 
       <section className="admin-section">

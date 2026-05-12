@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useQuiz } from '../../contexts/QuizContext.jsx';
@@ -8,6 +8,53 @@ import { useTheme } from '../../contexts/ThemeContext.jsx';
 const QUIZ_ADVANCE_DELAY_MS = 860;
 
 const LETTERS = ['A', 'B', 'C', 'D'];
+
+/** Slug or label → Title Case (e.g. `transport` → Transport, `housing_consumers` → Housing Consumers). */
+function formatReviewCategory(raw) {
+  if (raw == null) return '';
+  const s = String(raw).trim();
+  if (!s) return '';
+  return s
+    .replace(/_/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+function QuizNavLogout() {
+  const { logout } = useAuth();
+  const { restart } = useQuiz();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    restart();
+    logout();
+    navigate('/login', {
+      replace: true,
+      state: {
+        notice: 'You have signed out.',
+        noticeTone: 'success',
+      },
+    });
+  };
+
+  return (
+    <button type="button" className="quiz-top-logout" onClick={handleLogout}>
+      Log out
+    </button>
+  );
+}
+
+function QuizTopPlayer({ user }) {
+  const initials = (user?.username || 'P').slice(0, 1).toUpperCase();
+  return (
+    <div className="review-v7-player" aria-label="Signed-in player">
+      <span className="review-v7-av" aria-hidden="true">{initials}</span>
+      <span className="review-v7-pname">{user?.username || 'player'}</span>
+    </div>
+  );
+}
 
 const TOPIC_MAP = {
   Geography: { cls: 'tp-geo', label: 'Geography' },
@@ -167,49 +214,113 @@ function buildTopicMap(review, totalQuestions, correctFallback) {
   return { Overall: { t: totalQuestions, c: correctFallback } };
 }
 
+function WizardCrest() {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const gradId = `wizardCrestGold-${uid}`;
+  const filtId = `wizardCrestGlow-${uid}`;
+
+  return (
+    <svg
+      className="start-wizard__crest-svg"
+      viewBox="0 0 100 118"
+      width="104"
+      height="122"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#fff8dc" />
+          <stop offset="35%" stopColor="#e8c547" />
+          <stop offset="70%" stopColor="#b8860b" />
+          <stop offset="100%" stopColor="#6b5014" />
+        </linearGradient>
+        <filter id={filtId} x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="0" stdDeviation="1.2" floodColor="#ffd54f" floodOpacity="0.45" />
+        </filter>
+      </defs>
+      <path
+        fill={`url(#${gradId})`}
+        stroke="#3d2e0f"
+        strokeWidth="1.4"
+        filter={`url(#${filtId})`}
+        d="M50 3 L86 15 L86 60 C86 86 71 102 50 114 C29 102 14 86 14 60 L14 15 Z"
+      />
+      <line x1="50" y1="17" x2="50" y2="98" stroke="#4a3810" strokeWidth="0.9" opacity="0.85" />
+      <line x1="20" y1="44" x2="80" y2="44" stroke="#4a3810" strokeWidth="0.9" opacity="0.85" />
+      <text x="32" y="36" textAnchor="middle" fontSize="11" fill="#1a1208" fontFamily="Georgia,serif">
+        ✦
+      </text>
+      <text x="68" y="36" textAnchor="middle" fontSize="11" fill="#1a1208" fontFamily="Georgia,serif">
+        ★
+      </text>
+      <text x="32" y="74" textAnchor="middle" fontSize="12" fill="#1a1208" fontFamily="Georgia,serif">
+        ⚡
+      </text>
+      <text x="68" y="74" textAnchor="middle" fontSize="11" fill="#1a1208" fontFamily="Georgia,serif">
+        📖
+      </text>
+    </svg>
+  );
+}
+
 export function StartScreen() {
   const { startQuiz, state } = useQuiz();
+  const { user } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
 
   return (
     <div className="qf-screen start-screen">
-      <div className="start-hero">
-        <div className="start-left">
-          <div className="start-eyebrow">Sydney Student Life</div>
-          <h1 className="start-title">
-            SYDNEY
-            <em>LIFE QUIZ</em>
-          </h1>
-          <p className="start-sub">
-            Can you survive Sydney as an international student? Real-life scenarios. No hints during play.
-            Review everything after with full explanations.
-          </p>
-          <div className="start-stats">
-            <div className="stat-bubble">
-              <div className="stat-n">10</div>
-              <div className="stat-l">Questions</div>
-            </div>
-            <div className="stat-bubble">
-              <div className="stat-n">🏆</div>
-              <div className="stat-l">Leaderboard</div>
-            </div>
-            <div className="stat-bubble">
-              <div className="stat-n">∞</div>
-              <div className="stat-l">Review</div>
-            </div>
+      <div className="start-screen__bg" aria-hidden="true" />
+      <div className="start-screen__inner">
+        <div className="start-screen-top">
+          <div className="mode-row">
+            <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
+            <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
+            <button
+              type="button"
+              className="mode-sw"
+              onClick={toggleTheme}
+              aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
+              aria-pressed={!isDarkMode}
+            >
+              <span className="mode-kn" />
+            </button>
           </div>
-          {state.error && (
-            <p className="start-error">{state.error}</p>
-          )}
-          <button type="button" className="btn-start" onClick={startQuiz}>
-            Start Quiz <span className="btn-arrow">→</span>
-          </button>
+          <QuizTopPlayer user={user} />
+          <QuizNavLogout />
         </div>
 
-        <div className="start-deco" aria-hidden="true">
-          <div className="start-deco-ring">
-            <span className="start-deco-emoji">🌉</span>
+        <div className="start-wizard">
+          <div className="start-wizard__crest">
+            <WizardCrest />
           </div>
-          <p className="start-deco-cap">Harbour & campus vibes</p>
+          <p className="start-wizard__ribbon">Welcome to</p>
+          <h1 className="start-wizard__title">
+            <span className="start-wizard__title-line">Sydney Wizard</span>
+            <span className="start-wizard__title-line">Survival Quiz</span>
+          </h1>
+          <p className="start-wizard__tagline">
+            <span className="start-wizard__star" aria-hidden="true">
+              ✦
+            </span>
+            <span className="start-wizard__tagline-text">
+              Can you survive student life in magical Sydney?
+            </span>
+            <span className="start-wizard__star" aria-hidden="true">
+              ✦
+            </span>
+          </p>
+          {state.error ? <p className="start-error start-error--wizard">{state.error}</p> : null}
+          <button type="button" className="btn-wizard-start" onClick={startQuiz}>
+            <span className="btn-wizard-start__shine" aria-hidden="true" />
+            Start Quiz
+          </button>
+          <p className="start-wizard__footer">
+            <span className="start-wizard__quill" aria-hidden="true">
+              🪶
+            </span>
+            Test your knowledge. Earn your survival badge.
+          </p>
         </div>
       </div>
     </div>
@@ -220,6 +331,7 @@ export function QuizScreen() {
   const { state, lockAnswer, submitAnswer } = useQuiz();
   const { questions, currentQ, answers, answered } = state;
   const { isDarkMode, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [pendingAnswer, setPendingAnswer] = useState(null);
   const [featherBurst, setFeatherBurst] = useState(false);
 
@@ -244,7 +356,8 @@ export function QuizScreen() {
 
   const n = questions.length;
   const currentQuestion = questions[currentQ];
-  const currentTopic = currentQuestion?.category || currentQuestion?.topic || 'Sydney Life';
+  const currentTopic =
+    formatReviewCategory(currentQuestion?.category || currentQuestion?.topic || '') || 'Sydney Life';
 
   return (
     <div className="qf-screen quiz-screen">
@@ -272,6 +385,8 @@ export function QuizScreen() {
                 <span className="mode-kn" />
               </button>
             </div>
+            <QuizTopPlayer user={user} />
+            <QuizNavLogout />
           </div>
         </div>
         <main className="quiz-gothic-main">
@@ -454,6 +569,7 @@ export function ResultScreen() {
                 {correct}
                 <span>/{total}</span>
               </div>
+              <div className="score-frac-hint">Final score · +1 per correct answer</div>
               <div className="score-msg">{msg}</div>
               <div className="score-sub">{sub}</div>
             </div>
@@ -466,8 +582,8 @@ export function ResultScreen() {
               const col =
                 frac === 1 ? 'var(--sq-btn-b)' : frac >= 0.5 ? 'var(--sq-btn-a)' : '#E53935';
               return (
-                <div key={name} className="tc-card">
-                  <div className="tc-name">{name}</div>
+                  <div key={name} className="tc-card">
+                  <div className="tc-name">{formatReviewCategory(name) || name}</div>
                   <div className="tc-score" style={{ color: col }}>
                     {c}
                     /
@@ -482,12 +598,23 @@ export function ResultScreen() {
           </div>
 
           <div className="result-actions">
-            <button type="button" className="btn-debrief" onClick={showReview}>
-              📋 Mission Debrief →
-            </button>
-            <button type="button" className="btn-again" onClick={restart}>
-              ↺ Again
-            </button>
+            <div className="result-actions__btns">
+              <button type="button" className="btn-debrief" onClick={showReview}>
+                📋 Mission Debrief →
+              </button>
+              <button type="button" className="btn-again" onClick={restart}>
+                ↺ Again
+              </button>
+            </div>
+            <div className="result-actions__links">
+              <Link className="result-nav-link" to="/history">
+                📜 View History
+              </Link>
+              <Link className="result-nav-link" to="/leaderboard">
+                🏆 Leaderboard
+              </Link>
+            </div>
+            <QuizNavLogout />
           </div>
         </div>
       </div>
@@ -495,16 +622,20 @@ export function ResultScreen() {
   );
 }
 
-function ReviewV7Card({ item, index, explanationOpenIndex, onToggleExplanation }) {
+function ReviewV7Card({ item, index }) {
   const questionText = item.questionText;
   const options = item.options || [];
   const correctIdx = item.correctAnswer;
   const explanation = String(item.explanation ?? '').trim();
   const hasExplanation = Boolean(explanation);
-  const topic = item.category || item.topic || 'Sydney Life';
   const isCorrect = item.isCorrect;
-  const topicShort = String(topic).toUpperCase();
-  const open = hasExplanation && explanationOpenIndex === index;
+  /** Wrong: explanation open by default; correct: collapsed until user expands */
+  const [expOpen, setExpOpen] = useState(() => !isCorrect && hasExplanation);
+
+  const topicShort = (() => {
+    const label = formatReviewCategory(item.category || item.topic || '');
+    return label ? label.toUpperCase().replace(/\s+/g, ' ') : 'SYDNEY LIFE';
+  })();
 
   return (
     <div className={`rv-card-v7 rv-card ${isCorrect ? 'card-cor' : 'card-wrg'}`} id={`rvc-${index}`}>
@@ -543,31 +674,34 @@ function ReviewV7Card({ item, index, explanationOpenIndex, onToggleExplanation }
           })}
         </div>
       </div>
-      <button
-        type="button"
-        className={`rvc-exp-btn${open ? ' open' : ''}`}
-        disabled={!hasExplanation}
-        onClick={() => onToggleExplanation(index)}
-        aria-expanded={hasExplanation ? open : undefined}
-      >
-        <span className="exp-arrow" aria-hidden="true">▼</span>
-        <span className="rvc-exp-label">
-          {!hasExplanation
-            ? 'No explanation for this trial'
-            : open
-              ? 'Hide Explanation'
-              : 'View Explanation'}
-        </span>
-      </button>
       {hasExplanation ? (
-        <div className={`rvc-exp-panel${open ? ' open' : ''}`}>
+        <>
+          <button
+            type="button"
+            className={`rvc-exp-btn${expOpen ? ' open' : ''}`}
+            onClick={() => setExpOpen((o) => !o)}
+            aria-expanded={expOpen}
+          >
+            <span className="exp-arrow" aria-hidden="true">▼</span>
+            <span className="rvc-exp-label">{expOpen ? 'Hide Explanation' : 'View Explanation'}</span>
+          </button>
+          <div className={`rvc-exp-panel${expOpen ? ' open' : ''}`}>
+            <div className="rvc-exp-lbl">
+              <span aria-hidden="true">📜</span>
+              Explanation
+            </div>
+            <p className="rvc-exp-text">{explanation}</p>
+          </div>
+        </>
+      ) : (
+        <div className="rvc-exp-block rvc-exp-block--empty">
           <div className="rvc-exp-lbl">
             <span aria-hidden="true">📜</span>
             Explanation
           </div>
-          <p className="rvc-exp-text">{explanation}</p>
+          <p className="rvc-exp-text rvc-exp-missing">No explanation for this question.</p>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
@@ -582,34 +716,14 @@ export function ReviewScreen() {
   const correct = safeReview.filter((r) => r.isCorrect).length;
   const total = safeReview.length;
   const [activeDot, setActiveDot] = useState(0);
-  const [explanationOpenIndex, setExplanationOpenIndex] = useState(null);
-
-  const initials = (user?.username || 'P').slice(0, 1).toUpperCase();
 
   const jumpTo = (i) => {
     setActiveDot(i);
-    setExplanationOpenIndex(null);
     document.getElementById(`rvc-${i}`)?.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
     });
   };
-
-  const toggleExplanation = useCallback((i) => {
-    const row = safeReview[i];
-    if (!String(row?.explanation ?? '').trim()) return;
-
-    setExplanationOpenIndex((cur) => {
-      if (cur === i) return null;
-      requestAnimationFrame(() => {
-        document.getElementById(`rvc-${i}`)?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-        });
-      });
-      return i;
-    });
-  }, [safeReview]);
 
   return (
     <div className="qf-screen review-screen review-v7">
@@ -619,10 +733,6 @@ export function ReviewScreen() {
           SYDNEY LIFE QUIZ
         </Link>
         <div className="quiz-top-right">
-          <div className="review-v7-player">
-            <span className="review-v7-av" aria-hidden="true">{initials}</span>
-            <span className="review-v7-pname">{user?.username || 'player'}</span>
-          </div>
           <div className="mode-row">
             <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
             <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
@@ -636,16 +746,15 @@ export function ReviewScreen() {
               <span className="mode-kn" />
             </button>
           </div>
+          <QuizTopPlayer user={user} />
+          <QuizNavLogout />
         </div>
       </div>
 
       <div className="q-dot-bar">
-        <span className="qdb-score">
-          {correct}
-          /
-          {total}
-          {' '}
-          Correct
+        <span className="qdb-score" title="+1 point per correct answer">
+          Final Score: {correct}/{total}
+          <span className="qdb-score-sub"> (+1 each correct)</span>
         </span>
         <div className="qdb-dots" role="tablist" aria-label="Jump to question">
           {safeReview.map((row, i) => (
@@ -672,7 +781,19 @@ export function ReviewScreen() {
               {' '}
               <em>Debrief</em>
             </h1>
-            <p>All answers revealed. Click ▼ on any card to read the explanation.</p>
+            <div className="rv-final-score" role="status">
+              <span className="rv-fs-label">Final score</span>
+              <span className="rv-fs-value">
+                {correct}
+                <span className="rv-fs-slash">/</span>
+                {total}
+              </span>
+              <span className="rv-fs-hint">+1 point per correct answer</span>
+            </div>
+            <p>
+              Correct answers keep the explanation collapsed — use View Explanation to read it. Incorrect answers show
+              the explanation by default; use Hide Explanation to collapse it.
+            </p>
           </div>
           <div className="rv-cards-v7">
             {safeReview.map((row, i) => (
@@ -680,8 +801,6 @@ export function ReviewScreen() {
                 key={row.questionId || i}
                 item={row}
                 index={i}
-                explanationOpenIndex={explanationOpenIndex}
-                onToggleExplanation={toggleExplanation}
               />
             ))}
           </div>

@@ -1,6 +1,6 @@
 // Subsystem D - Integration, Robustness & Documentation (Tom Tian):
 // landing page that routes users into player and admin workflows.
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 const practiceAreas = [
@@ -30,65 +30,38 @@ function HomePage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
 
-  const handleStartQuiz = () => {
-    if (!isAuthenticated) {
-      navigate('/login', {
-        state: {
-          notice: 'Please sign in before starting the quiz.',
-          noticeTone: 'info',
-        },
-      });
-      return;
-    }
-
-    navigate('/quiz');
-  };
-
   return (
     <main className="home-page">
-      <section className="home-hero">
-        <div className="home-hero__copy">
-          <p className="eyebrow">Sydney student life practice</p>
-          <h1>Sydney Life Quiz</h1>
-          <p className="home-hero__lead">
-            A practical readiness check for the everyday decisions international
-            students meet after landing in Sydney.
-          </p>
-
-          <div className="home-hero__actions" aria-label="Primary navigation">
+      <section className="home-intro" aria-labelledby="home-intro-heading">
+        <p className="eyebrow">Sydney student life</p>
+        <h1 id="home-intro-heading">Sydney Life Quiz</h1>
+        <p className="home-intro__lead">
+          The full quiz experience — title screen, 10 questions, results, and review — opens on the
+          dedicated quiz page after you sign in.
+        </p>
+        <div className="home-intro__actions">
+          {isAuthenticated ? (
+            <Link className="button button--primary home-intro__cta" to="/quiz">
+              Open quiz
+            </Link>
+          ) : (
             <button
-              className="button button--primary home-hero__cta"
-              onClick={handleStartQuiz}
               type="button"
+              className="button button--primary home-intro__cta"
+              onClick={() =>
+                navigate('/login', {
+                  state: {
+                    notice: 'Please sign in to open the quiz.',
+                    noticeTone: 'info',
+                  },
+                })
+              }
             >
-              <span>Start quiz</span>
-              <svg
-                aria-hidden="true"
-                className="home-hero__cta-icon"
-                focusable="false"
-                viewBox="0 0 24 24"
-              >
-                <path d="M5 12h14" />
-                <path d="m13 6 6 6-6 6" />
-              </svg>
+              Sign in to play
             </button>
-          </div>
+          )}
+          <p className="home-intro__hint">Practice topics below — then head to the quiz when you are ready.</p>
         </div>
-
-        <aside className="home-quiz-card" aria-label="Quiz preview">
-          <div className="home-quiz-card__topline">
-            <span>Readiness check</span>
-            <strong>10 questions</strong>
-          </div>
-          <div className="home-quiz-card__score" aria-hidden="true">
-            10
-          </div>
-          <h2>Know what to do before it matters.</h2>
-          <p>
-            Work through a balanced mix of Sydney life scenarios, then review every
-            answer after submission.
-          </p>
-        </aside>
       </section>
 
       <section
