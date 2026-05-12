@@ -94,7 +94,7 @@ This command prepares local `.env` files when they are missing, installs missing
 - Backend: `http://localhost:5001`
 - Swagger UI: `http://localhost:5001/api-docs`
 - Admin login: `admin` / `AdminPass123`
-- Player logins: `player1` / `PlayerPass123`, `player2` / ``PlayerPass123
+- Player logins: `player1` / `PlayerPass123`, `player2` / `PlayerPass123`
 
 To stop only the demo MongoDB container created by the helper:
 
