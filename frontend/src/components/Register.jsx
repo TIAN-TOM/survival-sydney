@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import AuthScreenLayout from './AuthScreenLayout.jsx';
 
 const registerSchema = z
   .object({
@@ -39,55 +40,73 @@ export default function Register() {
     setServerError('');
     try {
       await registerUser({ username, email, password });
-      navigate('/');
+      navigate('/quiz', { replace: true });
     } catch (err) {
       setServerError(err.message || 'Registration failed');
     }
   };
 
   return (
-    <section className="auth-panel">
-      <h2>Register</h2>
-      <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
-        <label>
-          Username
-          <input type="text" autoComplete="username" {...register('username')} />
-          {errors.username && <span className="field-error">{errors.username.message}</span>}
-        </label>
+    <AuthScreenLayout>
+      <section className="auth-panel q-card framed auth-panel--quizframe">
+        <svg className="bracket tl" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
+          <polyline points="19,1 1,1 1,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+        </svg>
+        <svg className="bracket tr" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
+          <polyline points="1,1 19,1 19,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+        </svg>
+        <svg className="bracket bl" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
+          <polyline points="19,19 1,19 1,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+        </svg>
+        <svg className="bracket br" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
+          <polyline points="1,19 19,19 19,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+        </svg>
+        <h2>Register</h2>
+        <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <label>
+            Username
+            <input type="text" autoComplete="username" {...register('username')} />
+            {errors.username && <span className="field-error">{errors.username.message}</span>}
+          </label>
 
-        <label>
-          Email
-          <input type="email" autoComplete="email" {...register('email')} />
-          {errors.email && <span className="field-error">{errors.email.message}</span>}
-        </label>
+          <label>
+            Email
+            <input type="email" autoComplete="email" {...register('email')} />
+            {errors.email && <span className="field-error">{errors.email.message}</span>}
+          </label>
 
-        <label>
-          Password
-          <input type="password" autoComplete="new-password" {...register('password')} />
-          {errors.password && <span className="field-error">{errors.password.message}</span>}
-        </label>
+          <label>
+            Password
+            <input type="password" autoComplete="new-password" {...register('password')} />
+            {errors.password && <span className="field-error">{errors.password.message}</span>}
+          </label>
 
-        <label>
-          Confirm password
-          <input type="password" autoComplete="new-password" {...register('confirmPassword')} />
-          {errors.confirmPassword && (
-            <span className="field-error">{errors.confirmPassword.message}</span>
+          <label>
+            Confirm password
+            <input type="password" autoComplete="new-password" {...register('confirmPassword')} />
+            {errors.confirmPassword && (
+              <span className="field-error">{errors.confirmPassword.message}</span>
+            )}
+          </label>
+
+          {serverError && (
+            <p className="server-error" role="alert">
+              {serverError}
+            </p>
           )}
-        </label>
 
-        {serverError && (
-          <p className="server-error" role="alert">
-            {serverError}
-          </p>
-        )}
-
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account...' : 'Create account'}
-        </button>
-      </form>
-      <p>
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
-    </section>
+          <button type="submit" className="btn-wizard-start" disabled={isSubmitting}>
+            <span className="btn-wizard-start__shine" aria-hidden="true" />
+            {isSubmitting ? 'Creating account...' : 'Create account'}
+          </button>
+        </form>
+        <p>
+          Already have an account?{' '}
+        <Link to="/quiz" state={{ openAuth: true }}>
+          Log in
+        </Link>
+        </p>
+      </section>
+    </AuthScreenLayout>
   );
 }

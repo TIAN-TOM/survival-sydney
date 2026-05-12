@@ -1,8 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
+import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 import {
   CalculatingScreen,
+  QuizGateScreen,
   QuizScreen,
   ResultScreen,
   ReviewScreen,
@@ -10,11 +13,25 @@ import {
 } from './QuizScreens.jsx';
 import QuizWorldBackground from './QuizWorldBackground.jsx';
 
-import '../../styles/quizflow.css';
-
 export default function QuizFlow() {
-  const { state, finishQuiz } = useQuiz();
+  const { state, finishQuiz, setPhase } = useQuiz();
   const { phase } = state;
+  const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useLayoutEffect(() => {
+    if (user && phase === 'gate') {
+      setPhase('start');
+    }
+  }, [user, phase, setPhase]);
+
+  useEffect(() => {
+    if (!location.state?.openAuth) return;
+    if (user) {
+      navigate('/quiz', { replace: true, state: {} });
+    }
+  }, [location.state?.openAuth, user, navigate]);
 
   useEffect(() => {
     if (phase !== 'calculating') return undefined;
@@ -25,6 +42,7 @@ export default function QuizFlow() {
   }, [phase, finishQuiz]);
 
   const screens = {
+    gate: <QuizGateScreen />,
     start: <StartScreen />,
     quiz: <QuizScreen />,
     calculating: <CalculatingScreen />,
@@ -35,7 +53,7 @@ export default function QuizFlow() {
   return (
     <>
       <QuizWorldBackground />
-      {screens[phase] ?? <StartScreen />}
+      {screens[phase] ?? <QuizGateScreen />}
     </>
   );
 }

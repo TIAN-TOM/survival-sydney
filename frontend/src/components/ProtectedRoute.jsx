@@ -14,11 +14,11 @@ export default function ProtectedRoute({ adminOnly = false, children }) {
   const user = readStoredUser();
 
   if (!token) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/quiz" replace state={{ openAuth: true, from: location.pathname }} />;
   }
 
   if (adminOnly && user?.role !== 'admin') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/quiz" replace />;
   }
 
   return children || <Outlet />;

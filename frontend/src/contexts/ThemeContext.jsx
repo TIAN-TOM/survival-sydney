@@ -1,6 +1,7 @@
 // Subsystem D - Integration, Robustness & Documentation (Tom Tian):
 // shared theme state used across player and admin interfaces.
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 const ThemeContext = createContext(null);
 const STORAGE_KEY = 'comp5347-theme';
@@ -32,7 +33,19 @@ function ThemeProvider({ children }) {
 
   const value = useMemo(() => {
     function toggleTheme() {
-      setTheme((currentTheme) => (currentTheme === 'dark' ? 'light' : 'dark'));
+      const next = theme === 'dark' ? 'light' : 'dark';
+      const apply = () => {
+        setTheme(next);
+      };
+
+      if (typeof document !== 'undefined' && document.startViewTransition) {
+        document.startViewTransition(() => {
+          flushSync(apply);
+        });
+        return;
+      }
+
+      apply();
     }
 
     return {

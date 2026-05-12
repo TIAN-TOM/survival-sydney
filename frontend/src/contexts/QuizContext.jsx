@@ -5,7 +5,7 @@ import api from '../api/api.js';
 const QuizContext = createContext(null);
 
 const initialState = {
-  phase: 'start',
+  phase: 'gate',
   questions: [],
   currentQ: 0,
   answers: [],
@@ -58,11 +58,27 @@ function quizReducer(state, action) {
     case 'BACK_TO_RESULT':
       return { ...state, phase: 'result' };
 
+    case 'SET_PHASE':
+      return { ...state, phase: action.payload, error: null };
+
+    case 'RESET_GATE':
+      return {
+        ...initialState,
+        phase: 'gate',
+      };
+
     case 'RESTART':
-      return { ...initialState };
+      return {
+        ...initialState,
+        phase: 'start',
+      };
 
     case 'QUIZ_ERROR_RESET':
-      return { ...initialState, error: action.payload };
+      return {
+        ...initialState,
+        phase: 'start',
+        error: action.payload,
+      };
 
     case 'SET_ERROR':
       return { ...state, error: action.payload };
@@ -75,6 +91,14 @@ function quizReducer(state, action) {
 export function QuizProvider({ children }) {
   const [state, dispatch] = useReducer(quizReducer, initialState);
   const submitOnceRef = useRef(false);
+
+  const setPhase = useCallback((phase) => {
+    dispatch({ type: 'SET_PHASE', payload: phase });
+  }, []);
+
+  const resetToGate = useCallback(() => {
+    dispatch({ type: 'RESET_GATE' });
+  }, []);
 
   const startQuiz = useCallback(async () => {
     submitOnceRef.current = false;
@@ -144,6 +168,8 @@ export function QuizProvider({ children }) {
     <QuizContext.Provider
       value={{
         state,
+        setPhase,
+        resetToGate,
         startQuiz,
         lockAnswer,
         submitAnswer,

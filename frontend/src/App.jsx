@@ -6,10 +6,11 @@ import Leaderboard from './components/Leaderboard.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Register from './components/Register.jsx';
 import { useAuth } from './contexts/AuthContext.jsx';
+import { useQuiz } from './contexts/QuizContext.jsx';
 import { useTheme } from './contexts/ThemeContext.jsx';
+import { quizSealLogoSrc } from './quizBrandAssets.js';
 import AdminPage from './pages/AdminPage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
-import HomePage from './pages/HomePage.jsx';
 import QuizPage from './pages/QuizPage.jsx';
 import ReviewPage from './pages/ReviewPage.jsx';
 
@@ -41,31 +42,27 @@ function ThemeSplitIcon() {
 
 function App() {
   const { isAdmin, isAuthenticated, logout, user } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { resetToGate } = useQuiz();
+  const { isDarkMode, theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const hideAppHeader = location.pathname === '/quiz';
+  const fullBleedShell = ['/quiz', '/register', '/admin/login'].includes(location.pathname);
   const navLinkClass = ({ isActive }) => `app-header__nav-link${isActive ? ' is-active' : ''}`;
   const handleSignOut = () => {
+    resetToGate();
     logout();
-    navigate('/login', {
-      replace: true,
-      state: {
-        notice: 'You have signed out.',
-        noticeTone: 'success',
-      },
-    });
+    navigate('/quiz', { replace: true });
   };
 
   return (
-    <div className={`app-shell${hideAppHeader ? ' app-shell--quiz-fullscreen' : ''}`}>
-      {!hideAppHeader ? (
+    <div className={`app-shell${fullBleedShell ? ' app-shell--quiz-fullscreen' : ''}`}>
+      {!fullBleedShell ? (
         <header className="app-header">
-          <Link className="app-header__brand" to="/">
+          <Link className="app-header__brand" to="/quiz">
             <span className="app-header__brand-logo" aria-hidden="true">
-              <img src="/sydney-life-quiz-icon.png" alt="" />
+              <img key={theme} src={quizSealLogoSrc(isDarkMode)} alt="" />
             </span>
-            <span>Sydney Life Quiz</span>
+            <span>Sydney Survival Quiz</span>
           </Link>
           <nav className="app-header__nav" aria-label="Primary navigation">
             <NavLink className={navLinkClass} to="/history">History</NavLink>
@@ -89,25 +86,20 @@ function App() {
                 Sign out {user?.username ? `(${user.username})` : ''}
               </button>
             ) : (
-              <Link className="button button--primary app-header__login" to="/login">Sign in</Link>
+              <Link className="button button--primary app-header__login" to="/quiz" state={{ openAuth: true }}>
+                Sign in
+              </Link>
             )}
           </div>
         </header>
       ) : null}
 
       <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Navigate to="/quiz" replace />} />
+        <Route path="/login" element={<Navigate to="/quiz" replace state={{ openAuth: true }} />} />
         <Route path="/admin/login" element={<Login adminMode />} />
         <Route path="/register" element={<Register />} />
-        <Route
-          path="/quiz"
-          element={(
-            <ProtectedRoute>
-              <QuizPage />
-            </ProtectedRoute>
-          )}
-        />
+        <Route path="/quiz" element={<QuizPage />} />
         <Route
           path="/history"
           element={(
@@ -140,7 +132,7 @@ function App() {
             </ProtectedRoute>
           )}
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/quiz" replace />} />
       </Routes>
     </div>
   );

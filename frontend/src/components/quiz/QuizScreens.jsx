@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
+import { quizSealLogoSrc, quizStartHeroImageSrc } from '../../quizBrandAssets.js';
+import { AuthQuizCardShell, LoginFormPanel } from '../LoginFormPanel.jsx';
 
 const QUIZ_ADVANCE_DELAY_MS = 860;
 
@@ -24,19 +27,13 @@ function formatReviewCategory(raw) {
 
 function QuizNavLogout() {
   const { logout } = useAuth();
-  const { restart } = useQuiz();
+  const { resetToGate } = useQuiz();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    restart();
+    resetToGate();
     logout();
-    navigate('/login', {
-      replace: true,
-      state: {
-        notice: 'You have signed out.',
-        noticeTone: 'success',
-      },
-    });
+    navigate('/quiz', { replace: true });
   };
 
   return (
@@ -214,97 +211,249 @@ function buildTopicMap(review, totalQuestions, correctFallback) {
   return { Overall: { t: totalQuestions, c: correctFallback } };
 }
 
-function WizardCrest() {
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
-  const gradId = `wizardCrestGold-${uid}`;
-  const filtId = `wizardCrestGlow-${uid}`;
+/** First landing on /quiz — hero + Log in; login sheet slides up over dimmed hero (same screen). */
+export function QuizGateScreen() {
+  const { setPhase } = useQuiz();
+  const { isDarkMode, theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [sheetVisible, setSheetVisible] = useState(false);
+  /** 与 loginOpen 解耦：关闭浮层时立刻去掉压暗，不必等滑出动画结束 */
+  const [heroDimmed, setHeroDimmed] = useState(false);
+
+  useEffect(() => {
+    if (!location.state?.openAuth) return;
+    setLoginOpen(true);
+    setHeroDimmed(true);
+    const from = typeof location.state?.from === 'string' ? location.state.from : undefined;
+    navigate('/quiz', { replace: true, state: from ? { from } : {} });
+  }, [location.state?.openAuth, navigate]);
+
+  useEffect(() => {
+    if (!loginOpen) {
+      setSheetVisible(false);
+      return undefined;
+    }
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setSheetVisible(true));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [loginOpen]);
+
+  const closeLogin = useCallback(() => {
+    setSheetVisible(false);
+    setHeroDimmed(false);
+    window.setTimeout(() => setLoginOpen(false), 920);
+  }, []);
+
+  useEffect(() => {
+    if (!loginOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeLogin();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [loginOpen, closeLogin]);
+
+  useEffect(() => {
+    if (!loginOpen) return undefined;
+    const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+    const prevOverflow = document.body.style.overflow;
+    const prevPaddingRight = document.body.style.paddingRight;
+    document.body.style.overflow = 'hidden';
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPaddingRight;
+    };
+  }, [loginOpen]);
+
+  const handleLoggedIn = useCallback(() => {
+    const from = location.state?.from;
+    if (typeof from === 'string' && from.startsWith('/') && from !== '/quiz') {
+      navigate(from, { replace: true });
+      return;
+    }
+    setPhase('start');
+  }, [location.state?.from, navigate, setPhase]);
+
+  const gateThemePortal =
+    typeof document !== 'undefined'
+      ? createPortal(
+          <div
+            className={`quiz-flow-scope quiz-gate-theme-portal-root${heroDimmed ? ' is-login-overlay-open' : ''}`}
+          >
+            <div className="start-screen-top start-screen-top--gate-portal">
+              <div className="mode-row">
+                <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
+                <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
+                <button
+                  type="button"
+                  className="mode-sw"
+                  onClick={toggleTheme}
+                  aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
+                  aria-pressed={!isDarkMode}
+                >
+                  <span className="mode-kn" />
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
-    <svg
-      className="start-wizard__crest-svg"
-      viewBox="0 0 100 118"
-      width="104"
-      height="122"
-      aria-hidden="true"
-    >
-      <defs>
-        <linearGradient id={gradId} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#fff8dc" />
-          <stop offset="35%" stopColor="#e8c547" />
-          <stop offset="70%" stopColor="#b8860b" />
-          <stop offset="100%" stopColor="#6b5014" />
-        </linearGradient>
-        <filter id={filtId} x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="0" stdDeviation="1.2" floodColor="#ffd54f" floodOpacity="0.45" />
-        </filter>
-      </defs>
-      <path
-        fill={`url(#${gradId})`}
-        stroke="#3d2e0f"
-        strokeWidth="1.4"
-        filter={`url(#${filtId})`}
-        d="M50 3 L86 15 L86 60 C86 86 71 102 50 114 C29 102 14 86 14 60 L14 15 Z"
-      />
-      <line x1="50" y1="17" x2="50" y2="98" stroke="#4a3810" strokeWidth="0.9" opacity="0.85" />
-      <line x1="20" y1="44" x2="80" y2="44" stroke="#4a3810" strokeWidth="0.9" opacity="0.85" />
-      <text x="32" y="36" textAnchor="middle" fontSize="11" fill="#1a1208" fontFamily="Georgia,serif">
-        ✦
-      </text>
-      <text x="68" y="36" textAnchor="middle" fontSize="11" fill="#1a1208" fontFamily="Georgia,serif">
-        ★
-      </text>
-      <text x="32" y="74" textAnchor="middle" fontSize="12" fill="#1a1208" fontFamily="Georgia,serif">
-        ⚡
-      </text>
-      <text x="68" y="74" textAnchor="middle" fontSize="11" fill="#1a1208" fontFamily="Georgia,serif">
-        📖
-      </text>
-    </svg>
+    <div className="qf-screen start-screen">
+      {gateThemePortal}
+      <div className="start-screen__bg-stack" aria-hidden="true">
+        <div className="start-screen__bg-pane start-screen__bg-pane--night" />
+        <div className="start-screen__bg-pane start-screen__bg-pane--day" />
+        <div className="start-screen__bg-veil start-screen__bg-veil--night" />
+        <div className="start-screen__bg-veil start-screen__bg-veil--day" />
+      </div>
+      <div className="start-screen__inner">
+        <div className={`quiz-gate-dimmable${heroDimmed ? ' is-dimmed' : ''}`}>
+          <div className="start-wizard quiz-gate-wizard">
+            <div className="start-wizard__brand">
+              <img
+                key={theme}
+                className="start-wizard__brand-img"
+                src={quizStartHeroImageSrc(isDarkMode)}
+                alt="Sydney Survival Quiz"
+              />
+            </div>
+            <h1 className="start-wizard__title start-logo">
+              Sydney Survival
+              <em>Survival Quiz</em>
+            </h1>
+            <p className="start-wizard__tagline">
+              <span className="start-wizard__star" aria-hidden="true">
+                ✦
+              </span>
+              <span className="start-wizard__tagline-text">
+                Can you survive student life in magical Sydney?
+              </span>
+              <span className="start-wizard__star" aria-hidden="true">
+                ✦
+              </span>
+            </p>
+            <button
+              type="button"
+              className="btn-wizard-start"
+              onClick={() => {
+                setLoginOpen(true);
+                setHeroDimmed(true);
+              }}
+            >
+              <span className="btn-wizard-start__shine" aria-hidden="true" />
+              Log in
+            </button>
+            <p className="quiz-gate-register-hint">
+              <Link to="/register">Register</Link>
+            </p>
+            <p className="start-wizard__footer">
+              <span className="start-wizard__quill" aria-hidden="true">
+                🪶
+              </span>
+              Test your knowledge. Earn your survival badge.
+            </p>
+          </div>
+        </div>
+
+        {loginOpen ? (
+          <div
+            className={`quiz-gate-login-layer${sheetVisible ? ' is-visible' : ''}`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quiz-gate-login-title"
+          >
+            <button type="button" className="quiz-gate-login-backdrop" aria-label="Close sign in" onClick={closeLogin} />
+            <div className="quiz-gate-login-panel quiz-auth-card-host">
+              <AuthQuizCardShell>
+                <button type="button" className="auth-back-to-gate" onClick={closeLogin}>
+                  ← Back
+                </button>
+                <LoginFormPanel
+                  heading="Login"
+                  submitLabel="Sign in"
+                  headingId="quiz-gate-login-title"
+                  showRegisterLink
+                  onSuccess={handleLoggedIn}
+                />
+              </AuthQuizCardShell>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
   );
 }
 
 export function StartScreen() {
   const { startQuiz, state } = useQuiz();
   const { user } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, theme, toggleTheme } = useTheme();
 
   return (
     <div className="qf-screen start-screen">
-      <div className="start-screen__bg" aria-hidden="true" />
+      <div className="start-screen__bg-stack" aria-hidden="true">
+        <div className="start-screen__bg-pane start-screen__bg-pane--night" />
+        <div className="start-screen__bg-pane start-screen__bg-pane--day" />
+        <div className="start-screen__bg-veil start-screen__bg-veil--night" />
+        <div className="start-screen__bg-veil start-screen__bg-veil--day" />
+      </div>
       <div className="start-screen__inner">
-        <div className="start-screen-top">
-          <div className="mode-row">
-            <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
-            <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
-            <button
-              type="button"
-              className="mode-sw"
-              onClick={toggleTheme}
-              aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
-              aria-pressed={!isDarkMode}
-            >
-              <span className="mode-kn" />
-            </button>
+        <div className="start-screen-top start-screen-top--post-login">
+          <nav className="quiz-top-links start-screen-top-links" aria-label="Quiz shortcuts">
+            <Link className="quiz-top-link" to="/history">
+              History
+            </Link>
+            <Link className="quiz-top-link" to="/leaderboard">
+              Leaderboard
+            </Link>
+          </nav>
+          <div className="start-screen-top__actions">
+            <div className="mode-row">
+              <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
+              <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
+              <button
+                type="button"
+                className="mode-sw"
+                onClick={toggleTheme}
+                aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
+                aria-pressed={!isDarkMode}
+              >
+                <span className="mode-kn" />
+              </button>
+            </div>
+            <QuizTopPlayer user={user} />
+            <QuizNavLogout />
           </div>
-          <QuizTopPlayer user={user} />
-          <QuizNavLogout />
         </div>
 
         <div className="start-wizard">
-          <div className="start-wizard__crest">
-            <WizardCrest />
+          <div className="start-wizard__brand">
+            <img
+              key={theme}
+              className="start-wizard__brand-img"
+              src={quizStartHeroImageSrc(isDarkMode)}
+              alt="Sydney Survival Quiz"
+            />
           </div>
-          <p className="start-wizard__ribbon">Welcome to</p>
-          <h1 className="start-wizard__title">
-            <span className="start-wizard__title-line">Sydney Wizard</span>
-            <span className="start-wizard__title-line">Survival Quiz</span>
+          <h1 className="start-wizard__title start-logo">
+            Sydney Survival
+            <em>Survival Quiz</em>
           </h1>
           <p className="start-wizard__tagline">
             <span className="start-wizard__star" aria-hidden="true">
               ✦
             </span>
             <span className="start-wizard__tagline-text">
-              Can you survive student life in magical Sydney?
+              Ready to survive? Step in when you are—the city does not go easy on newcomers.
             </span>
             <span className="start-wizard__star" aria-hidden="true">
               ✦
@@ -319,7 +468,7 @@ export function StartScreen() {
             <span className="start-wizard__quill" aria-hidden="true">
               🪶
             </span>
-            Test your knowledge. Earn your survival badge.
+            Ten trials, one run—choose wisely, learn from every miss, and claim your survival badge.
           </p>
         </div>
       </div>
@@ -328,9 +477,9 @@ export function StartScreen() {
 }
 
 export function QuizScreen() {
-  const { state, lockAnswer, submitAnswer } = useQuiz();
+  const { state, lockAnswer, submitAnswer, restart } = useQuiz();
   const { questions, currentQ, answers, answered } = state;
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const [pendingAnswer, setPendingAnswer] = useState(null);
   const [featherBurst, setFeatherBurst] = useState(false);
@@ -357,17 +506,29 @@ export function QuizScreen() {
   const n = questions.length;
   const currentQuestion = questions[currentQ];
   const currentTopic =
-    formatReviewCategory(currentQuestion?.category || currentQuestion?.topic || '') || 'Sydney Life';
+    formatReviewCategory(currentQuestion?.category || currentQuestion?.topic || '') || 'Sydney Survival';
+
+  const abortQuiz = useCallback(() => {
+    restart();
+  }, [restart]);
 
   return (
     <div className="qf-screen quiz-screen">
       <div className="quiz-gothic-shell">
         <div className="quiz-top-navbar">
-          <a className="quiz-top-logo" href="/">
-            <span className="quiz-top-logo-seal" aria-hidden="true">📜</span>
-            Sydney Life Quiz
-          </a>
+          <Link className="quiz-top-logo" to="/quiz">
+            <span className="quiz-top-logo-seal quiz-top-logo-seal--brand" aria-hidden="true">
+              <img
+                key={theme}
+                className="quiz-top-logo-seal-img"
+                src={quizSealLogoSrc(isDarkMode)}
+                alt=""
+              />
+            </span>
+            Sydney Survival Quiz
+          </Link>
           <div className="quiz-top-links">
+            <button type="button" className="quiz-top-link" onClick={abortQuiz}>Home</button>
             <Link className="quiz-top-link" to="/history">History</Link>
             <Link className="quiz-top-link" to="/leaderboard">Leaderboard</Link>
           </div>
@@ -476,7 +637,7 @@ export function CalculatingScreen() {
 }
 
 export function ResultScreen() {
-  const { state, showReview, restart } = useQuiz();
+  const { state, showReview, restart, startQuiz } = useQuiz();
   const { attemptScore, attemptTotal, review } = state;
   const ringRef = useRef(null);
   const confettiRef = useRef(null);
@@ -542,17 +703,32 @@ export function ResultScreen() {
   const [, msg, sub] = messages.find(([t]) => pct >= t);
 
   const heroHigh = pct >= 70;
+  const handlePlayAgain = useCallback(() => {
+    startQuiz();
+  }, [startQuiz]);
 
   return (
     <div className="qf-screen result-screen">
       <div className="confetti-layer" ref={confettiRef} />
       <div className="result-inner">
         <div className={`result-hero-icon${heroHigh ? ' is-high' : ' is-low'}`} aria-hidden="true">
-          {heroHigh ? '🦉' : '📜'}
+          {heroHigh ? '🕊️' : '📜'}
         </div>
 
-        <div className="result-card">
-          <div className="result-mission-lbl">✦ Quiz Complete ✦</div>
+        <div className="result-card framed">
+          <svg className="bracket tl" viewBox="0 0 20 20" width="20" height="20">
+            <polyline points="19,1 1,1 1,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+          </svg>
+          <svg className="bracket tr" viewBox="0 0 20 20" width="20" height="20">
+            <polyline points="1,1 19,1 19,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+          </svg>
+          <svg className="bracket bl" viewBox="0 0 20 20" width="20" height="20">
+            <polyline points="19,19 1,19 1,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+          </svg>
+          <svg className="bracket br" viewBox="0 0 20 20" width="20" height="20">
+            <polyline points="1,19 19,19 19,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
+          </svg>
+          <div className="result-mission-lbl">✦ Survival Trial Complete ✦</div>
           <div className="result-score-row">
             <div className="score-ring">
               <svg width="110" height="110" viewBox="0 0 110 110">
@@ -602,11 +778,14 @@ export function ResultScreen() {
               <button type="button" className="btn-debrief" onClick={showReview}>
                 📋 Mission Debrief →
               </button>
-              <button type="button" className="btn-again" onClick={restart}>
+              <button type="button" className="btn-again" onClick={handlePlayAgain}>
                 ↺ Again
               </button>
             </div>
             <div className="result-actions__links">
+              <button type="button" className="result-nav-link" onClick={restart}>
+                🏠 Home
+              </button>
               <Link className="result-nav-link" to="/history">
                 📜 View History
               </Link>
@@ -634,7 +813,7 @@ function ReviewV7Card({ item, index }) {
 
   const topicShort = (() => {
     const label = formatReviewCategory(item.category || item.topic || '');
-    return label ? label.toUpperCase().replace(/\s+/g, ' ') : 'SYDNEY LIFE';
+    return label ? label.toUpperCase().replace(/\s+/g, ' ') : 'SYDNEY SURVIVAL';
   })();
 
   return (
@@ -710,7 +889,7 @@ export function ReviewScreen() {
   const { state, restart, backToResults } = useQuiz();
   const { review } = state;
   const { user } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, theme, toggleTheme } = useTheme();
 
   const safeReview = review || [];
   const correct = safeReview.filter((r) => r.isCorrect).length;
@@ -728,9 +907,16 @@ export function ReviewScreen() {
   return (
     <div className="qf-screen review-screen review-v7">
       <div className="quiz-top-navbar">
-        <Link className="quiz-top-logo" to="/">
-          <span className="quiz-top-logo-seal" aria-hidden="true">🕯️</span>
-          SYDNEY LIFE QUIZ
+        <Link className="quiz-top-logo" to="/quiz">
+          <span className="quiz-top-logo-seal quiz-top-logo-seal--brand" aria-hidden="true">
+            <img
+              key={theme}
+              className="quiz-top-logo-seal-img"
+              src={quizSealLogoSrc(isDarkMode)}
+              alt=""
+            />
+          </span>
+          SYDNEY SURVIVAL QUIZ
         </Link>
         <div className="quiz-top-right">
           <div className="mode-row">

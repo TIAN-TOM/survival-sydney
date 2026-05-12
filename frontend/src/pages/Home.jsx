@@ -23,7 +23,9 @@ export default function Home() {
         </div>
       ) : (
         <div className="auth-status">
-          <Link to="/login">Login</Link>
+          <Link to="/quiz" state={{ openAuth: true }}>
+            Login
+          </Link>
           <span> · </span>
           <Link to="/register">Register</Link>
         </div>

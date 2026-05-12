@@ -8,6 +8,7 @@ import { AuthProvider } from './contexts/AuthContext.jsx';
 import { QuizProvider } from './contexts/QuizContext.jsx';
 import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import './styles.css';
+import './styles/quizflow.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
