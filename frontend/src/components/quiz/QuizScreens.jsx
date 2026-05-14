@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
-import { quizSealLogoSrc, quizStartHeroImageSrc } from '../../quizBrandAssets.js';
+import { quizStartHeroImageSrc } from '../../quizBrandAssets.js';
+import GlobalHeader, { QuizNavLogout, QuizTopPlayer } from '../GlobalHeader.jsx';
+import QuizFramedPanel from './QuizFramedPanel.jsx';
 import { AuthQuizCardShell, LoginFormPanel } from '../LoginFormPanel.jsx';
 
 const QUIZ_ADVANCE_DELAY_MS = 860;
@@ -23,34 +25,6 @@ function formatReviewCategory(raw) {
     .filter(Boolean)
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
-}
-
-function QuizNavLogout() {
-  const { logout } = useAuth();
-  const { resetToGate } = useQuiz();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    resetToGate();
-    logout();
-    navigate('/quiz', { replace: true });
-  };
-
-  return (
-    <button type="button" className="quiz-top-logout" onClick={handleLogout}>
-      Log out
-    </button>
-  );
-}
-
-function QuizTopPlayer({ user }) {
-  const initials = (user?.username || 'P').slice(0, 1).toUpperCase();
-  return (
-    <div className="review-v7-player" aria-label="Signed-in player">
-      <span className="review-v7-av" aria-hidden="true">{initials}</span>
-      <span className="review-v7-pname">{user?.username || 'player'}</span>
-    </div>
-  );
 }
 
 const TOPIC_MAP = {
@@ -271,14 +245,22 @@ export function QuizGateScreen() {
     };
   }, [loginOpen]);
 
-  const handleLoggedIn = useCallback(() => {
-    const from = location.state?.from;
-    if (typeof from === 'string' && from.startsWith('/') && from !== '/quiz') {
-      navigate(from, { replace: true });
-      return;
-    }
-    setPhase('start');
-  }, [location.state?.from, navigate, setPhase]);
+  const handleLoggedIn = useCallback(
+    (signedInUser) => {
+      if (signedInUser?.role === 'admin') {
+        setPhase('start');
+        closeLogin();
+        return;
+      }
+      const from = location.state?.from;
+      if (typeof from === 'string' && from.startsWith('/') && from !== '/quiz') {
+        navigate(from, { replace: true });
+        return;
+      }
+      setPhase('start');
+    },
+    [closeLogin, location.state?.from, navigate, setPhase],
+  );
 
   const gateThemePortal =
     typeof document !== 'undefined'
@@ -355,6 +337,9 @@ export function QuizGateScreen() {
             <p className="quiz-gate-register-hint">
               <Link to="/register">Register</Link>
             </p>
+            <p className="quiz-gate-register-hint">
+              <Link to="/admin/login">Admin sign in</Link>
+            </p>
             <p className="start-wizard__footer">
               <span className="start-wizard__quill" aria-hidden="true">
                 🪶
@@ -394,8 +379,8 @@ export function QuizGateScreen() {
 }
 
 export function StartScreen() {
-  const { startQuiz, state } = useQuiz();
-  const { user } = useAuth();
+  const { startQuiz, state, restart } = useQuiz();
+  const { user, isAdmin } = useAuth();
   const { isDarkMode, theme, toggleTheme } = useTheme();
 
   return (
@@ -409,12 +394,26 @@ export function StartScreen() {
       <div className="start-screen__inner">
         <div className="start-screen-top start-screen-top--post-login">
           <nav className="quiz-top-links start-screen-top-links" aria-label="Quiz shortcuts">
-            <Link className="quiz-top-link" to="/history">
-              History
-            </Link>
-            <Link className="quiz-top-link" to="/leaderboard">
-              Leaderboard
-            </Link>
+            {!isAdmin ? (
+              <>
+                <Link className="quiz-top-link" to="/quiz" onClick={() => restart()}>
+                  Quiz home
+                </Link>
+                <Link className="quiz-top-link" to="/history">
+                  History
+                </Link>
+                <Link className="quiz-top-link" to="/leaderboard">
+                  Leaderboard
+                </Link>
+              </>
+            ) : (
+              <NavLink
+                className={({ isActive }) => `quiz-top-link${isActive ? ' quiz-top-link--active' : ''}`}
+                to="/admin"
+              >
+                Admin
+              </NavLink>
+            )}
           </nav>
           <div className="start-screen-top__actions">
             <div className="mode-row">
@@ -460,10 +459,31 @@ export function StartScreen() {
             </span>
           </p>
           {state.error ? <p className="start-error start-error--wizard">{state.error}</p> : null}
-          <button type="button" className="btn-wizard-start" onClick={startQuiz}>
-            <span className="btn-wizard-start__shine" aria-hidden="true" />
-            Start Quiz
-          </button>
+          {isAdmin ? (
+            <>
+              <p className="start-wizard__tagline" style={{ marginTop: '0.5rem' }}>
+                <span className="start-wizard__star" aria-hidden="true">
+                  ✦
+                </span>
+                <span className="start-wizard__tagline-text">
+                  You are signed in as an administrator. Quiz play is disabled — manage questions from the admin
+                  console.
+                </span>
+                <span className="start-wizard__star" aria-hidden="true">
+                  ✦
+                </span>
+              </p>
+              <Link className="btn-wizard-start" to="/admin">
+                <span className="btn-wizard-start__shine" aria-hidden="true" />
+                Open admin console
+              </Link>
+            </>
+          ) : (
+            <button type="button" className="btn-wizard-start" onClick={startQuiz}>
+              <span className="btn-wizard-start__shine" aria-hidden="true" />
+              Start Quiz
+            </button>
+          )}
           <p className="start-wizard__footer">
             <span className="start-wizard__quill" aria-hidden="true">
               🪶
@@ -477,16 +497,16 @@ export function StartScreen() {
 }
 
 export function QuizScreen() {
-  const { state, lockAnswer, submitAnswer, restart } = useQuiz();
+  const { state, lockAnswer, submitAnswer } = useQuiz();
   const { questions, currentQ, answers, answered } = state;
-  const { isDarkMode, theme, toggleTheme } = useTheme();
-  const { user } = useAuth();
   const [pendingAnswer, setPendingAnswer] = useState(null);
   const [featherBurst, setFeatherBurst] = useState(false);
+  const [hoveredOpt, setHoveredOpt] = useState(null);
 
   useEffect(() => {
     setPendingAnswer(null);
     setFeatherBurst(false);
+    setHoveredOpt(null);
   }, [currentQ]);
 
   const handleSelect = useCallback(
@@ -508,48 +528,10 @@ export function QuizScreen() {
   const currentTopic =
     formatReviewCategory(currentQuestion?.category || currentQuestion?.topic || '') || 'Sydney Survival';
 
-  const abortQuiz = useCallback(() => {
-    restart();
-  }, [restart]);
-
   return (
     <div className="qf-screen quiz-screen">
       <div className="quiz-gothic-shell">
-        <div className="quiz-top-navbar">
-          <Link className="quiz-top-logo" to="/quiz">
-            <span className="quiz-top-logo-seal quiz-top-logo-seal--brand" aria-hidden="true">
-              <img
-                key={theme}
-                className="quiz-top-logo-seal-img"
-                src={quizSealLogoSrc(isDarkMode)}
-                alt=""
-              />
-            </span>
-            Sydney Survival Quiz
-          </Link>
-          <div className="quiz-top-links">
-            <button type="button" className="quiz-top-link" onClick={abortQuiz}>Home</button>
-            <Link className="quiz-top-link" to="/history">History</Link>
-            <Link className="quiz-top-link" to="/leaderboard">Leaderboard</Link>
-          </div>
-          <div className="quiz-top-right">
-            <div className="mode-row">
-              <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
-              <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
-              <button
-                type="button"
-                className="mode-sw"
-                onClick={toggleTheme}
-                aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
-                aria-pressed={!isDarkMode}
-              >
-                <span className="mode-kn" />
-              </button>
-            </div>
-            <QuizTopPlayer user={user} />
-            <QuizNavLogout />
-          </div>
-        </div>
+        <GlobalHeader />
         <main className="quiz-gothic-main">
           <QuizProgressStrip total={n} current={currentQ} />
 
@@ -561,24 +543,12 @@ export function QuizScreen() {
             <div className="quiz-body">
               <div className="quiz-fade-wrap" key={currentQuestion?._id || currentQ}>
                 <div className="quiz-slide">
-                  <div className="q-card framed active">
+                  <QuizFramedPanel className="active">
                     <div className={`mystic-feather-burst${featherBurst ? ' active' : ''}`} aria-hidden="true">
                       <span>🪶</span>
                       <span>✦</span>
                       <span>🪶</span>
                     </div>
-                    <svg className="bracket tl" viewBox="0 0 20 20" width="20" height="20">
-                      <polyline points="19,1 1,1 1,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-                    </svg>
-                    <svg className="bracket tr" viewBox="0 0 20 20" width="20" height="20">
-                      <polyline points="1,1 19,1 19,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-                    </svg>
-                    <svg className="bracket bl" viewBox="0 0 20 20" width="20" height="20">
-                      <polyline points="19,19 1,19 1,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-                    </svg>
-                    <svg className="bracket br" viewBox="0 0 20 20" width="20" height="20">
-                      <polyline points="1,19 19,19 19,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-                    </svg>
                     <div className="q-meta">
                       <span className="q-num">Q{currentQ + 1}</span>
                       <TopicPill topic={currentTopic} />
@@ -592,12 +562,17 @@ export function QuizScreen() {
                     <div className="opts">
                       {(currentQuestion?.options || []).map((opt, j) => {
                         const isSelected = pendingAnswer === j;
+                        const isHover = !answered && hoveredOpt === j;
                         return (
                           <button
                             key={j}
                             type="button"
-                            className={`opt ${isSelected ? 'selected' : ''}`}
+                            className={`opt ${isSelected ? 'selected' : ''}${isHover ? ' opt-hover' : ''}`}
                             disabled={answered}
+                            onMouseEnter={() => {
+                              if (!answered) setHoveredOpt(j);
+                            }}
+                            onMouseLeave={() => setHoveredOpt(null)}
                             onClick={() => handleSelect(currentQ, j)}
                           >
                             <span className="opt-badge">{LETTERS[j]}</span>
@@ -606,7 +581,7 @@ export function QuizScreen() {
                         );
                       })}
                     </div>
-                  </div>
+                  </QuizFramedPanel>
                 </div>
               </div>
             </div>
@@ -637,7 +612,7 @@ export function CalculatingScreen() {
 }
 
 export function ResultScreen() {
-  const { state, showReview, restart, startQuiz } = useQuiz();
+  const { state, showReview, startQuiz } = useQuiz();
   const { attemptScore, attemptTotal, review } = state;
   const ringRef = useRef(null);
   const confettiRef = useRef(null);
@@ -708,27 +683,21 @@ export function ResultScreen() {
   }, [startQuiz]);
 
   return (
-    <div className="qf-screen result-screen">
+    <div className="qf-screen result-screen result-v7">
       <div className="confetti-layer" ref={confettiRef} />
-      <div className="result-inner">
-        <div className={`result-hero-icon${heroHigh ? ' is-high' : ' is-low'}`} aria-hidden="true">
-          {heroHigh ? '🕊️' : '📜'}
-        </div>
+      <GlobalHeader />
+      <main className="rv-main-v7 result-main-v7">
+        <div className="rv-center">
+          <div className="result-inner">
+            <div className={`result-hero-icon${heroHigh ? ' is-high' : ' is-low'}`} aria-hidden="true">
+              {heroHigh ? '🕊️' : '📜'}
+            </div>
 
-        <div className="result-card framed">
-          <svg className="bracket tl" viewBox="0 0 20 20" width="20" height="20">
-            <polyline points="19,1 1,1 1,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-          </svg>
-          <svg className="bracket tr" viewBox="0 0 20 20" width="20" height="20">
-            <polyline points="1,1 19,1 19,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-          </svg>
-          <svg className="bracket bl" viewBox="0 0 20 20" width="20" height="20">
-            <polyline points="19,19 1,19 1,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-          </svg>
-          <svg className="bracket br" viewBox="0 0 20 20" width="20" height="20">
-            <polyline points="1,19 19,19 19,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-          </svg>
-          <div className="result-mission-lbl">✦ Survival Trial Complete ✦</div>
+            <QuizFramedPanel className="result-stack">
+          <div className="q-meta">
+            <span className="q-num">Final score</span>
+            <span className="q-cat topic-pill">Survival trial</span>
+          </div>
           <div className="result-score-row">
             <div className="score-ring">
               <svg width="110" height="110" viewBox="0 0 110 110">
@@ -751,7 +720,11 @@ export function ResultScreen() {
             </div>
           </div>
 
-          <div className="topic-heading">Performance by Topic</div>
+          <div className="q-divider">◆ ◆ ◆</div>
+          <div className="q-hint result-topic-hint">
+            <span aria-hidden="true">📊</span>
+            Performance by topic
+          </div>
           <div className="topic-grid">
             {Object.entries(topicMap).map(([name, { t: tgTotal, c }]) => {
               const frac = tgTotal ? c / tgTotal : 0;
@@ -782,21 +755,11 @@ export function ResultScreen() {
                 ↺ Again
               </button>
             </div>
-            <div className="result-actions__links">
-              <button type="button" className="result-nav-link" onClick={restart}>
-                🏠 Home
-              </button>
-              <Link className="result-nav-link" to="/history">
-                📜 View History
-              </Link>
-              <Link className="result-nav-link" to="/leaderboard">
-                🏆 Leaderboard
-              </Link>
-            </div>
-            <QuizNavLogout />
+          </div>
+            </QuizFramedPanel>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
@@ -817,7 +780,11 @@ function ReviewV7Card({ item, index }) {
   })();
 
   return (
-    <div className={`rv-card-v7 rv-card ${isCorrect ? 'card-cor' : 'card-wrg'}`} id={`rvc-${index}`}>
+    <QuizFramedPanel
+      tag="article"
+      id={`rvc-${index}`}
+      className={`rv-card-v7 rv-card ${isCorrect ? 'card-cor' : 'card-wrg'}`}
+    >
       <div className="rvc-head">
         <div className={`rvc-si ${isCorrect ? 'ok' : 'bad'}`}>{isCorrect ? '✓' : '✕'}</div>
         <span className="rvc-qn">Q{index + 1}</span>
@@ -827,6 +794,7 @@ function ReviewV7Card({ item, index }) {
       </div>
       <div className="rvc-body">
         <div className="rvc-q">{questionText}</div>
+        <div className="q-divider rvc-q-divider">◆ ◆ ◆</div>
         <div className="rvc-opts">
           {options.map((opt, j) => {
             const isSel = j === item.selectedAnswer;
@@ -881,15 +849,13 @@ function ReviewV7Card({ item, index }) {
           <p className="rvc-exp-text rvc-exp-missing">No explanation for this question.</p>
         </div>
       )}
-    </div>
+    </QuizFramedPanel>
   );
 }
 
 export function ReviewScreen() {
   const { state, restart, backToResults } = useQuiz();
   const { review } = state;
-  const { user } = useAuth();
-  const { isDarkMode, theme, toggleTheme } = useTheme();
 
   const safeReview = review || [];
   const correct = safeReview.filter((r) => r.isCorrect).length;
@@ -906,36 +872,7 @@ export function ReviewScreen() {
 
   return (
     <div className="qf-screen review-screen review-v7">
-      <div className="quiz-top-navbar">
-        <Link className="quiz-top-logo" to="/quiz">
-          <span className="quiz-top-logo-seal quiz-top-logo-seal--brand" aria-hidden="true">
-            <img
-              key={theme}
-              className="quiz-top-logo-seal-img"
-              src={quizSealLogoSrc(isDarkMode)}
-              alt=""
-            />
-          </span>
-          SYDNEY SURVIVAL QUIZ
-        </Link>
-        <div className="quiz-top-right">
-          <div className="mode-row">
-            <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
-            <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
-            <button
-              type="button"
-              className="mode-sw"
-              onClick={toggleTheme}
-              aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
-              aria-pressed={!isDarkMode}
-            >
-              <span className="mode-kn" />
-            </button>
-          </div>
-          <QuizTopPlayer user={user} />
-          <QuizNavLogout />
-        </div>
-      </div>
+      <GlobalHeader />
 
       <div className="q-dot-bar">
         <span className="qdb-score" title="+1 point per correct answer">

@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import AuthScreenLayout from './AuthScreenLayout.jsx';
+import { AuthQuizCardShell } from './LoginFormPanel.jsx';
 
 const registerSchema = z
   .object({
@@ -47,20 +48,11 @@ export default function Register() {
   };
 
   return (
-    <AuthScreenLayout>
-      <section className="auth-panel q-card framed auth-panel--quizframe">
-        <svg className="bracket tl" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
-          <polyline points="19,1 1,1 1,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-        </svg>
-        <svg className="bracket tr" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
-          <polyline points="1,1 19,1 19,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-        </svg>
-        <svg className="bracket bl" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
-          <polyline points="19,19 1,19 1,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-        </svg>
-        <svg className="bracket br" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
-          <polyline points="1,19 19,19 19,1" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
-        </svg>
+    <AuthScreenLayout showBrand={false}>
+      <AuthQuizCardShell>
+        <Link className="auth-back-to-gate" to="/quiz" replace>
+          ← Back
+        </Link>
         <h2>Register</h2>
         <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
           <label>
@@ -102,11 +94,11 @@ export default function Register() {
         </form>
         <p>
           Already have an account?{' '}
-        <Link to="/quiz" state={{ openAuth: true }}>
-          Log in
-        </Link>
+          <Link to="/quiz" replace state={{ openAuth: true }}>
+            Log in
+          </Link>
         </p>
-      </section>
+      </AuthQuizCardShell>
     </AuthScreenLayout>
   );
 }

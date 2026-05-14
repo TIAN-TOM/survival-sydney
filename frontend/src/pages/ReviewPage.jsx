@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import api from '../api/api.js';
+import FrameCorners from '../components/FrameCorners.jsx';
+import GlobalHeader from '../components/GlobalHeader.jsx';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
@@ -77,23 +79,50 @@ function ReviewPage() {
   }, [attemptId]);
 
   if (loading) {
-    return <p>Loading review...</p>;
+    return (
+      <div className="quiz-flow-scope quiz-review-shell">
+        <GlobalHeader />
+        <main className="review-page quiz-review-page">
+          <p className="loading-state">Loading review...</p>
+        </main>
+      </div>
+    );
   }
 
   if (error) {
-    return <p className="error-message">{error}</p>;
+    return (
+      <div className="quiz-flow-scope quiz-review-shell">
+        <GlobalHeader />
+        <main className="review-page quiz-review-page">
+          <p className="error-message">{error}</p>
+        </main>
+      </div>
+    );
   }
 
   if (!attempt) {
-    return <p>No attempt found.</p>;
+    return (
+      <div className="quiz-flow-scope quiz-review-shell">
+        <GlobalHeader />
+        <main className="review-page quiz-review-page">
+          <p className="empty-state">No attempt found.</p>
+        </main>
+      </div>
+    );
   }
 
   const correctCount = attempt.review.filter((r) => r.isCorrect).length;
   const total = attempt.total || attempt.review.length;
 
   return (
-    <main className="review-page">
-      <section className="admin-section review-attempt-header">
+    <div className="quiz-flow-scope quiz-review-shell">
+      <div className="sq-world-bg" aria-hidden="true" />
+
+      <GlobalHeader />
+
+      <main className="review-page quiz-review-page">
+      <section className="admin-section review-attempt-header review-attempt-panel review-attempt-panel--framed">
+        <FrameCorners />
         <h1>Review Mode</h1>
 
         <div className="review-attempt-final" role="status">
@@ -119,13 +148,15 @@ function ReviewPage() {
         </p>
       </section>
 
-      <section className="admin-section review-attempt-list">
+      <section className="admin-section review-attempt-list review-attempt-panel review-attempt-panel--framed">
+        <FrameCorners />
         {attempt.review.map((item, index) => {
           const opts = item.options || [];
           const sel = item.selectedAnswer;
           const cor = item.correctAnswer;
           return (
-            <article key={item.questionId} className="review-attempt-card">
+            <article key={item.questionId} className="review-attempt-card review-attempt-card--framed">
+              <FrameCorners />
               <header className="review-attempt-card__head">
                 <span className={`review-attempt-mark${item.isCorrect ? ' is-ok' : ' is-bad'}`}>
                   {item.isCorrect ? '✓' : '✕'}
@@ -174,7 +205,8 @@ function ReviewPage() {
         })}
       </section>
 
-      <section className="admin-section">
+      <section className="admin-section review-attempt-panel review-attempt-panel--framed">
+        <FrameCorners />
         <div className="button-row">
           <button type="button" onClick={() => navigate('/history')}>
             Back to History
@@ -186,6 +218,7 @@ function ReviewPage() {
         </div>
       </section>
     </main>
+    </div>
   );
 }
 

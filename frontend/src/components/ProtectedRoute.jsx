@@ -8,7 +8,7 @@ function readStoredUser() {
   }
 }
 
-export default function ProtectedRoute({ adminOnly = false, children }) {
+export default function ProtectedRoute({ adminOnly = false, blockAdmin = false, children }) {
   const location = useLocation();
   const token = localStorage.getItem('jwt');
   const user = readStoredUser();
@@ -19,6 +19,10 @@ export default function ProtectedRoute({ adminOnly = false, children }) {
 
   if (adminOnly && user?.role !== 'admin') {
     return <Navigate to="/quiz" replace />;
+  }
+
+  if (blockAdmin && user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
   }
 
   return children || <Outlet />;

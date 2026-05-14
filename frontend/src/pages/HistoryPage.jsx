@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import api from '../api/api.js';
+import FrameCorners from '../components/FrameCorners.jsx';
+import GlobalHeader from '../components/GlobalHeader.jsx';
 
 function HistoryPage() {
   const navigate = useNavigate();
@@ -27,84 +29,110 @@ function HistoryPage() {
 
   if (loading) {
     return (
-      <main className="review-page history-page">
-        <section className="admin-section">
-          <p className="review-attempt-meta">Loading history…</p>
-        </section>
-      </main>
+      <div className="quiz-flow-scope quiz-review-shell">
+        <GlobalHeader />
+        <main className="review-page quiz-review-page">
+          <p className="loading-state">Loading history...</p>
+        </main>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <main className="review-page history-page">
-        <section className="admin-section">
+      <div className="quiz-flow-scope quiz-review-shell">
+        <GlobalHeader />
+        <main className="review-page quiz-review-page">
           <p className="error-message">{error}</p>
-        </section>
-      </main>
+        </main>
+      </div>
     );
   }
 
+  const latest = history[0];
+
   return (
-    <main className="review-page history-page">
-      <section className="admin-section review-attempt-header">
-        <h1>Quiz History</h1>
-        <p className="review-attempt-hint">
-          Newest attempts first. Use <strong>View review</strong> for the same debrief layout as Review Mode — questions,
-          your answers, and explanations.
-        </p>
-      </section>
+    <div className="quiz-flow-scope quiz-review-shell">
+      <div className="sq-world-bg" aria-hidden="true" />
 
-      {history.length === 0 ? (
-        <section className="admin-section">
-          <p className="review-attempt-meta">
-            No quiz attempts yet. Finish a quiz on the Quiz page to build your history.
-          </p>
-          <div className="button-row">
-            <button type="button" className="button button--primary" onClick={() => navigate('/quiz')}>
-              Go to quiz
-            </button>
+      <GlobalHeader />
+
+      <main className="review-page quiz-review-page">
+        <section className="admin-section review-attempt-header review-attempt-panel review-attempt-panel--framed">
+          <FrameCorners />
+          <h1>Quiz History</h1>
+
+          <div className="review-attempt-final" role="status">
+            <div className="review-attempt-final__label">Saved attempts</div>
+            <div className="review-attempt-final__value">{history.length}</div>
+            <p className="review-attempt-final__hint">Newest listed first</p>
           </div>
-        </section>
-      ) : (
-        <section className="admin-section review-attempt-list">
-          {history.map((attempt, index) => {
-            const attemptNo = history.length - index;
-            return (
-              <article key={attempt._id} className="review-attempt-card">
-                <header className="review-attempt-card__head">
-                  <span className="review-attempt-mark is-ok" aria-hidden="true">
-                    {attemptNo}
-                  </span>
-                  <h2 className="review-attempt-card__title">Attempt #{attemptNo}</h2>
-                  <span className="review-attempt-verdict is-ok">{attempt.score} pts</span>
-                </header>
-                <p className="review-attempt-meta">
-                  Completed: {new Date(attempt.createdAt).toLocaleString()}
-                </p>
-                <div className="button-row review-attempt-card__actions">
-                  <button
-                    type="button"
-                    className="button button--primary"
-                    onClick={() => navigate(`/review/${attempt._id}`)}
-                  >
-                    View review
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </section>
-      )}
 
-      <section className="admin-section">
-        <div className="button-row">
-          <button type="button" className="button button--secondary" onClick={() => navigate('/quiz')}>
-            Play again
-          </button>
-        </div>
-      </section>
-    </main>
+          <p className="review-attempt-meta">
+            {latest ? <>Latest: {new Date(latest.createdAt).toLocaleString()}</> : 'No activity yet.'}
+          </p>
+
+          <p className="review-attempt-hint">
+            Open <strong>View review</strong> for the same debrief layout as Review Mode — questions, your answers, and
+            explanations.
+          </p>
+        </section>
+
+        {history.length === 0 ? (
+          <section className="admin-section review-attempt-panel review-attempt-panel--framed">
+            <FrameCorners />
+            <p className="review-attempt-hint">
+              No quiz attempts yet. Finish a quiz on the Quiz page to build your history.
+            </p>
+            <div className="button-row">
+              <button type="button" onClick={() => navigate('/quiz')}>
+                Go to quiz
+              </button>
+            </div>
+          </section>
+        ) : (
+          <section className="admin-section review-attempt-list review-attempt-panel review-attempt-panel--framed">
+            <FrameCorners />
+            {history.map((attempt, index) => {
+              const attemptNo = history.length - index;
+              return (
+                <article key={attempt._id} className="review-attempt-card review-attempt-card--framed">
+                  <FrameCorners />
+                  <header className="review-attempt-card__head">
+                    <span className="review-attempt-mark is-ok" aria-hidden="true">
+                      {attemptNo}
+                    </span>
+                    <h2 className="review-attempt-card__title">Attempt #{attemptNo}</h2>
+                    <span className="review-attempt-verdict is-ok">{attempt.score} pts</span>
+                  </header>
+                  <p className="review-attempt-meta">
+                    Completed: {new Date(attempt.createdAt).toLocaleString()}
+                  </p>
+                  <div className="review-attempt-card__actions">
+                    <div className="button-row">
+                      <button type="button" onClick={() => navigate(`/review/${attempt._id}`)}>
+                        View review
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        )}
+
+        {history.length > 0 && (
+          <section className="admin-section review-attempt-panel review-attempt-panel--framed">
+            <FrameCorners />
+            <div className="button-row">
+              <button type="button" onClick={() => navigate('/quiz')}>
+                Play Again
+              </button>
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
   );
 }
 

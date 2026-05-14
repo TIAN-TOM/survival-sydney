@@ -76,7 +76,10 @@ export function LoginFormPanel({
         onSuccess(signedInUser);
         return;
       }
-      const path = typeof resolveNavigatePath === 'function' ? resolveNavigatePath() : '/quiz';
+      let path = typeof resolveNavigatePath === 'function' ? resolveNavigatePath() : '/quiz';
+      if (!adminMode && signedInUser.role === 'admin') {
+        path = '/admin';
+      }
       navigate(path, { replace: true });
     } catch (err) {
       setServerError(err.message || 'Login failed');

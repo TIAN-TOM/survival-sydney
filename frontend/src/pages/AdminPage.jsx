@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
 import api from '../api/api.js';
-import QuestionForm from '../components/QuestionForm.jsx';
 import BulkImport from '../components/BulkImport.jsx';
+import FrameCorners from '../components/FrameCorners.jsx';
+import GlobalHeader from '../components/GlobalHeader.jsx';
+import QuestionForm from '../components/QuestionForm.jsx';
 
 export default function AdminPage() {
   const [questions, setQuestions] = useState([]);
@@ -30,6 +33,8 @@ export default function AdminPage() {
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
+
+  const activeCount = useMemo(() => questions.filter((q) => q.active).length, [questions]);
 
   const handleCreateClick = () => {
     setEditingQuestion(null);
@@ -70,7 +75,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleDeleteQuestion = async questionId => {
+  const handleDeleteQuestion = async (questionId) => {
     const confirmed = window.confirm('Are you sure you want to delete this question?');
     if (!confirmed) return;
 
@@ -83,7 +88,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleToggleQuestion = async questionId => {
+  const handleToggleQuestion = async (questionId) => {
     try {
       await api.patch(`/admin/questions/${questionId}/toggle`);
       showMessage('success', 'Question status updated successfully.');
@@ -100,135 +105,153 @@ export default function AdminPage() {
   };
 
   return (
-    <main>
-      <section className="admin-section">
-        <div className="button-row">
-          <div>
-            <h1>Admin Question Management</h1>
-            <p>
-              Create, edit, delete, activate/deactivate, and bulk import quiz questions.
+    <div className="quiz-flow-scope quiz-review-shell">
+      <div className="sq-world-bg" aria-hidden="true" />
+
+      <GlobalHeader />
+
+      <main className="review-page quiz-review-page admin-dashboard-page">
+        <section className="admin-section review-attempt-header review-attempt-panel review-attempt-panel--framed">
+          <FrameCorners />
+          <h1>Question Management</h1>
+
+          <div className="review-attempt-final" role="status">
+            <div className="review-attempt-final__label">Questions in bank</div>
+            <div className="review-attempt-final__value">{loading ? '…' : questions.length}</div>
+            <p className="review-attempt-final__hint">
+              {loading ? 'Loading…' : `${activeCount} active · ${questions.length - activeCount} inactive`}
             </p>
           </div>
 
-          <button type="button" onClick={handleCreateClick}>
-            Add Question
-          </button>
-        </div>
-
-        {message && (
-          <p className={message.type === 'error' ? 'error-message' : 'success-message'}>
-            {message.text}
+          <p className="review-attempt-meta">
+            Create, edit, delete, toggle status, and bulk import. Explanations are shown to players in Review Mode.
           </p>
-        )}
-      </section>
 
-      {showForm && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={editingQuestion ? 'Edit question' : 'Create question'}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.65)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '24px',
-          }}
-        >
-          <section
-            className="admin-section"
-            style={{
-              width: 'min(760px, 100%)',
-              maxHeight: '90vh',
-              overflowY: 'auto',
-            }}
+          <p className="review-attempt-hint">
+            Use <strong>Add Question</strong> for one entry, or use <strong>Bulk Import</strong> below for a JSON array.
+          </p>
+
+          <div className="button-row">
+            <button type="button" onClick={handleCreateClick}>
+              Add Question
+            </button>
+          </div>
+
+          {message && !showForm ? (
+            <p className={message.type === 'error' ? 'error-message' : 'success-message'}>{message.text}</p>
+          ) : null}
+        </section>
+
+        {showForm ? (
+          <div
+            className="admin-form-overlay-root quiz-flow-scope"
+            role="dialog"
+            aria-modal="true"
+            aria-label={editingQuestion ? 'Edit question' : 'Create question'}
           >
-            <div className="button-row">
-              <h2>{editingQuestion ? 'Edit Question' : 'Create Question'}</h2>
-
-              <button type="button" onClick={handleCancelForm}>
-                Close
-              </button>
-            </div>
-
-            <QuestionForm
-              initialQuestion={editingQuestion}
-              isSubmitting={submitting}
-              onCancel={handleCancelForm}
-              onSubmit={handleSubmitQuestion}
+            <button
+              type="button"
+              className="admin-form-overlay-root__backdrop"
+              aria-label="Close dialog"
+              onClick={handleCancelForm}
             />
-          </section>
-        </div>
-      )}
+            <div className="admin-form-overlay-root__panel quiz-review-page">
+              <section className="admin-section review-attempt-panel review-attempt-panel--framed">
+                <FrameCorners />
+                <div className="button-row admin-dashboard-dialog-head">
+                  <h2 className="admin-dashboard-dialog-title">{editingQuestion ? 'Edit Question' : 'Create Question'}</h2>
+                  <button type="button" onClick={handleCancelForm}>
+                    Close
+                  </button>
+                </div>
 
-      <section className="admin-section">
-        <h2>Bulk Import</h2>
-        <BulkImport onImportSuccess={handleBulkImportSuccess} />
-      </section>
+                {message && showForm ? (
+                  <p className={message.type === 'error' ? 'error-message' : 'success-message'}>{message.text}</p>
+                ) : null}
 
-      <section className="admin-section">
-        <h2>Question List</h2>
+                <QuestionForm
+                  initialQuestion={editingQuestion}
+                  isSubmitting={submitting}
+                  onCancel={handleCancelForm}
+                  onSubmit={handleSubmitQuestion}
+                />
+              </section>
+            </div>
+          </div>
+        ) : null}
 
-        {loading ? (
-          <p>Loading questions...</p>
-        ) : questions.length === 0 ? (
-          <p>No questions found.</p>
-        ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>Question</th>
-                <th>Correct</th>
-                <th>Status</th>
-                <th>Explanation</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+        <section className="admin-section review-attempt-panel review-attempt-panel--framed">
+          <FrameCorners />
+          <h2 className="review-attempt-card__title admin-dashboard-section-title">Bulk Import</h2>
+          <p className="review-attempt-hint admin-dashboard-section-lead">
+            Paste a JSON array of questions, or an object with a <code>questions</code> array. Same shape as the
+            question model (four options, 0–3 correct index, optional explanation for Review Mode).
+          </p>
+          <BulkImport onImportSuccess={handleBulkImportSuccess} />
+        </section>
 
-            <tbody>
-              {questions.map(question => (
-                <tr key={question._id}>
-                  <td>
-                    <strong>{question.questionText}</strong>
-                    <ol type="A">
-                      {question.options.map((option, index) => (
-                        <li key={`${question._id}-${index}`}>{option}</li>
-                      ))}
-                    </ol>
-                  </td>
+        <section className="admin-section review-attempt-list review-attempt-panel review-attempt-panel--framed">
+          <FrameCorners />
+          <h2 className="review-attempt-card__title admin-dashboard-section-title">Question List</h2>
 
-                  <td>
-                    Option {String.fromCharCode(65 + Number(question.correctAnswer))}
-                  </td>
+          {loading ? (
+            <p className="loading-state">Loading questions...</p>
+          ) : questions.length === 0 ? (
+            <p className="review-attempt-hint">No questions found. Add one or run a bulk import.</p>
+          ) : (
+            <div className="admin-question-list">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Question</th>
+                    <th>Correct</th>
+                    <th>Status</th>
+                    <th>Explanation</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
 
-                  <td>{question.active ? 'Active' : 'Inactive'}</td>
+                <tbody>
+                  {questions.map(question => (
+                    <tr key={question._id}>
+                      <td>
+                        <strong>{question.questionText}</strong>
+                        <ol type="A">
+                          {question.options.map((option, index) => (
+                            <li key={`${question._id}-${index}`}>{option}</li>
+                          ))}
+                        </ol>
+                      </td>
 
-                  <td>{question.explanation || '-'}</td>
+                      <td>Option {String.fromCharCode(65 + Number(question.correctAnswer))}</td>
 
-                  <td>
-                    <div className="button-row">
-                      <button type="button" onClick={() => handleEditClick(question)}>
-                        Edit
-                      </button>
+                      <td>{question.active ? 'Active' : 'Inactive'}</td>
 
-                      <button type="button" onClick={() => handleToggleQuestion(question._id)}>
-                        {question.active ? 'Deactivate' : 'Activate'}
-                      </button>
+                      <td>{question.explanation || '—'}</td>
 
-                      <button type="button" onClick={() => handleDeleteQuestion(question._id)}>
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </section>
-    </main>
+                      <td>
+                        <div className="button-row">
+                          <button type="button" onClick={() => handleEditClick(question)}>
+                            Edit
+                          </button>
+
+                          <button type="button" onClick={() => handleToggleQuestion(question._id)}>
+                            {question.active ? 'Deactivate' : 'Activate'}
+                          </button>
+
+                          <button type="button" onClick={() => handleDeleteQuestion(question._id)}>
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </main>
+    </div>
   );
 }

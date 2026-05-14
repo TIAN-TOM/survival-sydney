@@ -1,7 +1,7 @@
 import { useTheme } from '../contexts/ThemeContext.jsx';
 import { quizSealLogoSrc } from '../quizBrandAssets.js';
 
-export default function AuthScreenLayout({ children }) {
+export default function AuthScreenLayout({ children, showBrand = true }) {
   const { isDarkMode, theme, toggleTheme } = useTheme();
 
   return (
@@ -13,18 +13,23 @@ export default function AuthScreenLayout({ children }) {
         <div className="start-screen__bg-veil start-screen__bg-veil--day" />
       </div>
       <div className="start-screen__inner auth-start-screen__inner">
-        <header className="quiz-top-navbar auth-start-screen__navbar" aria-label="Auth navigation">
-          <div className="quiz-top-logo auth-start-screen__brand">
-            <span className="quiz-top-logo-seal quiz-top-logo-seal--brand">
-              <img
-                key={theme}
-                className="quiz-top-logo-seal-img"
-                src={quizSealLogoSrc(isDarkMode)}
-                alt=""
-              />
-            </span>
-            <span>Sydney Survival Quiz</span>
-          </div>
+        <header
+          className={`quiz-top-navbar auth-start-screen__navbar${showBrand ? '' : ' auth-start-screen__navbar--no-brand'}`}
+          aria-label="Auth navigation"
+        >
+          {showBrand ? (
+            <div className="quiz-top-logo auth-start-screen__brand">
+              <span className="quiz-top-logo-seal quiz-top-logo-seal--brand">
+                <img
+                  key={theme}
+                  className="quiz-top-logo-seal-img"
+                  src={quizSealLogoSrc(isDarkMode)}
+                  alt=""
+                />
+              </span>
+              <span>Sydney Survival Quiz</span>
+            </div>
+          ) : null}
           <div className="auth-start-screen__navbar-spacer" aria-hidden="true" />
           <div className="mode-row">
             <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
@@ -40,7 +45,9 @@ export default function AuthScreenLayout({ children }) {
             </button>
           </div>
         </header>
-        <div className="auth-start-screen__body quiz-auth-card-host">{children}</div>
+        <div className="auth-start-screen__body quiz-auth-card-host">
+          <div className="auth-start-sheet">{children}</div>
+        </div>
       </div>
     </div>
   );
