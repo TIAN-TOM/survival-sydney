@@ -22,11 +22,11 @@ The application is a MERN-style quiz platform with a React frontend, Express API
 
 ## Review Mode
 
-Review Mode is implemented as a completed-attempt view. `/api/quiz/start` dynamically samples active questions and stores a short-lived in-memory snapshot of the served question text, options, correct answer, topic, difficulty, and explanation. `/api/quiz/submit` scores against that locked snapshot and stores the same review snapshot in `Score.answers`, while still keeping the original `questionId` reference. History/review responses use Mongoose population when the original question still exists and fall back to the stored snapshot when it has been edited or deleted. The database intentionally has `Question` and `Score` collections, not a persisted `Quiz` collection.
+Review Mode is implemented as a completed-attempt view. `/api/quiz/start` samples 10 active questions and withholds correct answers and explanations from the client. `/api/quiz/submit` scores the submitted answer indexes against the current `Question` documents and stores `questionId`, `selectedAnswer`, and `isCorrect` in `Score.answers`. `/api/quiz/history/:id` rebuilds review details from the current questions and returns a deleted-question placeholder if a referenced question no longer exists. The database intentionally has `Question` and `Score` collections, not a persisted `Quiz` collection.
 
 ## Question Bank and Sampling
 
-Questions carry `topic` and `difficulty` metadata. The seed bank provides 50 active Sydney life questions across 5 categories and the `foundation`, `application`, and `analysis` difficulty levels. Runtime selection keeps the fixed 10-question length for leaderboard comparability, but it now targets 3 foundation, 4 application, and 3 analysis questions and limits repeated topics when the active bank has enough coverage. If a difficulty bucket is underfilled, the selector fills from the remaining active bank so the app remains usable with admin-managed content.
+The source seed JSON contains 50 Sydney life questions across practical categories, but the persisted `Question` model currently stores `questionText`, four `options`, `correctAnswer` as an option index, `active`, and optional `explanation`. Runtime selection keeps the fixed 10-question length for leaderboard comparability and randomly samples from active questions. It does not currently persist `topic`/`difficulty` or perform metadata-balanced sampling.
 
 ## Data Flow
 
