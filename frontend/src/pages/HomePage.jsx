@@ -85,7 +85,7 @@ function HomePage() {
           </div>
           <h2>Know what to do before it matters.</h2>
           <p>
-            Work through a balanced mix of Sydney life scenarios, then review every
+            Work through a random mix of Sydney life scenarios, then review every
             answer after submission.
           </p>
         </aside>

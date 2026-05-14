@@ -20,7 +20,7 @@ Executed on 2026-05-06 against local MongoDB and seeded demo data:
 - Logged out, signed in as `admin` through `/admin/login`, and confirmed `/admin` displayed Admin Question Management, Create question, Bulk import, and Question bank sections.
 - Toggled dark mode, reloaded the app, and confirmed the theme persisted.
 
-Backend Supertest coverage additionally verifies history/review snapshot persistence, admin CRUD/toggle/delete, invalid bulk import indexes, player 403 on admin routes, and duplicate quiz submission rejection.
+Backend Supertest coverage additionally verifies auth, quiz start/submit/history/review data, leaderboard, admin CRUD/toggle/delete, invalid bulk import indexes, and player 403 on admin routes.
 
 ## Environment
 
@@ -41,8 +41,8 @@ Backend Supertest coverage additionally verifies history/review snapshot persist
 ## Quiz Flow
 
 - Start a fixed 10-question quiz from the active question bank.
-- Confirm the returned questions include a spread of difficulty values and do not all come from one topic when using seeded data.
-- Confirm each rendered question shows its topic and difficulty metadata.
+- Confirm the returned quiz contains 10 active questions from the seeded bank.
+- Confirm rendered questions show question text and four answer options without exposing correct answers before submission.
 - Select answers and submit the attempt.
 - Confirm the final score is shown.
 
@@ -53,15 +53,15 @@ Backend Supertest coverage additionally verifies history/review snapshot persist
 - Confirm incorrect answers show the correct answer.
 - Confirm explanation text appears when a question has an explanation.
 - Confirm Review Mode still works after a page refresh.
-- Confirm Review Mode still shows completed question text after the original question is later deleted by an admin.
+- Confirm Review Mode handles a deleted source question with the current placeholder state.
 
 ## Admin Flow
 
 - Log in as an admin user.
 - Confirm `/admin/login` rejects a normal player account.
-- Create questions with topic, difficulty, answer options, correct answers, and explanations.
+- Create questions with question text, four answer options, a correct answer index, active state, and explanations.
 - Edit an existing question.
-- Confirm the Question bank table displays topic and difficulty for created/imported questions.
+- Confirm the Question bank table displays question text, options, correct answer, active state, and explanation for created/imported questions.
 - Delete or deactivate a question and confirm it no longer appears to players.
 - Confirm a player JWT receives 403 from `/api/admin/questions`.
 - Confirm an unauthenticated request receives 401 from `/api/admin/questions`.
@@ -74,7 +74,7 @@ Backend Supertest coverage additionally verifies history/review snapshot persist
 - Submit an invalid form and confirm the UI shows a clear validation message.
 - Trigger an unauthorized request and confirm the UI handles the 401 response.
 - Confirm server errors do not reveal stack traces or database details in the browser.
-- Confirm login and quiz-submit rate limiting are configured via `backend/src/middleware/rateLimiters.js`.
+- Confirm login rate limiting is mounted via `backend/src/routes/auth.routes.js`; note that the quiz-submit limiter helper is defined but not currently mounted.
 
 ## Theme
 

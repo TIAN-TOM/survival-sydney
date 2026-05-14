@@ -15,15 +15,15 @@ The global error middleware hides all 5xx implementation details from clients. V
 
 ## Authentication Header
 
-The frontend API client reads a JWT from local storage using the keys `token`, `jwt`, or `authToken`. The first value found is sent as `Authorization: Bearer <token>`.
+The frontend API client reads a JWT from local storage using the `jwt` key and sends it as `Authorization: Bearer <token>`.
 
 ## Review Mode Contract
 
-Review Mode data should be backend-expanded. The API returns completed attempts with question text, answer choices, selected answers, correct answers, and explanation fields already available for rendering. Attempts store a question snapshot so Review Mode still works if an admin later edits, deactivates, or deletes the original question.
+Review Mode data is backend-expanded from the current `Question` documents. The API returns completed attempts with question text, answer choices, selected answers, correct answers, and explanation fields when the source questions still exist. Deleted questions render as placeholders because attempts do not currently store durable question snapshots.
 
 ## Quiz Attempt State
 
-Quiz attempts are generated dynamically from active `Question` documents. The backend keeps the started question set in a short-lived in-memory session until submission, then persists only the completed `Score` attempt. This follows the Ed #182 guidance that quizzes are runtime constructs rather than stored quiz documents.
+Quiz attempts are generated dynamically from active `Question` documents. The backend does not currently store a started quiz session; submission sends the 10 question IDs and answer indexes, then persists the completed `Score` attempt. This follows the direction that quizzes are runtime constructs rather than stored quiz documents.
 
 ## Frontend Theme
 
