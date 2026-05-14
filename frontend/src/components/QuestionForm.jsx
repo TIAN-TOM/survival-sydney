@@ -63,7 +63,7 @@ export default function QuestionForm({
     reset(toFormDefaults(initialQuestion));
   }, [initialQuestion, reset]);
 
-  const submitForm = values => {
+  const submitForm = (values) => {
     const payload = {
       questionText: values.questionText.trim(),
       options: [
@@ -82,76 +82,84 @@ export default function QuestionForm({
   };
 
   return (
-    <form className="form" onSubmit={handleSubmit(submitForm)}>
-      <label>
-        Question text
-        <textarea rows="3" {...register('questionText')} />
-        {errors.questionText && <span className="form-error">{errors.questionText.message}</span>}
-      </label>
+    <form className="form admin-question-form" onSubmit={handleSubmit(submitForm)}>
+      <div className="admin-question-form__scroll">
+        <section className="admin-question-form__group admin-question-form__group--question">
+          <label className="admin-question-form__field">
+            <span className="admin-question-form__label">Question text</span>
+            <textarea className="admin-question-form__textarea admin-question-form__textarea--lead" rows={4} {...register('questionText')} />
+            {errors.questionText && <span className="form-error">{errors.questionText.message}</span>}
+          </label>
+        </section>
 
-      <div className="form-grid">
-        <label>
-          Option A
-          <input type="text" {...register('optionA')} />
-          {errors.optionA && <span className="form-error">{errors.optionA.message}</span>}
-        </label>
+        <fieldset className="admin-question-form__group admin-question-form__group--options">
+          <legend className="admin-question-form__group-title">Options A–D</legend>
+          <div className="admin-question-form__options-grid">
+            <label className="admin-question-form__field admin-question-form__field--compact">
+              <span className="admin-question-form__label">Option A</span>
+              <input type="text" {...register('optionA')} />
+              {errors.optionA && <span className="form-error">{errors.optionA.message}</span>}
+            </label>
+            <label className="admin-question-form__field admin-question-form__field--compact">
+              <span className="admin-question-form__label">Option B</span>
+              <input type="text" {...register('optionB')} />
+              {errors.optionB && <span className="form-error">{errors.optionB.message}</span>}
+            </label>
+            <label className="admin-question-form__field admin-question-form__field--compact">
+              <span className="admin-question-form__label">Option C</span>
+              <input type="text" {...register('optionC')} />
+              {errors.optionC && <span className="form-error">{errors.optionC.message}</span>}
+            </label>
+            <label className="admin-question-form__field admin-question-form__field--compact">
+              <span className="admin-question-form__label">Option D</span>
+              <input type="text" {...register('optionD')} />
+              {errors.optionD && <span className="form-error">{errors.optionD.message}</span>}
+            </label>
+          </div>
+        </fieldset>
 
-        <label>
-          Option B
-          <input type="text" {...register('optionB')} />
-          {errors.optionB && <span className="form-error">{errors.optionB.message}</span>}
-        </label>
+        <section className="admin-question-form__group admin-question-form__group--meta">
+          <div className="admin-question-form__grid-2">
+            <label className="admin-question-form__field admin-question-form__field--compact">
+              <span className="admin-question-form__label">Correct answer</span>
+              <select {...register('correctAnswer', { valueAsNumber: true })}>
+                <option value={0}>Option A</option>
+                <option value={1}>Option B</option>
+                <option value={2}>Option C</option>
+                <option value={3}>Option D</option>
+              </select>
+              {errors.correctAnswer && <span className="form-error">{errors.correctAnswer.message}</span>}
+            </label>
+            <label className="admin-question-form__field admin-question-form__field--compact">
+              <span className="admin-question-form__label">Topic</span>
+              <input type="text" {...register('topic')} placeholder="e.g. transport" />
+              {errors.topic && <span className="form-error">{errors.topic.message}</span>}
+            </label>
+          </div>
+          <label className="admin-question-form__checkbox checkbox-row">
+            <input type="checkbox" {...register('active')} />
+            <span>Active question</span>
+          </label>
+        </section>
 
-        <label>
-          Option C
-          <input type="text" {...register('optionC')} />
-          {errors.optionC && <span className="form-error">{errors.optionC.message}</span>}
-        </label>
-
-        <label>
-          Option D
-          <input type="text" {...register('optionD')} />
-          {errors.optionD && <span className="form-error">{errors.optionD.message}</span>}
-        </label>
+        <section className="admin-question-form__group admin-question-form__group--explanation">
+          <h3 className="admin-question-form__group-title admin-question-form__group-title--secondary">Explanation (Review Mode)</h3>
+          <label className="admin-question-form__field">
+            <span className="admin-question-form__label admin-question-form__label--muted">Optional — shown to players after the quiz</span>
+            <textarea className="admin-question-form__textarea" rows={3} {...register('explanation')} />
+            {errors.explanation && <span className="form-error">{errors.explanation.message}</span>}
+          </label>
+        </section>
       </div>
 
-      <label>
-        Correct answer
-        <select {...register('correctAnswer', { valueAsNumber: true })}>
-          <option value={0}>Option A</option>
-          <option value={1}>Option B</option>
-          <option value={2}>Option C</option>
-          <option value={3}>Option D</option>
-        </select>
-        {errors.correctAnswer && <span className="form-error">{errors.correctAnswer.message}</span>}
-      </label>
-
-      <label>
-        Topic (slug or label, e.g. transport)
-        <input type="text" {...register('topic')} placeholder="general" />
-        {errors.topic && <span className="form-error">{errors.topic.message}</span>}
-      </label>
-
-      <label>
-        Explanation for Review Mode
-        <textarea rows="3" {...register('explanation')} />
-        {errors.explanation && <span className="form-error">{errors.explanation.message}</span>}
-      </label>
-
-      <label className="checkbox-row">
-        <input type="checkbox" {...register('active')} />
-        Active question
-      </label>
-
-      <div className="button-row">
-        <button className="button button--primary" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Saving...' : 'Save Question'}
-        </button>
-
-        <button className="button button--secondary" type="button" onClick={onCancel}>
+      <footer className="admin-question-form__footer">
+        <button className="admin-question-form__btn admin-question-form__btn--ghost" type="button" onClick={onCancel}>
           Cancel
         </button>
-      </div>
+        <button className="admin-question-form__btn admin-question-form__btn--primary" type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'Saving…' : 'Save question'}
+        </button>
+      </footer>
     </form>
   );
 }

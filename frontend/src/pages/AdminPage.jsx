@@ -106,7 +106,7 @@ export default function AdminPage() {
 
   return (
     <div className="quiz-flow-scope quiz-review-shell">
-      <div className="sq-world-bg" aria-hidden="true" />
+      <div className="sq-world-bg sq-world-bg--photo" aria-hidden="true" />
 
       <GlobalHeader />
 
@@ -128,14 +128,8 @@ export default function AdminPage() {
           </p>
 
           <p className="review-attempt-hint">
-            Use <strong>Add Question</strong> for one entry, or use <strong>Bulk Import</strong> below for a JSON array.
+            Add entries from the question list header, or use <strong>Bulk Import</strong> below for a JSON array.
           </p>
-
-          <div className="button-row">
-            <button type="button" onClick={handleCreateClick}>
-              Add Question
-            </button>
-          </div>
 
           {message && !showForm ? (
             <p className={message.type === 'error' ? 'error-message' : 'success-message'}>{message.text}</p>
@@ -143,39 +137,42 @@ export default function AdminPage() {
         </section>
 
         {showForm ? (
-          <div
-            className="admin-form-overlay-root quiz-flow-scope"
-            role="dialog"
-            aria-modal="true"
-            aria-label={editingQuestion ? 'Edit question' : 'Create question'}
-          >
-            <button
-              type="button"
-              className="admin-form-overlay-root__backdrop"
-              aria-label="Close dialog"
-              onClick={handleCancelForm}
-            />
-            <div className="admin-form-overlay-root__panel quiz-review-page">
-              <section className="admin-section review-attempt-panel review-attempt-panel--framed">
-                <FrameCorners />
-                <div className="button-row admin-dashboard-dialog-head">
-                  <h2 className="admin-dashboard-dialog-title">{editingQuestion ? 'Edit Question' : 'Create Question'}</h2>
-                  <button type="button" onClick={handleCancelForm}>
-                    Close
-                  </button>
-                </div>
+          <div className="admin-qa-overlay" role="presentation" onClick={handleCancelForm}>
+            <div
+              className="admin-qa-modal quiz-flow-scope"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="admin-question-dialog-title"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button type="button" className="admin-qa-close" onClick={handleCancelForm} aria-label="Close dialog">
+                ×
+              </button>
+              <header className="admin-qa-modal__head">
+                <h2 className="admin-qa-modal__title" id="admin-question-dialog-title">
+                  {editingQuestion ? 'Edit Question' : 'Create Question'}
+                </h2>
+                <p className="admin-qa-modal__meta">
+                  {editingQuestion
+                    ? `Editing bank entry · ${editingQuestion._id}`
+                    : 'New bank entry · save to publish'}
+                </p>
+              </header>
 
-                {message && showForm ? (
-                  <p className={message.type === 'error' ? 'error-message' : 'success-message'}>{message.text}</p>
-                ) : null}
+              {message && showForm ? (
+                <p className={`admin-qa-modal__alert ${message.type === 'error' ? 'error-message' : 'success-message'}`}>
+                  {message.text}
+                </p>
+              ) : null}
 
+              <div className="admin-qa-modal__body">
                 <QuestionForm
                   initialQuestion={editingQuestion}
                   isSubmitting={submitting}
                   onCancel={handleCancelForm}
                   onSubmit={handleSubmitQuestion}
                 />
-              </section>
+              </div>
             </div>
           </div>
         ) : null}
@@ -192,7 +189,12 @@ export default function AdminPage() {
 
         <section className="admin-section review-attempt-list review-attempt-panel review-attempt-panel--framed">
           <FrameCorners />
-          <h2 className="review-attempt-card__title admin-dashboard-section-title">Question List</h2>
+          <div className="admin-list-header">
+            <h2 className="review-attempt-card__title admin-dashboard-section-title admin-list-header__title">Question list</h2>
+            <button type="button" className="admin-btn-add" onClick={handleCreateClick}>
+              + Add question
+            </button>
+          </div>
 
           {loading ? (
             <p className="loading-state">Loading questions...</p>

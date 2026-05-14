@@ -2,58 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import api from '../api/api.js';
-import FrameCorners from '../components/FrameCorners.jsx';
 import GlobalHeader from '../components/GlobalHeader.jsx';
-
-const LETTERS = ['A', 'B', 'C', 'D'];
-
-function formatReviewCategory(raw) {
-  if (raw == null) return '';
-  const s = String(raw).trim();
-  if (!s) return '';
-  return s
-    .replace(/_/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
-}
-
-/** Correct: explanation folded by default; incorrect: expanded, both toggleable */
-function ReviewAttemptExplanation({ isCorrect, text }) {
-  const trimmed = String(text ?? '').trim();
-  const has = Boolean(trimmed);
-  const [open, setOpen] = useState(() => !isCorrect && has);
-
-  if (!has) {
-    return (
-      <div className="review-attempt-exp review-attempt-exp--empty">
-        <h3 className="review-attempt-exp__lbl">Explanation</h3>
-        <p className="review-attempt-exp__missing">No explanation for this question.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="review-attempt-exp">
-      <button
-        type="button"
-        className={`review-attempt-exp__toggle${open ? ' is-open' : ''}`}
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-      >
-        <span className="review-attempt-exp__arrow" aria-hidden="true">
-          ▼
-        </span>
-        {open ? 'Hide Explanation' : 'View Explanation'}
-      </button>
-      <div className={`review-attempt-exp__panel${open ? ' is-open' : ''}`}>
-        <h3 className="review-attempt-exp__lbl">Explanation</h3>
-        <p>{trimmed}</p>
-      </div>
-    </div>
-  );
-}
+import ReviewV7Card from '../components/quiz/ReviewV7Card.jsx';
 
 function ReviewPage() {
   const navigate = useNavigate();
@@ -80,10 +30,12 @@ function ReviewPage() {
 
   if (loading) {
     return (
-      <div className="quiz-flow-scope quiz-review-shell">
+      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
         <GlobalHeader />
         <main className="review-page quiz-review-page">
-          <p className="loading-state">Loading review...</p>
+          <div className="rv-center">
+            <p className="loading-state ld-page-lead">Opening your debrief…</p>
+          </div>
         </main>
       </div>
     );
@@ -91,10 +43,12 @@ function ReviewPage() {
 
   if (error) {
     return (
-      <div className="quiz-flow-scope quiz-review-shell">
+      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
         <GlobalHeader />
         <main className="review-page quiz-review-page">
-          <p className="error-message">{error}</p>
+          <div className="rv-center">
+            <p className="error-message">{error}</p>
+          </div>
         </main>
       </div>
     );
@@ -102,10 +56,12 @@ function ReviewPage() {
 
   if (!attempt) {
     return (
-      <div className="quiz-flow-scope quiz-review-shell">
+      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
         <GlobalHeader />
         <main className="review-page quiz-review-page">
-          <p className="empty-state">No attempt found.</p>
+          <div className="rv-center">
+            <p className="empty-state">No attempt found.</p>
+          </div>
         </main>
       </div>
     );
@@ -113,111 +69,71 @@ function ReviewPage() {
 
   const correctCount = attempt.review.filter((r) => r.isCorrect).length;
   const total = attempt.total || attempt.review.length;
+  const pct = total ? Math.round((correctCount / total) * 100) : 0;
 
   return (
-    <div className="quiz-flow-scope quiz-review-shell">
-      <div className="sq-world-bg" aria-hidden="true" />
+    <div className="quiz-flow-scope quiz-review-shell review-learning-page">
+      <div className="sq-world-bg sq-world-bg--photo" aria-hidden="true" />
 
       <GlobalHeader />
 
       <main className="review-page quiz-review-page">
-      <section className="admin-section review-attempt-header review-attempt-panel review-attempt-panel--framed">
-        <FrameCorners />
-        <h1>Review Mode</h1>
+        <div className="rv-center">
+          <header>
+            <h1 className="ld-page-title">
+              Learning
+              {' '}
+              <em>Debrief</em>
+            </h1>
+            <p className="ld-page-lead">
+              Each card walks the scenario, your choice, the keyed response, and a scholar note. Wrong items open the
+              note automatically so you can repair understanding first.
+            </p>
+            <div className="rv-final-score" role="status">
+              <span className="rv-fs-label">Outcome</span>
+              <span className="rv-fs-value">
+                {attempt.score}
+                <span className="rv-fs-slash">/</span>
+                {total}
+              </span>
+              <span className="rv-fs-hint">
+                {correctCount}
+                /
+                {total}
+                {' '}
+                correct ·
+                {' '}
+                {pct}
+                %
+              </span>
+            </div>
+            <p className="ld-meta-line">
+              <strong>Completed</strong>
+              {' '}
+              {new Date(attempt.createdAt).toLocaleString()}
+            </p>
+          </header>
 
-        <div className="review-attempt-final" role="status">
-          <div className="review-attempt-final__label">Final score</div>
-          <div className="review-attempt-final__value">
-            {attempt.score}
-            <span className="review-attempt-final__slash">/</span>
-            {total}
+          <div className="rv-cards-v7">
+            {attempt.review.map((item, index) => (
+              <ReviewV7Card key={item.questionId || index} item={item} index={index} />
+            ))}
           </div>
-          <p className="review-attempt-final__hint">+1 point per correct answer</p>
+
+          <div className="rv-v7-footer-actions">
+            <button
+              type="button"
+              className="btn-rv-again ld-footer-btn ld-footer-btn--ghost"
+              onClick={() => navigate('/history')}
+            >
+              ← Archive
+            </button>
+            <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--primary" onClick={() => navigate('/quiz')}>
+              New run
+            </button>
+          </div>
         </div>
-
-        <p className="review-attempt-meta">
-          Completed: {new Date(attempt.createdAt).toLocaleString()}
-          {' · '}
-          <span className={correctCount === total ? 'review-attempt-meta--ok' : ''}>
-            {correctCount}/{total} correct
-          </span>
-        </p>
-        <p className="review-attempt-hint">
-          Correct answers keep the explanation collapsed — use View Explanation to read it. Incorrect answers show the
-          explanation by default; use Hide Explanation to collapse it.
-        </p>
-      </section>
-
-      <section className="admin-section review-attempt-list review-attempt-panel review-attempt-panel--framed">
-        <FrameCorners />
-        {attempt.review.map((item, index) => {
-          const opts = item.options || [];
-          const sel = item.selectedAnswer;
-          const cor = item.correctAnswer;
-          return (
-            <article key={item.questionId} className="review-attempt-card review-attempt-card--framed">
-              <FrameCorners />
-              <header className="review-attempt-card__head">
-                <span className={`review-attempt-mark${item.isCorrect ? ' is-ok' : ' is-bad'}`}>
-                  {item.isCorrect ? '✓' : '✕'}
-                </span>
-                <h2 className="review-attempt-card__title">Question {index + 1}</h2>
-                <span className={`review-attempt-verdict${item.isCorrect ? ' is-ok' : ' is-bad'}`}>
-                  {item.isCorrect ? 'Correct' : 'Incorrect'}
-                </span>
-              </header>
-
-              {(item.category || item.topic) && (
-                <p className="review-page-topic">
-                  <strong>Topic:</strong>{' '}
-                  {formatReviewCategory(item.category || item.topic)}
-                </p>
-              )}
-
-              <p className="review-attempt-q">{item.questionText}</p>
-
-              <ul className="review-attempt-options">
-                {opts.map((option, optionIndex) => {
-                  const isSelected = optionIndex === sel;
-                  const isCorrectOpt = optionIndex === cor;
-
-                  return (
-                    <li
-                      key={`${item.questionId}-${optionIndex}`}
-                      className={`review-attempt-opt${isCorrectOpt ? ' is-correct' : ''}${
-                        isSelected && !isCorrectOpt ? ' is-wrong' : ''
-                      }${isSelected && isCorrectOpt ? ' is-picked-ok' : ''}`}
-                    >
-                      <span className="review-attempt-opt__letter">{LETTERS[optionIndex]}</span>
-                      <span className="review-attempt-opt__text">{option}</span>
-                      {isCorrectOpt && <span className="review-attempt-opt__tag">Correct</span>}
-                      {!isCorrectOpt && isSelected && (
-                        <span className="review-attempt-opt__tag">Your answer</span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <ReviewAttemptExplanation isCorrect={item.isCorrect} text={item.explanation} />
-            </article>
-          );
-        })}
-      </section>
-
-      <section className="admin-section review-attempt-panel review-attempt-panel--framed">
-        <FrameCorners />
-        <div className="button-row">
-          <button type="button" onClick={() => navigate('/history')}>
-            Back to History
-          </button>
-
-          <button type="button" onClick={() => navigate('/quiz')}>
-            Play Again
-          </button>
-        </div>
-      </section>
-    </main>
+      </main>
     </div>
   );
 }

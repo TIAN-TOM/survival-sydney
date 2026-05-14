@@ -9,6 +9,9 @@ import { QuizProvider } from './contexts/QuizContext.jsx';
 import { ThemeProvider } from './contexts/ThemeContext.jsx';
 import './styles.css';
 import './styles/quizflow.css';
+import './styles/learning-dashboard.css';
+import './styles/premium-ui.css';
+import './styles/quiz-play.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

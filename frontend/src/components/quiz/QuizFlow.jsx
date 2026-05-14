@@ -50,9 +50,11 @@ export default function QuizFlow() {
     review: <ReviewScreen />,
   };
 
+  const usePhotoBackdrop = phase !== 'gate' && phase !== 'start';
+
   return (
     <>
-      <QuizWorldBackground />
+      <QuizWorldBackground usePhotoBackdrop={usePhotoBackdrop} />
       {screens[phase] ?? <QuizGateScreen />}
     </>
   );

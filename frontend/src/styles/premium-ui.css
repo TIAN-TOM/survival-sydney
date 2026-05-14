@@ -1,0 +1,354 @@
+/**
+ * Premium editorial polish — magical parchment / Hogwarts-adjacent academia.
+ * Loads after quizflow.css; scoped to .quiz-flow-scope where applicable.
+ */
+
+/* ── Ambient backgrounds (light): softer, less competing with content ── */
+html[data-theme='light'] .quiz-flow-scope .sq-world-bg:not(.sq-world-bg--photo) {
+  background-color: var(--sq-sky1);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% 0%, rgba(74, 52, 34, 0.06), transparent 55%),
+    radial-gradient(circle at 78% 12%, rgba(184, 115, 51, 0.1), transparent 14%),
+    repeating-linear-gradient(90deg, transparent, transparent 48px, rgba(74, 52, 34, 0.02) 48px, rgba(74, 52, 34, 0.02) 50px),
+    repeating-linear-gradient(180deg, transparent, transparent 22px, rgba(74, 52, 34, 0.018) 22px, rgba(74, 52, 34, 0.018) 24px),
+    linear-gradient(180deg, var(--sq-sky1) 0%, var(--sq-sky2) 58%, var(--sq-ground) 100%);
+}
+
+html[data-theme='light'] .quiz-flow-scope .sq-world-bg:not(.sq-world-bg--photo)::after {
+  opacity: 0.42;
+}
+
+/* Screen enter — subtle */
+@keyframes premium-qf-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-flow-scope .qf-screen {
+    animation: premium-qf-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
+/* Cards: readable veil on parchment (light) */
+html[data-theme='light'] .quiz-flow-scope .q-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(247, 241, 227, 0.96) 100%),
+    var(--sq-card);
+  box-shadow:
+    0 5px 0 rgba(74, 52, 34, 0.12),
+    0 12px 36px rgba(74, 52, 34, 0.08);
+}
+
+html[data-theme='dark'] .quiz-flow-scope .q-card {
+  box-shadow:
+    0 6px 0 rgba(0, 0, 0, 0.55),
+    0 0 48px rgba(201, 139, 71, 0.06);
+}
+
+/* Hero title — Playfair for both themes so layout does not shift when toggling day/night */
+.quiz-flow-scope .start-logo,
+.quiz-flow-scope .start-wizard__title.start-logo {
+  font-family: 'Playfair Display', 'Cinzel', Georgia, serif;
+}
+
+html[data-theme='light'] .quiz-flow-scope .start-logo {
+  color: #4a3422;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    0 2px 8px rgba(74, 52, 34, 0.18),
+    0 3px 14px rgba(156, 91, 46, 0.12);
+}
+
+html[data-theme='light'] .quiz-flow-scope .start-wizard__tagline {
+  color: #5c4330;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Primary CTA — dominant, premium press */
+.quiz-flow-scope .btn-wizard-start {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    filter 0.25s ease,
+    color 0.5s ease,
+    text-shadow 0.5s ease;
+}
+
+.quiz-flow-scope .btn-wizard-start:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.04);
+  box-shadow:
+    0 0 40px rgba(201, 139, 71, 0.28),
+    0 8px 24px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+}
+
+.quiz-flow-scope .btn-wizard-start:active {
+  transform: translateY(0);
+  box-shadow:
+    0 0 18px rgba(201, 139, 71, 0.15),
+    inset 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+/* Gate secondary links */
+.quiz-flow-scope .quiz-gate-register-hint a {
+  transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.quiz-flow-scope .quiz-gate-register-hint a:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 0 12px rgba(201, 139, 71, 0.35);
+}
+
+/* Navbar — animated underline + active glow */
+.quiz-flow-scope .quiz-top-link,
+.quiz-flow-scope .quiz-top-logo {
+  position: relative;
+  transition:
+    color 0.22s ease,
+    border-color 0.22s ease,
+    background 0.22s ease,
+    transform 0.2s ease,
+    text-shadow 0.22s ease;
+}
+
+.quiz-flow-scope .quiz-top-link::after {
+  content: '';
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.2rem;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, transparent, var(--sq-btn-a), transparent);
+  opacity: 0;
+  transform: scaleX(0.35);
+  transition:
+    opacity 0.22s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.quiz-flow-scope .quiz-top-link:hover::after {
+  opacity: 0.55;
+  transform: scaleX(1);
+}
+
+.quiz-flow-scope .quiz-top-link.quiz-top-link--active {
+  color: var(--sq-btn-a);
+  text-shadow: 0 0 14px rgba(201, 139, 71, 0.22);
+}
+
+.quiz-flow-scope .quiz-top-link.quiz-top-link--active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.quiz-flow-scope .quiz-top-logo:hover {
+  transform: translateY(-1px);
+  text-shadow: 0 0 18px rgba(201, 139, 71, 0.25);
+}
+
+/* Journey / progress — active pulse + fill ease */
+@keyframes premium-journey-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 5px 0 rgba(173, 100, 18, 0.28),
+      0 0 0 5px rgba(201, 139, 71, 0.18),
+      0 8px 20px rgba(156, 91, 46, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 5px 0 rgba(173, 100, 18, 0.32),
+      0 0 0 7px rgba(201, 139, 71, 0.26),
+      0 10px 28px rgba(156, 91, 46, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-flow-scope .journey-stop.current .stop-icon {
+    animation: premium-journey-pulse 2.4s ease-in-out infinite;
+  }
+
+  .quiz-flow-scope .journey-line-fill {
+    transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+.quiz-flow-scope .journey-line-fill {
+  background: linear-gradient(180deg, #e8d4a8 0%, var(--sq-btn-a) 100%);
+}
+
+/* Quiz options — premium feedback */
+.quiz-flow-scope .opt {
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    transform 0.22s ease,
+    box-shadow 0.25s ease,
+    color 0.2s ease;
+}
+
+.quiz-flow-scope .opt:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 0 rgba(74, 52, 34, 0.18),
+    0 0 22px rgba(201, 139, 71, 0.12);
+}
+
+.quiz-flow-scope .opt.selected {
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 0 rgba(74, 52, 34, 0.28),
+    0 0 28px rgba(201, 139, 71, 0.2),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.quiz-flow-scope .opt:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Result screen — score ring + spark dust */
+@keyframes premium-score-spark {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: translateY(-4px) scale(1.02);
+  }
+}
+
+.quiz-flow-scope .result-inner {
+  position: relative;
+}
+
+.quiz-flow-scope .result-inner::before {
+  content: '✦';
+  position: absolute;
+  top: -0.25rem;
+  right: 8%;
+  font-size: 0.75rem;
+  color: var(--sq-btn-a);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.quiz-flow-scope .result-inner::after {
+  content: '✦';
+  position: absolute;
+  bottom: 12%;
+  left: 6%;
+  font-size: 0.65rem;
+  color: var(--sq-btn-a);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-flow-scope .result-inner::before,
+  .quiz-flow-scope .result-inner::after {
+    animation: premium-score-spark 4s ease-in-out infinite;
+  }
+
+  .quiz-flow-scope .result-inner::after {
+    animation-delay: 1.2s;
+  }
+}
+
+.quiz-flow-scope .score-ring svg {
+  filter: drop-shadow(0 0 6px rgba(201, 139, 71, 0.15));
+}
+
+.quiz-flow-scope .result-stack .tc-card {
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.25s ease,
+    border-color 0.2s ease;
+}
+
+.quiz-flow-scope .result-stack .tc-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 5px 0 rgba(74, 52, 34, 0.14),
+    0 10px 28px rgba(74, 52, 34, 0.08);
+}
+
+.quiz-flow-scope .btn-debrief,
+.quiz-flow-scope .btn-again {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    filter 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.quiz-flow-scope .btn-debrief:hover,
+.quiz-flow-scope .btn-again:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+
+.quiz-flow-scope .btn-debrief:active,
+.quiz-flow-scope .btn-again:active {
+  transform: translateY(1px);
+}
+
+/* Review debrief — explanation motion */
+.quiz-flow-scope .rvc-exp-panel {
+  transition:
+    grid-template-rows 0.28s ease,
+    opacity 0.22s ease;
+}
+
+.quiz-flow-scope .rvc-exp-btn {
+  transition:
+    color 0.2s ease,
+    background 0.22s ease,
+    letter-spacing 0.2s ease;
+}
+
+.quiz-flow-scope .rvc-opt {
+  transition:
+    border-color 0.22s ease,
+    background 0.22s ease,
+    box-shadow 0.25s ease,
+    transform 0.22s ease;
+}
+
+.quiz-flow-scope .rvc-opt:hover {
+  transform: translateY(-1px);
+}
+
+.quiz-flow-scope .rv-card-v7.q-card.framed {
+  transition:
+    box-shadow 0.28s ease,
+    border-color 0.25s ease;
+}
+
+.quiz-flow-scope .rv-card-v7.q-card.framed:hover {
+  box-shadow:
+    0 5px 0 rgba(0, 0, 0, 0.36),
+    0 14px 40px rgba(74, 52, 34, 0.08);
+}
+
+/* Explanation panel — reveal on inner content */
+.quiz-flow-scope .rvc-exp-panel.open .rvc-exp-panel-inner {
+  animation: rvc-slide-down 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.quiz-flow-scope .rvc-opt-tag {
+  letter-spacing: 0.04em;
+}

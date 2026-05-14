@@ -8,24 +8,18 @@ import { useTheme } from '../../contexts/ThemeContext.jsx';
 import { quizStartHeroImageSrc } from '../../quizBrandAssets.js';
 import GlobalHeader, { QuizNavLogout, QuizTopPlayer } from '../GlobalHeader.jsx';
 import QuizFramedPanel from './QuizFramedPanel.jsx';
+import ReviewV7Card from './ReviewV7Card.jsx';
+import { formatReviewCategory } from './reviewFormatUtils.js';
 import { AuthQuizCardShell, LoginFormPanel } from '../LoginFormPanel.jsx';
 
 const QUIZ_ADVANCE_DELAY_MS = 860;
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
-/** Slug or label → Title Case (e.g. `transport` → Transport, `housing_consumers` → Housing Consumers). */
-function formatReviewCategory(raw) {
-  if (raw == null) return '';
-  const s = String(raw).trim();
-  if (!s) return '';
-  return s
-    .replace(/_/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-    .join(' ');
-}
+const QUIZ_HINT_PHRASES = [
+  'Choose wisely — only one path is correct.',
+  'One answer will guide your survival.',
+];
 
 const TOPIC_MAP = {
   Geography: { cls: 'tp-geo', label: 'Geography' },
@@ -527,6 +521,7 @@ export function QuizScreen() {
   const currentQuestion = questions[currentQ];
   const currentTopic =
     formatReviewCategory(currentQuestion?.category || currentQuestion?.topic || '') || 'Sydney Survival';
+  const hintPhrase = QUIZ_HINT_PHRASES[currentQ % QUIZ_HINT_PHRASES.length];
 
   return (
     <div className="qf-screen quiz-screen">
@@ -534,10 +529,6 @@ export function QuizScreen() {
         <GlobalHeader />
         <main className="quiz-gothic-main">
           <QuizProgressStrip total={n} current={currentQ} />
-
-          <div className="quiz-gothic-topbar">
-            <div className="gothic-ornament" aria-hidden="true">✦ ✦ ✦</div>
-          </div>
 
           <section className="quiz-gothic-question">
             <div className="quiz-body">
@@ -550,14 +541,49 @@ export function QuizScreen() {
                       <span>🪶</span>
                     </div>
                     <div className="q-meta">
-                      <span className="q-num">Q{currentQ + 1}</span>
+                      <div className="q-meta-left">
+                        <span className="q-meta-crest" aria-hidden="true">
+                          <svg className="q-meta-crest-svg" viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                              d="M16 2.5L27.5 8v11.2c0 6.8-4.2 12.4-11.5 14.3L16 34l-.1-.1C8.6 31.9 4.5 26.3 4.5 19.5V8L16 2.5z"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.35"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M16 11v9M11.5 15.5h9"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.1"
+                              strokeLinecap="round"
+                              opacity="0.55"
+                            />
+                          </svg>
+                        </span>
+                        <div className="q-meta-titles">
+                          <span className="q-num">Q{currentQ + 1}</span>
+                          <span className="q-trial-lbl">Safety Trial</span>
+                        </div>
+                      </div>
                       <TopicPill topic={currentTopic} />
                     </div>
 
                     <div className="q-text">{currentQuestion?.questionText}</div>
 
-                    <div className="q-divider">◆ ◆ ◆</div>
-                    <div className="q-hint"><span>🪶</span> Choose one correct answer.</div>
+                    <div className="q-divider q-divider--ornate" role="presentation">
+                      <span className="q-div-orn">✦</span>
+                      <span className="q-div-line" aria-hidden="true" />
+                      <span className="q-div-orn">✦</span>
+                      <span className="q-div-line" aria-hidden="true" />
+                      <span className="q-div-orn">✦</span>
+                    </div>
+                    <div className="q-hint">
+                      <span className="q-hint-feather" aria-hidden="true">
+                        🪶
+                      </span>
+                      <span>{hintPhrase}</span>
+                    </div>
 
                     <div className="opts">
                       {(currentQuestion?.options || []).map((opt, j) => {
@@ -764,95 +790,6 @@ export function ResultScreen() {
   );
 }
 
-function ReviewV7Card({ item, index }) {
-  const questionText = item.questionText;
-  const options = item.options || [];
-  const correctIdx = item.correctAnswer;
-  const explanation = String(item.explanation ?? '').trim();
-  const hasExplanation = Boolean(explanation);
-  const isCorrect = item.isCorrect;
-  /** Wrong: explanation open by default; correct: collapsed until user expands */
-  const [expOpen, setExpOpen] = useState(() => !isCorrect && hasExplanation);
-
-  const topicShort = (() => {
-    const label = formatReviewCategory(item.category || item.topic || '');
-    return label ? label.toUpperCase().replace(/\s+/g, ' ') : 'SYDNEY SURVIVAL';
-  })();
-
-  return (
-    <QuizFramedPanel
-      tag="article"
-      id={`rvc-${index}`}
-      className={`rv-card-v7 rv-card ${isCorrect ? 'card-cor' : 'card-wrg'}`}
-    >
-      <div className="rvc-head">
-        <div className={`rvc-si ${isCorrect ? 'ok' : 'bad'}`}>{isCorrect ? '✓' : '✕'}</div>
-        <span className="rvc-qn">Q{index + 1}</span>
-        <span className="rvc-sep">·</span>
-        <span className="rvc-topic">{topicShort}</span>
-        <span className={`rvc-result ${isCorrect ? 'ok' : 'bad'}`}>{isCorrect ? 'Correct' : 'Incorrect'}</span>
-      </div>
-      <div className="rvc-body">
-        <div className="rvc-q">{questionText}</div>
-        <div className="q-divider rvc-q-divider">◆ ◆ ◆</div>
-        <div className="rvc-opts">
-          {options.map((opt, j) => {
-            const isSel = j === item.selectedAnswer;
-            const isCor = j === correctIdx;
-            let cls = 'neutral';
-            let tag = null;
-            if (isCor && isSel) {
-              cls = 'ok-ans';
-              tag = <span className="rvc-opt-tag">Your Answer ✓</span>;
-            } else if (isCor) {
-              cls = 'ok-ans';
-              tag = <span className="rvc-opt-tag">Correct</span>;
-            } else if (isSel && !isCor) {
-              cls = 'ur-bad';
-              tag = <span className="rvc-opt-tag">Your Answer ✗</span>;
-            }
-            return (
-              <div key={j} className={`rvc-opt ${cls}`}>
-                <span className="rvc-ol">{LETTERS[j]}</span>
-                {opt}
-                {tag}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      {hasExplanation ? (
-        <>
-          <button
-            type="button"
-            className={`rvc-exp-btn${expOpen ? ' open' : ''}`}
-            onClick={() => setExpOpen((o) => !o)}
-            aria-expanded={expOpen}
-          >
-            <span className="exp-arrow" aria-hidden="true">▼</span>
-            <span className="rvc-exp-label">{expOpen ? 'Hide Explanation' : 'View Explanation'}</span>
-          </button>
-          <div className={`rvc-exp-panel${expOpen ? ' open' : ''}`}>
-            <div className="rvc-exp-lbl">
-              <span aria-hidden="true">📜</span>
-              Explanation
-            </div>
-            <p className="rvc-exp-text">{explanation}</p>
-          </div>
-        </>
-      ) : (
-        <div className="rvc-exp-block rvc-exp-block--empty">
-          <div className="rvc-exp-lbl">
-            <span aria-hidden="true">📜</span>
-            Explanation
-          </div>
-          <p className="rvc-exp-text rvc-exp-missing">No explanation for this question.</p>
-        </div>
-      )}
-    </QuizFramedPanel>
-  );
-}
-
 export function ReviewScreen() {
   const { state, restart, backToResults } = useQuiz();
   const { review } = state;
@@ -871,7 +808,7 @@ export function ReviewScreen() {
   };
 
   return (
-    <div className="qf-screen review-screen review-v7">
+    <div className="qf-screen review-screen review-v7 review-learning-page">
       <GlobalHeader />
 
       <div className="q-dot-bar">
@@ -914,8 +851,8 @@ export function ReviewScreen() {
               <span className="rv-fs-hint">+1 point per correct answer</span>
             </div>
             <p>
-              Correct answers keep the explanation collapsed — use View Explanation to read it. Incorrect answers show
-              the explanation by default; use Hide Explanation to collapse it.
+              Wrong items open the scholar note automatically; correct items keep it folded until you choose to read
+              it.
             </p>
           </div>
           <div className="rv-cards-v7">

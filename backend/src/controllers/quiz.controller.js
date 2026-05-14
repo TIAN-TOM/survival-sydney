@@ -152,10 +152,52 @@ const submitQuiz = async (req, res, next) => {
 const getHistory = async (req, res, next) => {
   try {
     const history = await Score.find({ userId: req.user.id })
-      .select('score createdAt')
-      .sort({ createdAt: -1 });
+      .select('score createdAt answers')
+      .sort({ createdAt: -1 })
+      .lean();
 
-    return res.json(ok(history));
+    const idStrings = [];
+    for (const row of history) {
+      for (const a of row.answers || []) {
+        if (a.questionId) idStrings.push(a.questionId.toString());
+      }
+    }
+    const uniqueIds = [...new Set(idStrings)];
+
+    const questions =
+      uniqueIds.length > 0
+        ? await Question.find({ _id: { $in: uniqueIds } })
+            .select('topic')
+            .lean()
+        : [];
+
+    const topicByQuestionId = {};
+    for (const q of questions) {
+      topicByQuestionId[q._id.toString()] = q.topic || 'general';
+    }
+
+    const enriched = history.map((row) => {
+      const topics = [];
+      const seen = new Set();
+      for (const a of row.answers || []) {
+        const tid = a.questionId?.toString();
+        const t = tid ? topicByQuestionId[tid] || 'general' : 'general';
+        if (!seen.has(t)) {
+          seen.add(t);
+          topics.push(t);
+        }
+      }
+
+      return {
+        _id: row._id,
+        score: row.score,
+        createdAt: row.createdAt,
+        totalQuestions: row.answers?.length ?? 0,
+        topics: topics.slice(0, 8),
+      };
+    });
+
+    return res.json(ok(enriched));
   } catch (err) {
     next(err);
   }

@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Sydney sky / harbour skyline layer from sydney-quiz-prototype (no mascot).
+ * usePhotoBackdrop: when true (non–gate/start quiz flow), full-bleed day/night photos replace the parchment-style sky.
  */
-export default function QuizWorldBackground() {
+export default function QuizWorldBackground({ usePhotoBackdrop = false }) {
   const starsRef = useRef(null);
 
   useEffect(() => {
@@ -27,7 +28,10 @@ export default function QuizWorldBackground() {
   }, []);
 
   return (
-    <div className="sq-world-bg" aria-hidden="true">
+    <div
+      className={`sq-world-bg${usePhotoBackdrop ? ' sq-world-bg--photo' : ''}`}
+      aria-hidden="true"
+    >
       <div className="sq-cloud" style={{ top: '12%', left: '8%' }}>
         <div className="sq-cloud-shape" style={{ width: '80px', height: '24px', position: 'absolute' }} />
         <div

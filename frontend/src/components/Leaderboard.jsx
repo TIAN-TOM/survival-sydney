@@ -51,35 +51,53 @@ export default function Leaderboard() {
             ✕
           </button>
           <h1 id="lb-v7-title" className="leaderboard-v7-title">
-            🏆 Leaderboard
+            Hall of Merit
           </h1>
-          <p className="leaderboard-v7-sub">Best attempt per player · Highest score first</p>
-          <p className="leaderboard-v7-note">✦ Sydney Survival Quiz — All Players</p>
+          <p className="leaderboard-v7-sub">Best attempt per scholar · highest score first</p>
+          <p className="leaderboard-v7-note">Sydney Survival Quiz — all players</p>
 
           {loading ? <p className="leaderboard-v7-status">Loading…</p> : null}
           {error ? <p className="leaderboard-v7-error">{error}</p> : null}
 
           {!loading && !error ? (
-            <div className="leaderboard-v7-list">
+            <div className="leaderboard-v7-scroll">
               {rows.length === 0 ? (
                 <p className="leaderboard-v7-empty">No scores yet. Be the first.</p>
               ) : (
-                rows.map((row, i) => {
-                  const isMe = user?.username && row.username === user.username;
-                  return (
-                    <div key={`${row.username}-${i}`} className={`leaderboard-v7-row${isMe ? ' me' : ''}`}>
-                      <span className="leaderboard-v7-rank">{i + 1}</span>
-                      <span className="leaderboard-v7-medal" aria-hidden="true">
-                        {MEDALS[i] || ''}
-                      </span>
-                      <span className="leaderboard-v7-name">{row.username}</span>
-                      <span className="leaderboard-v7-score">
-                        {row.bestScore}
-                        <span>/10</span>
-                      </span>
-                    </div>
-                  );
-                })
+                <table className="leaderboard-v7-table">
+                  <thead>
+                    <tr>
+                      <th className="lb-col-rank" scope="col">
+                        Rank
+                      </th>
+                      <th className="lb-col-medal" scope="col">
+                        Award
+                      </th>
+                      <th scope="col">Name</th>
+                      <th className="lb-col-score" scope="col">
+                        Score
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row, i) => {
+                      const isMe = user?.username && row.username === user.username;
+                      return (
+                        <tr key={`${row.username}-${i}`} className={isMe ? 'me' : undefined}>
+                          <td className="lb-col-rank">{i + 1}</td>
+                          <td className="lb-col-medal" aria-hidden="true">
+                            {MEDALS[i] || '·'}
+                          </td>
+                          <td className="lb-col-name">{row.username}</td>
+                          <td className="lb-col-score">
+                            {row.bestScore}
+                            <span> / 10</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               )}
             </div>
           ) : null}
