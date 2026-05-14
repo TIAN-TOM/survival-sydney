@@ -49,7 +49,7 @@ Then run one manual browser pass using `docs/manual-test-checklist.md`.
 
 - The database is local MongoDB only.
 - Quiz attempts are generated dynamically from active `Question` documents.
-- In-progress quiz state is short-lived server memory plus frontend state; completed attempts are persisted in `Score`.
+- In-progress quiz state is held in frontend state; the backend does not persist started quiz sessions, and completed attempts are persisted in `Score`.
 - There is no persisted `Quiz` collection.
 - Admins use the same backend login mechanism as players; `/admin/login` is an optional frontend entry for admin workflow clarity.
 - Review Mode uses `Score.answers[]` plus current `Question` documents; deleted questions render as placeholders rather than durable snapshots.
