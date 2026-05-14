@@ -227,7 +227,7 @@ Design decisions:
 - Quiz length: fixed 10 questions.
 - Question selection: backend randomly samples 10 active questions per attempt.
 - Scoring: +1 per correct answer only.
-- Leaderboard: backend returns the best score per user, sorted by score descending. Frontend leaderboard rendering still needs owner follow-up.
+- Leaderboard: backend returns the best score per user, sorted by score descending. The backend leaderboard endpoint is currently public; the frontend `/leaderboard` route is protected but still renders a placeholder. Tie-break ordering and admin-score filtering need quiz/leaderboard owner follow-up before final submission.
 
 ## 📘 API Documentation
 
@@ -246,7 +246,7 @@ Key route groups:
 | Requirement | Implementation |
 |---|---|
 | Local authentication | Users register/log in with username and password; passwords are hashed with bcrypt before storage. |
-| JWT protected routes | Authenticated routes require `Authorization: Bearer <token>`; JWT payload includes user role. |
+| JWT protected routes | Quiz start, submit, history/review, and admin routes require `Authorization: Bearer <token>`; the current backend leaderboard endpoint is public even though the frontend route is protected. |
 | Backend RBAC | `/api/admin/*` routes require both authentication and `role === "admin"`. |
 | Frontend RBAC | Admin navigation and `/admin` are restricted by `ProtectedRoute adminOnly`. |
 | Rate limiting | Login uses `express-rate-limit` via `backend/src/middleware/rateLimiters.js`; quiz submit has a limiter helper defined but not mounted. |
