@@ -1,9 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import api from '../api/api.js';
-import GlobalHeader from '../components/GlobalHeader.jsx';
-import ReviewV7Card from '../components/quiz/ReviewV7Card.jsx';
+import GameplayHudPortal from '../components/GameplayHudPortal.jsx';
+import ReviewQuestionCard from '../components/quiz/ReviewQuestionCard.jsx';
+import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
+
+function ReviewArchiveHudStrip({ attempt, activeDot, onJump, onArchive }) {
+  const correctCount = attempt.review.filter((r) => r.isCorrect).length;
+  const total = attempt.total || attempt.review.length;
+  return (
+    <div className="review-progress-strip review-progress-strip--archive-route">
+      <span className="qdb-score" title="+1 point per correct answer">
+        Outcome:
+        {' '}
+        {attempt.score}
+        /
+        {total}
+        <span className="qdb-score-sub">
+          {' '}
+          (
+          {correctCount}
+          /
+          {total}
+          {' '}
+          correct)
+        </span>
+      </span>
+      <div className="qdb-dots" role="tablist" aria-label="Jump to question">
+        {attempt.review.map((row, i) => (
+          <button
+            key={row.questionId || i}
+            type="button"
+            className={`q-dot ${row.isCorrect ? 'cor' : 'wrg'}${activeDot === i ? ' active-dot' : ''}`}
+            onClick={() => onJump(i)}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </div>
+      <button type="button" className="qdb-back" onClick={onArchive}>
+        ← Archive
+      </button>
+    </div>
+  );
+}
 
 function ReviewPage() {
   const navigate = useNavigate();
@@ -12,6 +53,15 @@ function ReviewPage() {
   const [attempt, setAttempt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeDot, setActiveDot] = useState(0);
+
+  const jumpTo = useCallback((i) => {
+    setActiveDot(i);
+    document.getElementById(`rvc-${i}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }, []);
 
   useEffect(() => {
     const fetchAttempt = async () => {
@@ -31,7 +81,7 @@ function ReviewPage() {
   if (loading) {
     return (
       <div className="quiz-flow-scope quiz-review-shell review-learning-page">
-        <GlobalHeader />
+        <QuizWorldBackground usePhotoBackdrop />
         <main className="review-page quiz-review-page">
           <div className="rv-center">
             <p className="loading-state ld-page-lead">Opening your debrief…</p>
@@ -44,7 +94,7 @@ function ReviewPage() {
   if (error) {
     return (
       <div className="quiz-flow-scope quiz-review-shell review-learning-page">
-        <GlobalHeader />
+        <QuizWorldBackground usePhotoBackdrop />
         <main className="review-page quiz-review-page">
           <div className="rv-center">
             <p className="error-message">{error}</p>
@@ -57,7 +107,7 @@ function ReviewPage() {
   if (!attempt) {
     return (
       <div className="quiz-flow-scope quiz-review-shell review-learning-page">
-        <GlobalHeader />
+        <QuizWorldBackground usePhotoBackdrop />
         <main className="review-page quiz-review-page">
           <div className="rv-center">
             <p className="empty-state">No attempt found.</p>
@@ -67,15 +117,18 @@ function ReviewPage() {
     );
   }
 
-  const correctCount = attempt.review.filter((r) => r.isCorrect).length;
-  const total = attempt.total || attempt.review.length;
-  const pct = total ? Math.round((correctCount / total) * 100) : 0;
-
   return (
     <div className="quiz-flow-scope quiz-review-shell review-learning-page">
-      <div className="sq-world-bg sq-world-bg--photo" aria-hidden="true" />
+      <GameplayHudPortal mode="review">
+        <ReviewArchiveHudStrip
+          attempt={attempt}
+          activeDot={activeDot}
+          onJump={jumpTo}
+          onArchive={() => navigate('/history')}
+        />
+      </GameplayHudPortal>
 
-      <GlobalHeader />
+      <QuizWorldBackground usePhotoBackdrop />
 
       <main className="review-page quiz-review-page">
         <div className="rv-center">
@@ -89,24 +142,6 @@ function ReviewPage() {
               Each card walks the scenario, your choice, the keyed response, and a scholar note. Wrong items open the
               note automatically so you can repair understanding first.
             </p>
-            <div className="rv-final-score" role="status">
-              <span className="rv-fs-label">Outcome</span>
-              <span className="rv-fs-value">
-                {attempt.score}
-                <span className="rv-fs-slash">/</span>
-                {total}
-              </span>
-              <span className="rv-fs-hint">
-                {correctCount}
-                /
-                {total}
-                {' '}
-                correct ·
-                {' '}
-                {pct}
-                %
-              </span>
-            </div>
             <p className="ld-meta-line">
               <strong>Completed</strong>
               {' '}
@@ -114,13 +149,13 @@ function ReviewPage() {
             </p>
           </header>
 
-          <div className="rv-cards-v7">
+          <div className="review-cards">
             {attempt.review.map((item, index) => (
-              <ReviewV7Card key={item.questionId || index} item={item} index={index} />
+              <ReviewQuestionCard key={item.questionId || index} item={item} index={index} />
             ))}
           </div>
 
-          <div className="rv-v7-footer-actions">
+          <div className="review-footer-actions">
             <button
               type="button"
               className="btn-rv-again ld-footer-btn ld-footer-btn--ghost"

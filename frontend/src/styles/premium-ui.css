@@ -55,7 +55,7 @@ html[data-theme='dark'] .quiz-flow-scope .q-card {
 /* Hero title — Playfair for both themes so layout does not shift when toggling day/night */
 .quiz-flow-scope .start-logo,
 .quiz-flow-scope .start-wizard__title.start-logo {
-  font-family: 'Playfair Display', 'Cinzel', Georgia, serif;
+  font-family: var(--font-display);
 }
 
 html[data-theme='light'] .quiz-flow-scope .start-logo {
@@ -332,13 +332,13 @@ html[data-theme='light'] .quiz-flow-scope .start-wizard__tagline {
   transform: translateY(-1px);
 }
 
-.quiz-flow-scope .rv-card-v7.q-card.framed {
+.quiz-flow-scope .review-question-card.q-card.framed {
   transition:
     box-shadow 0.28s ease,
     border-color 0.25s ease;
 }
 
-.quiz-flow-scope .rv-card-v7.q-card.framed:hover {
+.quiz-flow-scope .review-question-card.q-card.framed:hover {
   box-shadow:
     0 5px 0 rgba(0, 0, 0, 0.36),
     0 14px 40px rgba(74, 52, 34, 0.08);

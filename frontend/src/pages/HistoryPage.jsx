@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import api from '../api/api.js';
-import GlobalHeader from '../components/GlobalHeader.jsx';
+import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
 import { formatReviewCategory } from '../components/quiz/reviewFormatUtils.js';
 
 const CHIP_ORDER = ['renting', 'transport', 'safety', 'scam', 'food', 'general'];
@@ -75,7 +75,7 @@ function HistoryAttemptCard({ attempt, attemptNo, navigate }) {
         <div className="hist-progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} role="progressbar" aria-label="Score as percent of attempt">
           <span style={{ width: `${Math.min(100, pct)}%` }} />
         </div>
-        <button type="button" className="hist-cta" onClick={() => navigate(`/review/${attempt._id}`)}>
+        <button type="button" className="hist-cta" onClick={() => navigate(`/history/${attempt._id}`)}>
           View review
           <span aria-hidden="true"> →</span>
         </button>
@@ -124,7 +124,7 @@ function HistoryPage() {
   if (loading) {
     return (
       <div className="quiz-flow-scope quiz-review-shell hist-learning-page">
-        <GlobalHeader />
+        <QuizWorldBackground usePhotoBackdrop />
         <main className="review-page quiz-review-page">
           <div className="rv-center">
             <p className="loading-state ld-page-lead">Loading your archive…</p>
@@ -137,7 +137,7 @@ function HistoryPage() {
   if (error) {
     return (
       <div className="quiz-flow-scope quiz-review-shell hist-learning-page">
-        <GlobalHeader />
+        <QuizWorldBackground usePhotoBackdrop />
         <main className="review-page quiz-review-page">
           <div className="rv-center">
             <p className="error-message">{error}</p>
@@ -149,9 +149,7 @@ function HistoryPage() {
 
   return (
     <div className="quiz-flow-scope quiz-review-shell hist-learning-page">
-      <div className="sq-world-bg sq-world-bg--photo" aria-hidden="true" />
-
-      <GlobalHeader />
+      <QuizWorldBackground usePhotoBackdrop />
 
       <main className="review-page quiz-review-page">
         <div className="rv-center">
@@ -209,7 +207,7 @@ function HistoryPage() {
                   Begin first quiz
                 </button>
               </div>
-              <div className="rv-v7-footer-actions">
+              <div className="review-footer-actions">
                 <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--ghost" onClick={() => navigate('/')}>
                   ← Home
                 </button>
@@ -236,7 +234,7 @@ function HistoryPage() {
                 open any attempt for the same structured debrief as Trial Debrief — your pick, the keyed answer, and
                 scholar notes.
               </p>
-              <div className="rv-v7-footer-actions">
+              <div className="review-footer-actions">
                 <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--primary" onClick={() => navigate('/quiz')}>
                   New run
                 </button>

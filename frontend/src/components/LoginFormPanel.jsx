@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
@@ -10,9 +10,10 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-export function AuthQuizCardShell({ children }) {
+export function AuthQuizCardShell({ children, tone }) {
+  const toneClass = tone === 'readable' ? ' auth-panel--readable' : '';
   return (
-    <section className="auth-panel q-card framed auth-panel--quizframe">
+    <section className={`auth-panel q-card framed auth-panel--quizframe${toneClass}`}>
       <svg className="bracket tl" viewBox="0 0 20 20" width="20" height="20" aria-hidden="true">
         <polyline points="19,1 1,1 1,19" fill="none" stroke="var(--sq-btn-a)" strokeWidth="2" strokeLinecap="square" />
       </svg>
@@ -37,6 +38,7 @@ export function AuthQuizCardShell({ children }) {
  * @param {string} props.submitLabel
  * @param {string} [props.notice]
  * @param {string} [props.noticeTone]
+ * @param {string} [props.prefilledUsername]
  * @param {(user: object) => void} [props.onSuccess] — embedded flow: no router navigation
  * @param {() => string} [props.resolveNavigatePath] — when onSuccess omitted, navigate here after login
  * @param {boolean} [props.showRegisterLink]
@@ -49,19 +51,28 @@ export function LoginFormPanel({
   submitLabel,
   notice,
   noticeTone,
+  prefilledUsername = '',
   onSuccess,
   resolveNavigatePath,
   showRegisterLink = true,
 }) {
   const navigate = useNavigate();
-  const { login, logout } = useAuth();
+  const { login, logout, loading } = useAuth();
   const [serverError, setServerError] = useState('');
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(loginSchema) });
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { username: prefilledUsername || '', password: '' },
+  });
+
+  useEffect(() => {
+    reset({ username: prefilledUsername || '', password: '' });
+  }, [prefilledUsername, reset]);
 
   const onSubmit = async ({ username, password }) => {
     setServerError('');
@@ -69,7 +80,7 @@ export function LoginFormPanel({
       const signedInUser = await login(username, password);
       if (adminMode && signedInUser.role !== 'admin') {
         logout();
-        setServerError('Admin access required');
+        setServerError('This account is not an administrator.');
         return;
       }
       if (typeof onSuccess === 'function') {
@@ -82,9 +93,16 @@ export function LoginFormPanel({
       }
       navigate(path, { replace: true });
     } catch (err) {
+      const status = err.status;
+      if (status === 401) {
+        setServerError('Incorrect username or password.');
+        return;
+      }
       setServerError(err.message || 'Login failed');
     }
   };
+
+  const busy = isSubmitting || loading;
 
   return (
     <>
@@ -97,14 +115,36 @@ export function LoginFormPanel({
       <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <label>
           Username
-          <input type="text" autoComplete="username" {...register('username')} />
-          {errors.username && <span className="field-error">{errors.username.message}</span>}
+          <input
+            type="text"
+            autoComplete="username"
+            className={errors.username ? 'is-invalid' : undefined}
+            aria-invalid={errors.username ? 'true' : undefined}
+            aria-describedby={errors.username ? 'login-username-err' : undefined}
+            {...register('username')}
+          />
+          {errors.username ? (
+            <span className="field-error" id="login-username-err" role="alert">
+              {errors.username.message}
+            </span>
+          ) : null}
         </label>
 
         <label>
           Password
-          <input type="password" autoComplete="current-password" {...register('password')} />
-          {errors.password && <span className="field-error">{errors.password.message}</span>}
+          <input
+            type="password"
+            autoComplete="current-password"
+            className={errors.password ? 'is-invalid' : undefined}
+            aria-invalid={errors.password ? 'true' : undefined}
+            aria-describedby={errors.password ? 'login-password-err' : undefined}
+            {...register('password')}
+          />
+          {errors.password ? (
+            <span className="field-error" id="login-password-err" role="alert">
+              {errors.password.message}
+            </span>
+          ) : null}
         </label>
 
         {serverError ? (
@@ -113,9 +153,9 @@ export function LoginFormPanel({
           </p>
         ) : null}
 
-        <button type="submit" className="btn-wizard-start" disabled={isSubmitting}>
+        <button type="submit" className="btn-wizard-start" disabled={busy}>
           <span className="btn-wizard-start__shine" aria-hidden="true" />
-          {isSubmitting ? 'Signing in...' : submitLabel}
+          {busy ? 'Signing in…' : submitLabel}
         </button>
       </form>
       {showRegisterLink && !adminMode ? (

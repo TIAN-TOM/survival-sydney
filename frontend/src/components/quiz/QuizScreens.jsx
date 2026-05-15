@@ -1,16 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
+import ThemeFloatingToggle from '../ThemeFloatingToggle.jsx';
 import { quizStartHeroImageSrc } from '../../quizBrandAssets.js';
-import GlobalHeader, { QuizNavLogout, QuizTopPlayer } from '../GlobalHeader.jsx';
 import QuizFramedPanel from './QuizFramedPanel.jsx';
-import ReviewV7Card from './ReviewV7Card.jsx';
 import { formatReviewCategory } from './reviewFormatUtils.js';
-import { AuthQuizCardShell, LoginFormPanel } from '../LoginFormPanel.jsx';
+import GameplayHudPortal from '../GameplayHudPortal.jsx';
 
 const QUIZ_ADVANCE_DELAY_MS = 860;
 
@@ -179,112 +177,67 @@ function buildTopicMap(review, totalQuestions, correctFallback) {
   return { Overall: { t: totalQuestions, c: correctFallback } };
 }
 
-/** First landing on /quiz — hero + Log in; login sheet slides up over dimmed hero (same screen). */
+/** Decorative survival title + low-key atmosphere copy for the result hero. */
+function survivalRankBand(pct) {
+  if (pct >= 85) {
+    return {
+      title: 'Sydney Veteran',
+      tagline: 'The harbour bends to your instincts.',
+      lines: [
+        'You read the city like an old map folded in your pocket.',
+        'Carry this clarity into the archive — then come back sharper.',
+      ],
+    };
+  }
+  if (pct >= 65) {
+    return {
+      title: 'Streetwise Apprentice',
+      tagline: 'Wrong turns taught you where the light is.',
+      lines: [
+        'Every miss becomes compass ink on the next crossing.',
+        'The debrief will finish what the trial started.',
+      ],
+    };
+  }
+  if (pct >= 45) {
+    return {
+      title: 'Harbour Cadet',
+      tagline: 'Survival is repetition — you are circling the right habits.',
+      lines: [
+        'Open the debrief while the trial is still warm in memory.',
+        'Sydney rewards the scholar who returns with questions.',
+      ],
+    };
+  }
+  if (pct >= 25) {
+    return {
+      title: 'Rookie Abroad',
+      tagline: 'First crossings are supposed to sting.',
+      lines: [
+        'Let the explanations settle like dust after rain.',
+        'Speed returns after clarity — walk the cards slowly once.',
+      ],
+    };
+  }
+  return {
+    title: 'Lost First-Year',
+    tagline: 'Even founders failed chapters they never reread.',
+    lines: [
+      'The archive holds every correction you need.',
+      'When you are ready, the board forgives and resets.',
+    ],
+  };
+}
+
+/** Guest landing on /quiz — narrative gate; sign-in lives on /login (staff: /admin/login). */
 export function QuizGateScreen() {
-  const { setPhase } = useQuiz();
-  const { isDarkMode, theme, toggleTheme } = useTheme();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [sheetVisible, setSheetVisible] = useState(false);
-  /** 与 loginOpen 解耦：关闭浮层时立刻去掉压暗，不必等滑出动画结束 */
-  const [heroDimmed, setHeroDimmed] = useState(false);
-
-  useEffect(() => {
-    if (!location.state?.openAuth) return;
-    setLoginOpen(true);
-    setHeroDimmed(true);
-    const from = typeof location.state?.from === 'string' ? location.state.from : undefined;
-    navigate('/quiz', { replace: true, state: from ? { from } : {} });
-  }, [location.state?.openAuth, navigate]);
-
-  useEffect(() => {
-    if (!loginOpen) {
-      setSheetVisible(false);
-      return undefined;
-    }
-    const id = requestAnimationFrame(() => {
-      requestAnimationFrame(() => setSheetVisible(true));
-    });
-    return () => cancelAnimationFrame(id);
-  }, [loginOpen]);
-
-  const closeLogin = useCallback(() => {
-    setSheetVisible(false);
-    setHeroDimmed(false);
-    window.setTimeout(() => setLoginOpen(false), 920);
-  }, []);
-
-  useEffect(() => {
-    if (!loginOpen) return undefined;
-    const onKey = (e) => {
-      if (e.key === 'Escape') closeLogin();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [loginOpen, closeLogin]);
-
-  useEffect(() => {
-    if (!loginOpen) return undefined;
-    const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
-    const prevOverflow = document.body.style.overflow;
-    const prevPaddingRight = document.body.style.paddingRight;
-    document.body.style.overflow = 'hidden';
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
-    };
-  }, [loginOpen]);
-
-  const handleLoggedIn = useCallback(
-    (signedInUser) => {
-      if (signedInUser?.role === 'admin') {
-        setPhase('start');
-        closeLogin();
-        return;
-      }
-      const from = location.state?.from;
-      if (typeof from === 'string' && from.startsWith('/') && from !== '/quiz') {
-        navigate(from, { replace: true });
-        return;
-      }
-      setPhase('start');
-    },
-    [closeLogin, location.state?.from, navigate, setPhase],
-  );
-
-  const gateThemePortal =
-    typeof document !== 'undefined'
-      ? createPortal(
-          <div
-            className={`quiz-flow-scope quiz-gate-theme-portal-root${heroDimmed ? ' is-login-overlay-open' : ''}`}
-          >
-            <div className="start-screen-top start-screen-top--gate-portal">
-              <div className="mode-row">
-                <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
-                <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
-                <button
-                  type="button"
-                  className="mode-sw"
-                  onClick={toggleTheme}
-                  aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
-                  aria-pressed={!isDarkMode}
-                >
-                  <span className="mode-kn" />
-                </button>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )
-      : null;
+  const { isDarkMode, theme } = useTheme();
 
   return (
     <div className="qf-screen start-screen">
-      {gateThemePortal}
+      <div className="auth-immersive__theme" role="region" aria-label="Appearance">
+        <ThemeFloatingToggle />
+      </div>
       <div className="start-screen__bg-stack" aria-hidden="true">
         <div className="start-screen__bg-pane start-screen__bg-pane--night" />
         <div className="start-screen__bg-pane start-screen__bg-pane--day" />
@@ -292,90 +245,50 @@ export function QuizGateScreen() {
         <div className="start-screen__bg-veil start-screen__bg-veil--day" />
       </div>
       <div className="start-screen__inner">
-        <div className={`quiz-gate-dimmable${heroDimmed ? ' is-dimmed' : ''}`}>
-          <div className="start-wizard quiz-gate-wizard">
-            <div className="start-wizard__brand">
-              <img
-                key={theme}
-                className="start-wizard__brand-img"
-                src={quizStartHeroImageSrc(isDarkMode)}
-                alt="Sydney Survival Quiz"
-              />
-            </div>
-            <h1 className="start-wizard__title start-logo">
-              Sydney Survival
-              <em>Survival Quiz</em>
-            </h1>
-            <p className="start-wizard__tagline">
-              <span className="start-wizard__star" aria-hidden="true">
-                ✦
-              </span>
-              <span className="start-wizard__tagline-text">
-                Can you survive student life in magical Sydney?
-              </span>
-              <span className="start-wizard__star" aria-hidden="true">
-                ✦
-              </span>
-            </p>
-            <button
-              type="button"
-              className="btn-wizard-start"
-              onClick={() => {
-                setLoginOpen(true);
-                setHeroDimmed(true);
-              }}
-            >
-              <span className="btn-wizard-start__shine" aria-hidden="true" />
-              Log in
-            </button>
-            <p className="quiz-gate-register-hint">
-              <Link to="/register">Register</Link>
-            </p>
-            <p className="quiz-gate-register-hint">
-              <Link to="/admin/login">Admin sign in</Link>
-            </p>
-            <p className="start-wizard__footer">
-              <span className="start-wizard__quill" aria-hidden="true">
-                🪶
-              </span>
-              Test your knowledge. Earn your survival badge.
-            </p>
+        <div className="start-wizard quiz-gate-wizard">
+          <div className="start-wizard__brand">
+            <img
+              key={theme}
+              className="start-wizard__brand-img"
+              src={quizStartHeroImageSrc(isDarkMode)}
+              alt="Sydney Survival Quiz"
+            />
           </div>
+          <h1 className="start-wizard__title start-logo">Sydney Survival</h1>
+          <p className="start-wizard__tagline">
+            <span className="start-wizard__star" aria-hidden="true">
+              ✦
+            </span>
+            <span className="start-wizard__tagline-text">
+              Can you survive student life in magical Sydney?
+            </span>
+            <span className="start-wizard__star" aria-hidden="true">
+              ✦
+            </span>
+          </p>
+          <Link className="btn-wizard-start" to="/login">
+            <span className="btn-wizard-start__shine" aria-hidden="true" />
+            Sign in
+          </Link>
+          <p className="quiz-gate-register-hint">
+            <Link to="/register">New scholar? Register</Link>
+          </p>
+          <p className="start-wizard__footer">
+            <span className="start-wizard__quill" aria-hidden="true">
+              🪶
+            </span>
+            Test your knowledge. Earn your survival badge.
+          </p>
         </div>
-
-        {loginOpen ? (
-          <div
-            className={`quiz-gate-login-layer${sheetVisible ? ' is-visible' : ''}`}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="quiz-gate-login-title"
-          >
-            <button type="button" className="quiz-gate-login-backdrop" aria-label="Close sign in" onClick={closeLogin} />
-            <div className="quiz-gate-login-panel quiz-auth-card-host">
-              <AuthQuizCardShell>
-                <button type="button" className="auth-back-to-gate" onClick={closeLogin}>
-                  ← Back
-                </button>
-                <LoginFormPanel
-                  heading="Login"
-                  submitLabel="Sign in"
-                  headingId="quiz-gate-login-title"
-                  showRegisterLink
-                  onSuccess={handleLoggedIn}
-                />
-              </AuthQuizCardShell>
-            </div>
-          </div>
-        ) : null}
       </div>
     </div>
   );
 }
 
 export function StartScreen() {
-  const { startQuiz, state, restart } = useQuiz();
-  const { user, isAdmin } = useAuth();
-  const { isDarkMode, theme, toggleTheme } = useTheme();
+  const { startQuiz, state } = useQuiz();
+  const { isAdmin } = useAuth();
+  const { isDarkMode, theme } = useTheme();
 
   return (
     <div className="qf-screen start-screen">
@@ -386,48 +299,6 @@ export function StartScreen() {
         <div className="start-screen__bg-veil start-screen__bg-veil--day" />
       </div>
       <div className="start-screen__inner">
-        <div className="start-screen-top start-screen-top--post-login">
-          <nav className="quiz-top-links start-screen-top-links" aria-label="Quiz shortcuts">
-            {!isAdmin ? (
-              <>
-                <Link className="quiz-top-link" to="/quiz" onClick={() => restart()}>
-                  Quiz home
-                </Link>
-                <Link className="quiz-top-link" to="/history">
-                  History
-                </Link>
-                <Link className="quiz-top-link" to="/leaderboard">
-                  Leaderboard
-                </Link>
-              </>
-            ) : (
-              <NavLink
-                className={({ isActive }) => `quiz-top-link${isActive ? ' quiz-top-link--active' : ''}`}
-                to="/admin"
-              >
-                Admin
-              </NavLink>
-            )}
-          </nav>
-          <div className="start-screen-top__actions">
-            <div className="mode-row">
-              <span className="mode-lbl">{isDarkMode ? 'Night' : 'Day'}</span>
-              <span className="mode-icon" aria-hidden="true">{isDarkMode ? '🌙' : '☀️'}</span>
-              <button
-                type="button"
-                className="mode-sw"
-                onClick={toggleTheme}
-                aria-label={isDarkMode ? 'Switch to day mode' : 'Switch to night mode'}
-                aria-pressed={!isDarkMode}
-              >
-                <span className="mode-kn" />
-              </button>
-            </div>
-            <QuizTopPlayer user={user} />
-            <QuizNavLogout />
-          </div>
-        </div>
-
         <div className="start-wizard">
           <div className="start-wizard__brand">
             <img
@@ -437,10 +308,7 @@ export function StartScreen() {
               alt="Sydney Survival Quiz"
             />
           </div>
-          <h1 className="start-wizard__title start-logo">
-            Sydney Survival
-            <em>Survival Quiz</em>
-          </h1>
+          <h1 className="start-wizard__title start-logo">Sydney Survival</h1>
           <p className="start-wizard__tagline">
             <span className="start-wizard__star" aria-hidden="true">
               ✦
@@ -525,12 +393,12 @@ export function QuizScreen() {
 
   return (
     <div className="qf-screen quiz-screen">
-      <div className="quiz-gothic-shell">
-        <GlobalHeader />
-        <main className="quiz-gothic-main">
-          <QuizProgressStrip total={n} current={currentQ} />
-
-          <section className="quiz-gothic-question">
+      <GameplayHudPortal mode="quiz">
+        <QuizProgressStrip total={n} current={currentQ} />
+      </GameplayHudPortal>
+      <div className="quiz-screen-shell">
+        <main className="quiz-content">
+          <section className="question-card">
             <div className="quiz-body">
               <div className="quiz-fade-wrap" key={currentQuestion?._id || currentQ}>
                 <div className="quiz-slide">
@@ -540,34 +408,16 @@ export function QuizScreen() {
                       <span>✦</span>
                       <span>🪶</span>
                     </div>
-                    <div className="q-meta">
-                      <div className="q-meta-left">
-                        <span className="q-meta-crest" aria-hidden="true">
-                          <svg className="q-meta-crest-svg" viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                              d="M16 2.5L27.5 8v11.2c0 6.8-4.2 12.4-11.5 14.3L16 34l-.1-.1C8.6 31.9 4.5 26.3 4.5 19.5V8L16 2.5z"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.35"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="M16 11v9M11.5 15.5h9"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.1"
-                              strokeLinecap="round"
-                              opacity="0.55"
-                            />
-                          </svg>
-                        </span>
-                        <div className="q-meta-titles">
+
+                    <header className="quiz-question-header">
+                      <div className="quiz-question-header__row">
+                        <div className="quiz-question-header__cluster">
                           <span className="q-num">Q{currentQ + 1}</span>
-                          <span className="q-trial-lbl">Safety Trial</span>
+                          <span className="q-trial-lbl">Safety trial</span>
                         </div>
+                        <TopicPill topic={currentTopic} />
                       </div>
-                      <TopicPill topic={currentTopic} />
-                    </div>
+                    </header>
 
                     <div className="q-text">{currentQuestion?.questionText}</div>
 
@@ -577,12 +427,6 @@ export function QuizScreen() {
                       <span className="q-div-orn">✦</span>
                       <span className="q-div-line" aria-hidden="true" />
                       <span className="q-div-orn">✦</span>
-                    </div>
-                    <div className="q-hint">
-                      <span className="q-hint-feather" aria-hidden="true">
-                        🪶
-                      </span>
-                      <span>{hintPhrase}</span>
                     </div>
 
                     <div className="opts">
@@ -607,6 +451,13 @@ export function QuizScreen() {
                         );
                       })}
                     </div>
+
+                    <p className="q-hint q-hint--card-foot q-hint--atmosphere" role="note">
+                      <span className="q-hint-feather" aria-hidden="true">
+                        🪶
+                      </span>
+                      <span>{hintPhrase}</span>
+                    </p>
                   </QuizFramedPanel>
                 </div>
               </div>
@@ -638,19 +489,21 @@ export function CalculatingScreen() {
 }
 
 export function ResultScreen() {
-  const { state, showReview, startQuiz } = useQuiz();
-  const { attemptScore, attemptTotal, review } = state;
+  const { state, startQuiz } = useQuiz();
+  const navigate = useNavigate();
+  const { attemptScore, attemptTotal, review, scoreId } = state;
   const ringRef = useRef(null);
-  const confettiRef = useRef(null);
 
   const total = attemptTotal || review?.length || 10;
   const correct = typeof attemptScore === 'number' ? attemptScore : 0;
   const pct = Math.round((correct / total) * 100);
-  const CIRC = 2 * Math.PI * 45;
+  const RING_R = 14;
+  const CIRC = 2 * Math.PI * RING_R;
+
+  const rankBand = useMemo(() => survivalRankBand(pct), [pct]);
 
   useEffect(() => {
-    const color =
-      pct >= 80 ? 'var(--sq-btn-b)' : pct >= 50 ? 'var(--sq-btn-a)' : '#E53935';
+    const color = pct >= 80 ? '#6b8f7d' : pct >= 50 ? '#7d8a78' : '#b87a6a';
     const timer = setTimeout(() => {
       if (ringRef.current) {
         ringRef.current.style.strokeDashoffset = `${CIRC * (1 - pct / 100)}`;
@@ -660,214 +513,134 @@ export function ResultScreen() {
     return () => clearTimeout(timer);
   }, [pct, CIRC]);
 
-  useEffect(() => {
-    if (pct < 60 || !confettiRef.current) return undefined;
-    const colors = ['#FF8040', '#40B080', '#FFD700', '#FF6B9D', '#40C0FF', '#FF9D00', '#7FFF7F'];
-    const count = pct >= 80 ? 70 : 35;
-    const timers = [];
-
-    for (let i = 0; i < count; i += 1) {
-      timers.push(
-        setTimeout(() => {
-          if (!confettiRef.current) return;
-          const p = document.createElement('div');
-          const sz = 6 + Math.random() * 9;
-          const col = colors[Math.floor(Math.random() * colors.length)];
-          p.className = 'cpc';
-          Object.assign(p.style, {
-            left: `${Math.random() * 100}%`,
-            top: '-14px',
-            width: `${sz}px`,
-            height: `${sz}px`,
-            background: col,
-            borderRadius: Math.random() > 0.5 ? '50%' : '4px',
-            animationDuration: `${1.8 + Math.random() * 2}s`,
-            animationDelay: `${Math.random() * 0.6}s`,
-          });
-          confettiRef.current.appendChild(p);
-          setTimeout(() => p.remove(), 5000);
-        }, i * 25),
-      );
-    }
-    return () => timers.forEach(clearTimeout);
-  }, [pct]);
-
   const topicMap = buildTopicMap(review, total, correct);
+  const topicEntries = useMemo(() => Object.entries(topicMap).slice(0, 6), [topicMap]);
 
   const messages = [
-    [100, 'Perfect Score! 🎯', 'You answered every question correctly.'],
-    [80, 'Excellent! ⭐', `${correct} out of ${total} — outstanding work.`],
-    [60, 'Good Job! ⭐', `${correct} correct. Open the debrief to review the rest.`],
-    [40, 'Keep Going 🔍', `${correct} right. The explanations will help a lot.`],
-    [0, 'Keep Practicing 💪', 'Read through the full debrief — flip every card.'],
+    [100, 'Flawless run', 'Every signal read true — rare air.'],
+    [80, 'Outstanding', `${correct} of ${total} locked in with conviction.`],
+    [60, 'Solid crossing', `${correct} correct. The archive will sharpen the rest.`],
+    [40, 'Still learning the streets', `${correct} right — let the explanations anchor you.`],
+    [0, 'Rough tide', 'Walk the debrief card by card before the next launch.'],
   ];
   const [, msg, sub] = messages.find(([t]) => pct >= t);
 
-  const heroHigh = pct >= 70;
   const handlePlayAgain = useCallback(() => {
     startQuiz();
   }, [startQuiz]);
 
+  const goToAttemptReview = useCallback(() => {
+    if (!scoreId) return;
+    navigate(`/history/${scoreId}`, { replace: true });
+  }, [navigate, scoreId]);
+
   return (
-    <div className="qf-screen result-screen result-v7">
-      <div className="confetti-layer" ref={confettiRef} />
-      <GlobalHeader />
-      <main className="rv-main-v7 result-main-v7">
-        <div className="rv-center">
+    <div className="qf-screen result-screen">
+      <main className="result-content">
+        <div className="rv-center result-rv">
           <div className="result-inner">
-            <div className={`result-hero-icon${heroHigh ? ' is-high' : ' is-low'}`} aria-hidden="true">
-              {heroHigh ? '🕊️' : '📜'}
-            </div>
-
-            <QuizFramedPanel className="result-stack">
-          <div className="q-meta">
-            <span className="q-num">Final score</span>
-            <span className="q-cat topic-pill">Survival trial</span>
-          </div>
-          <div className="result-score-row">
-            <div className="score-ring">
-              <svg width="110" height="110" viewBox="0 0 110 110">
-                <circle className="sr-track" cx="55" cy="55" r="45" />
-                <circle className="sr-fill" ref={ringRef} cx="55" cy="55" r="45" />
-              </svg>
-              <div className="score-ring-txt">
-                <div className="score-ring-pct">{pct}%</div>
-                <div className="score-ring-sub">Score</div>
-              </div>
-            </div>
-            <div className="score-details">
-              <div className="score-frac">
-                {correct}
-                <span>/{total}</span>
-              </div>
-              <div className="score-frac-hint">Final score · +1 per correct answer</div>
-              <div className="score-msg">{msg}</div>
-              <div className="score-sub">{sub}</div>
-            </div>
-          </div>
-
-          <div className="q-divider">◆ ◆ ◆</div>
-          <div className="q-hint result-topic-hint">
-            <span aria-hidden="true">📊</span>
-            Performance by topic
-          </div>
-          <div className="topic-grid">
-            {Object.entries(topicMap).map(([name, { t: tgTotal, c }]) => {
-              const frac = tgTotal ? c / tgTotal : 0;
-              const col =
-                frac === 1 ? 'var(--sq-btn-b)' : frac >= 0.5 ? 'var(--sq-btn-a)' : '#E53935';
-              return (
-                  <div key={name} className="tc-card">
-                  <div className="tc-name">{formatReviewCategory(name) || name}</div>
-                  <div className="tc-score" style={{ color: col }}>
-                    {c}
-                    /
-                    {tgTotal}
+            <QuizFramedPanel className="result-stack result-stack--finale result-card">
+              <div className="result-hero-wrap">
+                <header className="result-hero-section">
+                  <p className="result-eyebrow">Trial complete</p>
+                  <div className="result-score-hero">
+                    <p className="result-score-line" aria-label={`Score ${correct} out of ${total}`}>
+                      <span className="result-score">{correct}</span>
+                      <span className="score-total">/{total}</span>
+                    </p>
                   </div>
-                  <div className="tc-bar">
-                    <div className="tc-fill" style={{ background: col, width: `${frac * 100}%` }} />
+                  <h2 className="result-ending-title">{rankBand.title}</h2>
+                  <div className="result-description">
+                    <p className="result-description__lead">{msg}</p>
+                    <p className="result-description__sub">{sub}</p>
+                    <p className="result-description__aside">{rankBand.lines[0]}</p>
+                  </div>
+                  <div className="result-mini-stats">
+                    <div
+                      className="result-accuracy-row"
+                      aria-label={`${pct}% accuracy; final score; plus one point per correct answer`}
+                    >
+                        <div className="result-accuracy-ring" aria-hidden="true">
+                          <svg width="24" height="24" viewBox="0 0 36 36">
+                          <circle className="sr-track--mini" cx="18" cy="18" r={RING_R} />
+                          <circle className="sr-fill--mini" ref={ringRef} cx="18" cy="18" r={RING_R} />
+                        </svg>
+                      </div>
+                      <p className="result-accuracy-row__txt">
+                        <span className="result-accuracy-row__pct">{pct}%</span>
+                        <span className="result-accuracy-row__mid"> Accuracy · Final score</span>
+                        <span className="result-accuracy-row__muted"> (+1 per correct)</span>
+                      </p>
+                    </div>
+                  </div>
+                </header>
+              </div>
+
+              <div className="result-topics-wrap">
+                <p className="result-topics-subline">
+                  Where your instincts held — and where Sydney caught you off guard.
+                </p>
+                <p className="result-topics-section-label">Topic performance</p>
+                <div
+                  className="topic-performance-grid"
+                  role="list"
+                  aria-label="Topic performance"
+                >
+                  {topicEntries.map(([name, { t: tgTotal, c }]) => {
+                    const frac = tgTotal ? c / tgTotal : 0;
+                    const tier = frac === 1 ? 'high' : frac >= 0.5 ? 'mid' : 'low';
+                    return (
+                      <article
+                        key={name}
+                        className={`topic-performance-card topic-performance-card--tier-${tier}`}
+                        role="listitem"
+                      >
+                        <h4 className="topic-performance-card__title">
+                          {formatReviewCategory(name) || name}
+                        </h4>
+                        <div className="topic-score">
+                          <span className="topic-score__num">{c}</span>
+                          <span className="topic-score__slash" aria-hidden="true">
+                            /
+                          </span>
+                          <span className="topic-score__den">{tgTotal}</span>
+                        </div>
+                        <div className="topic-performance-track" aria-hidden="true">
+                          <div className="topic-performance-fill" style={{ width: `${frac * 100}%` }} />
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="result-actions result-actions--finale">
+                <div className="result-actions__cluster">
+                  <div className="result-actions__btn-row">
+                    <button
+                      type="button"
+                      className="btn-debrief result-actions__cta-primary"
+                      onClick={goToAttemptReview}
+                      disabled={!scoreId}
+                    >
+                      Review your run
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-again btn-again--outline result-actions__cta-secondary"
+                      onClick={handlePlayAgain}
+                    >
+                      Try again
+                    </button>
+                  </div>
+                  <div className="result-actions__tertiary-row">
+                    <Link className="result-actions__tertiary-link" to="/leaderboard">
+                      Leaderboard →
+                    </Link>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="result-actions">
-            <div className="result-actions__btns">
-              <button type="button" className="btn-debrief" onClick={showReview}>
-                📋 Mission Debrief →
-              </button>
-              <button type="button" className="btn-again" onClick={handlePlayAgain}>
-                ↺ Again
-              </button>
-            </div>
-          </div>
+              </div>
             </QuizFramedPanel>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
-
-export function ReviewScreen() {
-  const { state, restart, backToResults } = useQuiz();
-  const { review } = state;
-
-  const safeReview = review || [];
-  const correct = safeReview.filter((r) => r.isCorrect).length;
-  const total = safeReview.length;
-  const [activeDot, setActiveDot] = useState(0);
-
-  const jumpTo = (i) => {
-    setActiveDot(i);
-    document.getElementById(`rvc-${i}`)?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  };
-
-  return (
-    <div className="qf-screen review-screen review-v7 review-learning-page">
-      <GlobalHeader />
-
-      <div className="q-dot-bar">
-        <span className="qdb-score" title="+1 point per correct answer">
-          Final Score: {correct}/{total}
-          <span className="qdb-score-sub"> (+1 each correct)</span>
-        </span>
-        <div className="qdb-dots" role="tablist" aria-label="Jump to question">
-          {safeReview.map((row, i) => (
-            <button
-              key={row.questionId || i}
-              type="button"
-              className={`q-dot ${row.isCorrect ? 'cor' : 'wrg'}${activeDot === i ? ' active-dot' : ''}`}
-              onClick={() => jumpTo(i)}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
-        <button type="button" className="qdb-back" onClick={backToResults}>
-          ← Results
-        </button>
-      </div>
-
-      <main className="rv-main-v7">
-        <div className="rv-center">
-          <div className="rv-head-v7">
-            <h1>
-              Trial
-              {' '}
-              <em>Debrief</em>
-            </h1>
-            <div className="rv-final-score" role="status">
-              <span className="rv-fs-label">Final score</span>
-              <span className="rv-fs-value">
-                {correct}
-                <span className="rv-fs-slash">/</span>
-                {total}
-              </span>
-              <span className="rv-fs-hint">+1 point per correct answer</span>
-            </div>
-            <p>
-              Wrong items open the scholar note automatically; correct items keep it folded until you choose to read
-              it.
-            </p>
-          </div>
-          <div className="rv-cards-v7">
-            {safeReview.map((row, i) => (
-              <ReviewV7Card
-                key={row.questionId || i}
-                item={row}
-                index={i}
-              />
-            ))}
-          </div>
-          <div className="rv-v7-footer-actions">
-            <button type="button" className="btn-rv-again" onClick={restart}>
-              ↺ Play Again
-            </button>
           </div>
         </div>
       </main>

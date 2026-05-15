@@ -13,14 +13,14 @@ afterEach(clearTestDb);
 afterAll(stopTestDb);
 
 describe('POST /api/auth/register', () => {
-  test('returns token and user on success', async () => {
+  test('returns user without token on success', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ username: 'alice', password: 'secret123' });
+      .send({ username: 'alice', email: 'alice@example.com', password: 'secret123' });
 
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.token).toEqual(expect.any(String));
+    expect(res.body.data.token).toBeUndefined();
     expect(res.body.data.user.username).toBe('alice');
     expect(res.body.data.user.role).toBe('user');
   });
@@ -28,11 +28,11 @@ describe('POST /api/auth/register', () => {
   test('returns 409 when username is already taken', async () => {
     await request(app)
       .post('/api/auth/register')
-      .send({ username: 'alice', password: 'secret123' });
+      .send({ username: 'alice', email: 'alice@example.com', password: 'secret123' });
 
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ username: 'alice', password: 'another123' });
+      .send({ username: 'alice', email: 'alice2@example.com', password: 'another123' });
 
     expect(res.status).toBe(409);
     expect(res.body.success).toBe(false);
@@ -44,7 +44,7 @@ describe('POST /api/auth/login', () => {
   test('returns token on valid credentials', async () => {
     await request(app)
       .post('/api/auth/register')
-      .send({ username: 'bob', password: 'secret123' });
+      .send({ username: 'bob', email: 'bob@example.com', password: 'secret123' });
 
     const res = await request(app)
       .post('/api/auth/login')
@@ -59,7 +59,7 @@ describe('POST /api/auth/login', () => {
   test('returns 401 on wrong password', async () => {
     await request(app)
       .post('/api/auth/register')
-      .send({ username: 'bob', password: 'secret123' });
+      .send({ username: 'bob', email: 'bob2@example.com', password: 'secret123' });
 
     const res = await request(app)
       .post('/api/auth/login')
@@ -67,16 +67,19 @@ describe('POST /api/auth/login', () => {
 
     expect(res.status).toBe(401);
     expect(res.body.success).toBe(false);
-    expect(res.body.error).toMatch(/invalid credentials/i);
+    expect(res.body.error).toMatch(/invalid username or password/i);
   });
 });
 
 describe('GET /api/auth/me', () => {
   test('returns user when token is valid', async () => {
-    const reg = await request(app)
+    await request(app)
       .post('/api/auth/register')
+      .send({ username: 'carol', email: 'carol@example.com', password: 'secret123' });
+    const loginRes = await request(app)
+      .post('/api/auth/login')
       .send({ username: 'carol', password: 'secret123' });
-    const token = reg.body.data.token;
+    const token = loginRes.body.data.token;
 
     const res = await request(app).get('/api/auth/me').set('Authorization', `Bearer ${token}`);
 

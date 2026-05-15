@@ -52,12 +52,6 @@ function quizReducer(state, action) {
         review: action.payload.review,
       };
 
-    case 'SHOW_REVIEW':
-      return { ...state, phase: 'review' };
-
-    case 'BACK_TO_RESULT':
-      return { ...state, phase: 'result' };
-
     case 'SET_PHASE':
       return { ...state, phase: action.payload, error: null };
 
@@ -155,10 +149,6 @@ export function QuizProvider({ children }) {
     }
   }, [state]);
 
-  const showReview = useCallback(() => dispatch({ type: 'SHOW_REVIEW' }), []);
-
-  const backToResults = useCallback(() => dispatch({ type: 'BACK_TO_RESULT' }), []);
-
   const restart = useCallback(() => {
     submitOnceRef.current = false;
     dispatch({ type: 'RESTART' });
@@ -174,8 +164,6 @@ export function QuizProvider({ children }) {
         lockAnswer,
         submitAnswer,
         finishQuiz,
-        showReview,
-        backToResults,
         restart,
       }}
     >

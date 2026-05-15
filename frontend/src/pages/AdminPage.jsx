@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import api from '../api/api.js';
 import BulkImport from '../components/BulkImport.jsx';
 import FrameCorners from '../components/FrameCorners.jsx';
-import GlobalHeader from '../components/GlobalHeader.jsx';
 import QuestionForm from '../components/QuestionForm.jsx';
+import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
 
 export default function AdminPage() {
+  const { hash } = useLocation();
   const [questions, setQuestions] = useState([]);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -33,6 +35,15 @@ export default function AdminPage() {
   useEffect(() => {
     fetchQuestions();
   }, [fetchQuestions]);
+
+  useLayoutEffect(() => {
+    if (!hash) return;
+    const id = hash.replace(/^#/, '');
+    if (!id) return;
+    window.requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [hash]);
 
   const activeCount = useMemo(() => questions.filter((q) => q.active).length, [questions]);
 
@@ -105,10 +116,8 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="quiz-flow-scope quiz-review-shell">
-      <div className="sq-world-bg sq-world-bg--photo" aria-hidden="true" />
-
-      <GlobalHeader />
+    <div className="quiz-flow-scope quiz-review-shell admin-layout">
+      <QuizWorldBackground usePhotoBackdrop />
 
       <main className="review-page quiz-review-page admin-dashboard-page">
         <section className="admin-section review-attempt-header review-attempt-panel review-attempt-panel--framed">
@@ -177,7 +186,7 @@ export default function AdminPage() {
           </div>
         ) : null}
 
-        <section className="admin-section review-attempt-panel review-attempt-panel--framed">
+        <section id="admin-bulk-import" className="admin-section review-attempt-panel review-attempt-panel--framed">
           <FrameCorners />
           <h2 className="review-attempt-card__title admin-dashboard-section-title">Bulk Import</h2>
           <p className="review-attempt-hint admin-dashboard-section-lead">
@@ -187,9 +196,9 @@ export default function AdminPage() {
           <BulkImport onImportSuccess={handleBulkImportSuccess} />
         </section>
 
-        <section className="admin-section review-attempt-list review-attempt-panel review-attempt-panel--framed">
+        <section id="admin-question-list" className="admin-section review-attempt-list review-attempt-panel review-attempt-panel--framed">
           <FrameCorners />
-          <div className="admin-list-header">
+          <div className="admin-list-header admin-toolbar">
             <h2 className="review-attempt-card__title admin-dashboard-section-title admin-list-header__title">Question list</h2>
             <button type="button" className="admin-btn-add" onClick={handleCreateClick}>
               + Add question
@@ -201,7 +210,7 @@ export default function AdminPage() {
           ) : questions.length === 0 ? (
             <p className="review-attempt-hint">No questions found. Add one or run a bulk import.</p>
           ) : (
-            <div className="admin-question-list">
+            <div className="admin-question-list admin-table">
               <table>
                 <thead>
                   <tr>

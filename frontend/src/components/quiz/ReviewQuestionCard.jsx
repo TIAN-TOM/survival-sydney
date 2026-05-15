@@ -21,7 +21,7 @@ function optionBadge(sel, correctIdx, j) {
   return null;
 }
 
-export default function ReviewV7Card({ item, index }) {
+export default function ReviewQuestionCard({ item, index }) {
   const questionText = item.questionText;
   const options = item.options || [];
   const correctIdx = item.correctAnswer;
@@ -42,15 +42,16 @@ export default function ReviewV7Card({ item, index }) {
   return (
     <article
       id={`rvc-${index}`}
-      className={`review-q-card rv-card-v7 ${isCorrect ? 'review-q-card--correct' : 'review-q-card--wrong'}`}
+      className={`review-q-card review-question-card ${isCorrect ? 'review-q-card--correct' : 'review-q-card--wrong'}`}
     >
       <header className="review-q-head">
-        <span className="review-q-num">
-          Question
-          {' '}
-          {index + 1}
-        </span>
-        <span className="review-q-cat">{categoryLabel}</span>
+        <div className="review-q-head-main">
+          <span className="review-q-num">
+            <span className="review-q-num-label">Question</span>
+            <span className="review-q-num-value">{index + 1}</span>
+          </span>
+          <span className="review-q-cat">{categoryLabel}</span>
+        </div>
         <span className={`review-q-verdict ${isCorrect ? 'is-ok' : 'is-bad'}`}>
           {isCorrect ? 'Correct' : 'Incorrect'}
         </span>
