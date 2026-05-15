@@ -28,14 +28,11 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
+  /** Creates account only — caller should redirect to login (no JWT stored). */
   const register = useCallback(async ({ username, email, password }) => {
     setLoading(true);
     try {
-      const data = await api.post('/auth/register', { username, email, password });
-      localStorage.setItem('jwt', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      setUser(data.user);
-      return data.user;
+      return await api.post('/auth/register', { username, email, password });
     } finally {
       setLoading(false);
     }

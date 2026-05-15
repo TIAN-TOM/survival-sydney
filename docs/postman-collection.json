@@ -32,7 +32,7 @@
           "raw": "{\n  \"username\": \"demo\",\n  \"email\": \"demo@example.com\",\n  \"password\": \"Password123\"\n}"
         }
       },
-      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.success && json.data?.token) pm.collectionVariables.set('token', json.data.token);"] } }]
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.success && json.data?.user) {", "  pm.test('No JWT on register', () => pm.expect(json.data.token).to.be.undefined);", "}"] } }]
     },
     {
       "name": "Auth - Login seeded player",

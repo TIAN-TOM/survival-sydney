@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext.jsx';
+import AuthPageShell from './AuthPageShell.jsx';
 
 const registerSchema = z
   .object({
@@ -25,7 +26,7 @@ const registerSchema = z
   });
 
 export default function Register() {
-  const { register: registerUser } = useAuth();
+  const { register: registerAccount, loading } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState('');
 
@@ -38,38 +39,83 @@ export default function Register() {
   const onSubmit = async ({ username, email, password }) => {
     setServerError('');
     try {
-      await registerUser({ username, email, password });
-      navigate('/');
+      await registerAccount({ username, email, password });
+      navigate('/login', {
+        replace: true,
+        state: {
+          notice: 'Your scholar account is ready. Sign in to enter the trials.',
+          noticeTone: 'success',
+          registeredUsername: username,
+        },
+      });
     } catch (err) {
+      const status = err.status;
+      if (status === 409) {
+        setServerError(err.message || 'That username or email is already registered.');
+        return;
+      }
+      if (status === 400) {
+        setServerError(err.message || 'Please check the form and try again.');
+        return;
+      }
       setServerError(err.message || 'Registration failed');
     }
   };
 
+  const busy = isSubmitting || loading;
+
   return (
-    <section className="auth-panel">
+    <AuthPageShell>
+      <Link className="auth-back-to-gate" to="/quiz" replace>
+        ← Back
+      </Link>
       <h2>Register</h2>
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      <form className="auth-form" onSubmit={handleSubmit(onSubmit)} noValidate>
         <label>
           Username
-          <input type="text" autoComplete="username" {...register('username')} />
+          <input
+            type="text"
+            autoComplete="username"
+            className={errors.username ? 'is-invalid' : undefined}
+            aria-invalid={errors.username ? 'true' : undefined}
+            {...register('username')}
+          />
           {errors.username && <span className="field-error">{errors.username.message}</span>}
         </label>
 
         <label>
           Email
-          <input type="email" autoComplete="email" {...register('email')} />
+          <input
+            type="email"
+            autoComplete="email"
+            className={errors.email ? 'is-invalid' : undefined}
+            aria-invalid={errors.email ? 'true' : undefined}
+            {...register('email')}
+          />
           {errors.email && <span className="field-error">{errors.email.message}</span>}
         </label>
 
         <label>
           Password
-          <input type="password" autoComplete="new-password" {...register('password')} />
+          <input
+            type="password"
+            autoComplete="new-password"
+            className={errors.password ? 'is-invalid' : undefined}
+            aria-invalid={errors.password ? 'true' : undefined}
+            {...register('password')}
+          />
           {errors.password && <span className="field-error">{errors.password.message}</span>}
         </label>
 
         <label>
           Confirm password
-          <input type="password" autoComplete="new-password" {...register('confirmPassword')} />
+          <input
+            type="password"
+            autoComplete="new-password"
+            className={errors.confirmPassword ? 'is-invalid' : undefined}
+            aria-invalid={errors.confirmPassword ? 'true' : undefined}
+            {...register('confirmPassword')}
+          />
           {errors.confirmPassword && (
             <span className="field-error">{errors.confirmPassword.message}</span>
           )}
@@ -81,13 +127,14 @@ export default function Register() {
           </p>
         )}
 
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Creating account...' : 'Create account'}
+        <button type="submit" className="btn-wizard-start" disabled={busy}>
+          <span className="btn-wizard-start__shine" aria-hidden="true" />
+          {busy ? 'Creating account…' : 'Create account'}
         </button>
       </form>
       <p>
-        Already have an account? <Link to="/login">Login</Link>
+        Already have an account? <Link to="/login">Sign in</Link>
       </p>
-    </section>
+    </AuthPageShell>
   );
 }

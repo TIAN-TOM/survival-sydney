@@ -1,0 +1,298 @@
+/**
+ * Global motion language — restrained, cinematic, premium.
+ * Player routes: soft page enter + context-specific stagger.
+ * Quiz: stronger question transitions (scoped).
+ * Admin: hover + modal only.
+ */
+
+:root {
+  --motion-duration-instant: 120ms;
+  --motion-duration-fast: 200ms;
+  --motion-duration-base: 280ms;
+  --motion-duration-page: 400ms;
+  --motion-duration-quiz: 480ms;
+  --motion-duration-modal: 320ms;
+  --motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-standard: cubic-bezier(0.25, 0.08, 0.25, 1);
+  --motion-distance-sm: 6px;
+  --motion-distance-md: 8px;
+  --motion-lift-sm: -2px;
+  --motion-lift-md: -3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration-instant: 0ms;
+    --motion-duration-fast: 0ms;
+    --motion-duration-base: 0ms;
+    --motion-duration-page: 0ms;
+    --motion-duration-quiz: 0ms;
+    --motion-duration-modal: 0ms;
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes motion-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-md));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-sm));
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-quiz-question-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-distance-md)) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes motion-modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-modal-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── 1. Player page enter ── */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-page-enter {
+    animation: motion-page-in var(--motion-duration-page) var(--motion-ease-out) both;
+  }
+}
+
+/* ── 2. Quiz — primary immersive transitions ── */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-context--quiz .quiz-fade-wrap {
+    animation: motion-quiz-question-in var(--motion-duration-quiz) var(--motion-ease-out) both;
+  }
+
+  .motion-context--quiz .qf-screen:not(.quiz-screen) {
+    animation: motion-page-in var(--motion-duration-page) var(--motion-ease-out) both;
+  }
+}
+
+/* ── 3. Result — staged ceremonial reveal ── */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-result-reveal {
+    animation: motion-reveal-in var(--motion-duration-base) var(--motion-ease-out) both;
+    animation-delay: var(--motion-delay, 0ms);
+  }
+
+  .motion-result-reveal--score {
+    --motion-delay: 0ms;
+  }
+
+  .motion-result-reveal--title {
+    --motion-delay: 90ms;
+  }
+
+  .motion-result-reveal--accuracy {
+    --motion-delay: 170ms;
+  }
+
+  .motion-result-reveal--topics {
+    --motion-delay: 260ms;
+  }
+
+  .motion-result-reveal--actions {
+    --motion-delay: 360ms;
+  }
+
+  .motion-context--quiz .result-topics-wrap .topic-performance-card {
+    animation: motion-reveal-in 260ms var(--motion-ease-out) both;
+    animation-delay: calc(300ms + var(--motion-stagger-index, 0) * 45ms);
+  }
+}
+
+/* ── 4. Leaderboard — very light row stagger ── */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-context--leaderboard .lb-row {
+    animation: motion-reveal-in 300ms var(--motion-ease-out) both;
+    animation-delay: calc(140ms + var(--motion-stagger-index, 0) * 32ms);
+  }
+
+  .motion-context--leaderboard .leaderboard-panel__title,
+  .motion-context--leaderboard .leaderboard-panel__sub {
+    animation: motion-reveal-in 340ms var(--motion-ease-out) both;
+  }
+
+  .motion-context--leaderboard .leaderboard-panel__sub {
+    animation-delay: 60ms;
+  }
+}
+
+/* ── 5. History — fast archive card reveal ── */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-context--history .hist-stat-card {
+    animation: motion-reveal-in 220ms var(--motion-ease-out) both;
+    animation-delay: calc(80ms + var(--motion-stagger-index, 0) * 40ms);
+  }
+
+  .motion-context--history .hist-attempt-card {
+    animation: motion-reveal-in 240ms var(--motion-ease-out) both;
+    animation-delay: calc(100ms + var(--motion-stagger-index, 0) * 28ms);
+  }
+}
+
+/* ── 6. Review debrief — soft card cascade ── */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-context--review .review-cards > * {
+    animation: motion-reveal-in 240ms var(--motion-ease-out) both;
+    animation-delay: calc(120ms + var(--motion-stagger-index, 0) * 36ms);
+  }
+}
+
+/* ── 6b. Admin — no page / staged motion ── */
+.motion-context--admin.motion-page-enter {
+  animation: none;
+}
+
+/* ── 7. Unified hover — cards ── */
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-flow-scope .hist-attempt-card,
+  .quiz-flow-scope .hist-stat-card,
+  .quiz-flow-scope.leaderboard-page .lb-row,
+  .quiz-flow-scope .result-stack--finale .topic-performance-card,
+  .quiz-flow-scope .landing-page__cta,
+  .quiz-flow-scope .auth-start-sheet,
+  .quiz-flow-scope.leaderboard-page .leaderboard-panel.q-card.framed {
+    transition:
+      transform var(--motion-duration-fast) var(--motion-ease-out),
+      box-shadow var(--motion-duration-base) var(--motion-ease-out),
+      border-color var(--motion-duration-fast) ease,
+      background var(--motion-duration-fast) ease;
+  }
+
+  .quiz-flow-scope .hist-attempt-card:hover,
+  .quiz-flow-scope .hist-stat-card:hover {
+    transform: translateY(var(--motion-lift-sm));
+  }
+
+  .quiz-flow-scope.leaderboard-page .lb-row:hover {
+    transform: translateY(-1px);
+  }
+
+  .quiz-flow-scope.leaderboard-page .lb-row--p1:hover,
+  .quiz-flow-scope.leaderboard-page .lb-row--p2:hover,
+  .quiz-flow-scope.leaderboard-page .lb-row--p3:hover {
+    transform: translateY(var(--motion-lift-sm));
+  }
+}
+
+/* ── 7b. Unified hover — buttons (tactile, not flashy) ── */
+.quiz-flow-scope .btn-wizard-start,
+.quiz-flow-scope .btn-debrief,
+.quiz-flow-scope .btn-again,
+.quiz-flow-scope .ld-footer-btn,
+.quiz-flow-scope .admin-btn-add,
+.quiz-flow-scope .admin-row-btn,
+.quiz-flow-scope .landing-page__cta,
+.quiz-flow-scope .hist-empty-cta,
+.quiz-flow-scope .admin-question-form__btn--primary,
+.quiz-flow-scope .admin-question-form__btn--ghost {
+  transition:
+    transform var(--motion-duration-fast) var(--motion-ease-out),
+    box-shadow var(--motion-duration-base) var(--motion-ease-out),
+    filter var(--motion-duration-fast) ease,
+    border-color var(--motion-duration-fast) ease,
+    background var(--motion-duration-fast) ease,
+    color var(--motion-duration-fast) ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-flow-scope .btn-wizard-start:hover:not(:disabled),
+  .quiz-flow-scope .btn-debrief:hover:not(:disabled),
+  .quiz-flow-scope .btn-again:hover:not(:disabled),
+  .quiz-flow-scope .ld-footer-btn:hover:not(:disabled),
+  .quiz-flow-scope .admin-btn-add:hover:not(:disabled),
+  .quiz-flow-scope .landing-page__cta--primary:hover {
+    transform: translateY(var(--motion-lift-md));
+  }
+
+  .quiz-flow-scope .admin-row-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .quiz-flow-scope .btn-wizard-start:active:not(:disabled),
+  .quiz-flow-scope .btn-debrief:active:not(:disabled),
+  .quiz-flow-scope .btn-again:active:not(:disabled),
+  .quiz-flow-scope .ld-footer-btn:active:not(:disabled),
+  .quiz-flow-scope .admin-row-btn:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+/* ── 8. Modal system ── */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-modal-overlay {
+    animation: motion-modal-backdrop-in var(--motion-duration-modal) var(--motion-ease-out) both;
+  }
+
+  .motion-modal-panel {
+    animation: motion-modal-panel-in var(--motion-duration-modal) var(--motion-ease-out) both;
+    animation-delay: 40ms;
+  }
+}
+
+.motion-route-shell {
+  display: block;
+  min-height: 0;
+}
+
+/* Avoid double animation on result score (staged reveal handles it) */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-context--quiz .result-score-line {
+    animation: none;
+  }
+}
+
+/* History — fast expand on debrief explanation panels */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-context--review .rvc-exp-panel {
+    transition:
+      grid-template-rows 220ms var(--motion-ease-out),
+      opacity 200ms var(--motion-ease-out);
+  }
+}
+
+/* Admin — minimal modal only */
+.motion-context--admin .motion-modal-overlay {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.motion-context--admin .motion-modal-panel {
+  animation-duration: 240ms;
+}

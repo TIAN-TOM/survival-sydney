@@ -170,9 +170,9 @@ const swaggerDefinition = {
           }
         },
         responses: {
-          201: okResponse('Registered user and JWT token', {
-            token: { type: 'string' },
+          201: okResponse('Registered user (sign in to obtain a JWT)', {
             user: { $ref: '#/components/schemas/User' },
+            message: { type: 'string' },
           }),
           400: failResponse('Validation failed'),
           409: failResponse('Username or email already exists'),

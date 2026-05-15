@@ -24,7 +24,7 @@ const router = express.Router();
  *               email: { type: string, format: email }
  *               password: { type: string, minLength: 8, maxLength: 72 }
  *     responses:
- *       201: { description: 'Created, returns JWT and user' }
+ *       201: { description: 'Created, returns user profile (no session — sign in separately)' }
  *       400: { description: Validation error }
  *       409: { description: Username or email already taken }
  *       429: { description: Rate limit exceeded }

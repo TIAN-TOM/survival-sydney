@@ -1,7 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import api from '../api/api.js';
+import GameplayHudPortal from '../components/GameplayHudPortal.jsx';
+import ReviewQuestionCard from '../components/quiz/ReviewQuestionCard.jsx';
+import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
+
+function ReviewArchiveHudStrip({ attempt, activeDot, onJump, onArchive }) {
+  const correctCount = attempt.review.filter((r) => r.isCorrect).length;
+  const total = attempt.total || attempt.review.length;
+  return (
+    <div className="review-progress-strip review-progress-strip--archive-route">
+      <span className="qdb-score" title="+1 point per correct answer">
+        Outcome:
+        {' '}
+        {attempt.score}
+        /
+        {total}
+        <span className="qdb-score-sub">
+          {' '}
+          (
+          {correctCount}
+          /
+          {total}
+          {' '}
+          correct)
+        </span>
+      </span>
+      <div className="qdb-dots" role="tablist" aria-label="Jump to question">
+        {attempt.review.map((row, i) => (
+          <button
+            key={row.questionId || i}
+            type="button"
+            className={`q-dot ${row.isCorrect ? 'cor' : 'wrg'}${activeDot === i ? ' active-dot' : ''}`}
+            onClick={() => onJump(i)}
+          >
+            {i + 1}
+          </button>
+        ))}
+      </div>
+      <button type="button" className="qdb-back" onClick={onArchive}>
+        ← Archive
+      </button>
+    </div>
+  );
+}
 
 function ReviewPage() {
   const navigate = useNavigate();
@@ -10,6 +53,15 @@ function ReviewPage() {
   const [attempt, setAttempt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeDot, setActiveDot] = useState(0);
+
+  const jumpTo = useCallback((i) => {
+    setActiveDot(i);
+    document.getElementById(`rvc-${i}`)?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  }, []);
 
   useEffect(() => {
     const fetchAttempt = async () => {
@@ -27,95 +79,97 @@ function ReviewPage() {
   }, [attemptId]);
 
   if (loading) {
-    return <p>Loading review...</p>;
+    return (
+      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
+        <QuizWorldBackground usePhotoBackdrop />
+        <main className="review-page quiz-review-page">
+          <div className="rv-center">
+            <p className="loading-state ld-page-lead">Opening your debrief…</p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (error) {
-    return <p className="error-message">{error}</p>;
+    return (
+      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
+        <QuizWorldBackground usePhotoBackdrop />
+        <main className="review-page quiz-review-page">
+          <div className="rv-center">
+            <p className="error-message">{error}</p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (!attempt) {
-    return <p>No attempt found.</p>;
+    return (
+      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
+        <QuizWorldBackground usePhotoBackdrop />
+        <main className="review-page quiz-review-page">
+          <div className="rv-center">
+            <p className="empty-state">No attempt found.</p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
-    <main>
-      <section className="admin-section">
-        <h1>Attempt Review</h1>
+    <div className="quiz-flow-scope quiz-review-shell review-learning-page">
+      <GameplayHudPortal mode="review">
+        <ReviewArchiveHudStrip
+          attempt={attempt}
+          activeDot={activeDot}
+          onJump={jumpTo}
+          onArchive={() => navigate('/history')}
+        />
+      </GameplayHudPortal>
 
-        <h2>
-          Score: {attempt.score} / {attempt.total}
-        </h2>
+      <QuizWorldBackground usePhotoBackdrop />
 
-        <p>Completed: {new Date(attempt.createdAt).toLocaleString()}</p>
-      </section>
+      <main className="review-page quiz-review-page">
+        <div className="rv-center">
+          <header>
+            <h1 className="ld-page-title">
+              Learning
+              {' '}
+              <em>Debrief</em>
+            </h1>
+            <p className="ld-page-lead">
+              Each card walks the scenario, your choice, the keyed response, and a scholar note. Wrong items open the
+              note automatically so you can repair understanding first.
+            </p>
+            <p className="ld-meta-line">
+              <strong>Completed</strong>
+              {' '}
+              {new Date(attempt.createdAt).toLocaleString()}
+            </p>
+          </header>
 
-      <section className="admin-section">
-        {attempt.review.map((item, index) => (
-          <div
-            key={item.questionId}
-            style={{
-              border: '1px solid #ccc',
-              padding: '20px',
-              marginBottom: '20px',
-              borderRadius: '8px',
-            }}
-          >
-            <h3>Question {index + 1}</h3>
-
-            <p>{item.questionText}</p>
-
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              {item.options.map((option, optionIndex) => {
-                const isSelected = optionIndex === item.selectedAnswer;
-                const isCorrect = optionIndex === item.correctAnswer;
-
-                return (
-                  <li
-                    key={`${item.questionId}-${optionIndex}`}
-                    style={{
-                      marginBottom: '10px',
-                      padding: '10px',
-                      borderRadius: '6px',
-                      backgroundColor: isCorrect
-                        ? '#d4edda'
-                        : isSelected
-                          ? '#f8d7da'
-                          : '#f1f1f1',
-                    }}
-                  >
-                    {option}
-                    {isCorrect && ' ✅ Correct'}
-                    {!isCorrect && isSelected && ' ❌ Your Answer'}
-                  </li>
-                );
-              })}
-            </ul>
-
-            <p>{item.isCorrect ? '✅ Correct' : '❌ Incorrect'}</p>
-
-            {item.explanation && (
-              <div>
-                <strong>Explanation:</strong>
-                <p>{item.explanation}</p>
-              </div>
-            )}
+          <div className="review-cards">
+            {attempt.review.map((item, index) => (
+              <ReviewQuestionCard key={item.questionId || index} item={item} index={index} />
+            ))}
           </div>
-        ))}
-      </section>
 
-      <section className="admin-section">
-        <div className="button-row">
-          <button type="button" onClick={() => navigate('/history')}>
-            Back to History
-          </button>
-
-          <button type="button" onClick={() => navigate('/quiz')}>
-            Play Again
-          </button>
+          <div className="review-footer-actions">
+            <button
+              type="button"
+              className="btn-rv-again ld-footer-btn ld-footer-btn--ghost"
+              onClick={() => navigate('/history')}
+            >
+              ← Archive
+            </button>
+            <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--primary" onClick={() => navigate('/quiz')}>
+              New run
+            </button>
+          </div>
         </div>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }
 

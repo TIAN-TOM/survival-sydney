@@ -8,7 +8,8 @@ function readStoredUser() {
   }
 }
 
-export default function ProtectedRoute({ adminOnly = false, children }) {
+/** Player-only areas (history, leaderboard, etc.). Admin routes use ProtectedAdminRoute. */
+export default function ProtectedRoute({ blockAdmin = false, children }) {
   const location = useLocation();
   const token = localStorage.getItem('jwt');
   const user = readStoredUser();
@@ -17,8 +18,8 @@ export default function ProtectedRoute({ adminOnly = false, children }) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (adminOnly && user?.role !== 'admin') {
-    return <Navigate to="/" replace />;
+  if (blockAdmin && user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
   }
 
   return children || <Outlet />;

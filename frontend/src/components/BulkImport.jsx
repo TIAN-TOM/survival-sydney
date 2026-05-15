@@ -16,6 +16,7 @@ const questionImportSchema = z.object({
   correctAnswer: z.number().int().min(0).max(3),
   active: z.boolean().optional(),
   explanation: z.string().optional(),
+  topic: z.string().optional(),
 });
 
 const exampleJson = `{
@@ -25,7 +26,8 @@ const exampleJson = `{
       "options": ["Library", "Database", "Operating System", "Browser"],
       "correctAnswer": 0,
       "active": true,
-      "explanation": "React is a JavaScript library for building user interfaces."
+      "explanation": "React is a JavaScript library for building user interfaces.",
+      "topic": "general"
     }
   ]
 }`;
@@ -64,6 +66,7 @@ function parseImportPayload(jsonText) {
     correctAnswer: question.correctAnswer,
     active: question.active ?? true,
     explanation: question.explanation?.trim() || '',
+    topic: question.topic?.trim() || 'general',
   }));
 }
 

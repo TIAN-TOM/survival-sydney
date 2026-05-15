@@ -34,8 +34,12 @@ exports.register = async (req, res, next) => {
     await user.setPassword(password);
     await user.save();
 
-    const token = signToken(user);
-    return res.status(201).json(ok({ token, user: user.toSafeObject() }));
+    return res.status(201).json(
+      ok({
+        user: user.toSafeObject(),
+        message: 'Account created. Sign in to continue.',
+      })
+    );
   } catch (err) {
     return next(err);
   }

@@ -142,6 +142,21 @@ describe('auth and access control API', () => {
 });
 
 describe('quiz API', () => {
+  test('returns 403 when an admin tries to start a quiz', async () => {
+    const admin = await createUser('admin', 'forbidquizstart');
+    const token = await login(admin.username);
+
+    const response = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(403);
+
+    expect(response.body).toMatchObject({
+      success: false,
+      error: 'Admins cannot take quizzes.',
+    });
+  });
+
   test('requires authentication and at least ten active questions to start', async () => {
     const user = await createUser('user', 'shortquiz');
     const token = await login(user.username);

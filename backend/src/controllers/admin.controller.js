@@ -39,16 +39,28 @@ const isValidQuestionPayload = question => {
     return 'explanation must be a string if provided';
   }
 
+  if (question.topic !== undefined && typeof question.topic !== 'string') {
+    return 'topic must be a string if provided';
+  }
+
   return null;
 };
 
-const normalizeQuestionPayload = question => ({
-  questionText: question.questionText.trim(),
-  options: question.options.map(option => option.trim()),
-  correctAnswer: question.correctAnswer,
-  active: question.active !== undefined ? question.active : true,
-  explanation: question.explanation ? question.explanation.trim() : '',
-});
+const normalizeQuestionPayload = question => {
+  const base = {
+    questionText: question.questionText.trim(),
+    options: question.options.map(option => option.trim()),
+    correctAnswer: question.correctAnswer,
+    active: question.active !== undefined ? question.active : true,
+    explanation: question.explanation ? question.explanation.trim() : '',
+  };
+
+  if (question.topic !== undefined) {
+    base.topic = question.topic.trim() || 'general';
+  }
+
+  return base;
+};
 
 /**
  * GET /api/admin/questions
