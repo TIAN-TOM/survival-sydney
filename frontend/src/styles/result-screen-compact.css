@@ -256,7 +256,7 @@ html[data-theme='dark'] .quiz-flow-scope .result-accuracy-row {
 
 .quiz-flow-scope .sr-fill--mini {
   fill: none;
-  stroke: var(--sq-btn-b);
+  stroke: var(--sq-success);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 87.96;

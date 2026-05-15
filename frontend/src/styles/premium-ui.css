@@ -31,7 +31,13 @@ html[data-theme='light'] .quiz-flow-scope .sq-world-bg:not(.sq-world-bg--photo):
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .quiz-flow-scope .qf-screen {
+  /*
+   * Do not apply transform animation to the live quiz screen: any non-none transform
+   * on an ancestor makes position:fixed descendants (e.g. quiz-play shell veils) use
+   * that ancestor as their containing block instead of the viewport, which breaks
+   * full-bleed underlays and causes a horizontal “seam” tied to content height.
+   */
+  .quiz-flow-scope .qf-screen:not(.quiz-screen) {
     animation: premium-qf-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }

@@ -57,7 +57,9 @@ html[data-theme='light'] .quiz-flow-scope {
   --gold3: #c98b47;
   --maroon: rgba(156, 91, 46, 0.12);
   --maroon2: rgba(156, 91, 46, 0.22);
-  --cor: #3d8b5c;
+  /* Success / correct only — not default chrome or CTAs */
+  --sq-success: #35815a;
+  --cor: var(--sq-success);
   --wrg: #c95a4a;
   --ember: #b87333;
   --glow: rgba(184, 115, 51, 0.22);
@@ -76,8 +78,9 @@ html[data-theme='light'] .quiz-flow-scope {
   --sq-nav-bd: var(--bd);
   --sq-btn-a: var(--gold);
   --sq-btn-a2: var(--gold2);
-  --sq-btn-b: var(--cor);
-  --sq-btn-b2: #2d6b48;
+  /* Neutral / secondary actions — bronze, not green */
+  --sq-btn-b: var(--gold2);
+  --sq-btn-b2: #7a4a22;
   --sq-opt-bg: var(--sf2);
   --sq-opt-bd: var(--bd);
   --sq-opt-sel: var(--gold);
@@ -104,7 +107,8 @@ html[data-theme='dark'] .quiz-flow-scope {
   --gold3: #dfc08a;
   --maroon: #3a1810;
   --maroon2: #2a100c;
-  --cor: #3d8b5c;
+  --sq-success: #4d9968;
+  --cor: var(--sq-success);
   --wrg: #c95a4a;
   --ember: #c98b47;
   --glow: rgba(201, 139, 71, 0.18);
@@ -123,8 +127,8 @@ html[data-theme='dark'] .quiz-flow-scope {
   --sq-nav-bd: var(--bd);
   --sq-btn-a: var(--gold);
   --sq-btn-a2: var(--gold2);
-  --sq-btn-b: var(--cor);
-  --sq-btn-b2: rgba(0, 0, 0, 0.42);
+  --sq-btn-b: var(--gold2);
+  --sq-btn-b2: color-mix(in srgb, var(--gold2) 58%, #000 42%);
   --sq-opt-bg: var(--sf2);
   --sq-opt-bd: var(--bd);
   --sq-opt-sel: var(--gold);
@@ -1333,18 +1337,39 @@ html[data-theme='dark'] .quiz-flow-scope .candle-floor-fill {
 }
 
 .quiz-flow-scope .seal-stop.done .seal-item {
-  border: none;
+  border: 1px solid color-mix(in srgb, var(--gold2) 55%, transparent);
   transform: scale(0.94);
-  background: linear-gradient(155deg, #ecc255 0%, #d4a832 48%, #a87820 100%);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--sf) 52%, var(--gold3) 48%) 0%,
+    color-mix(in srgb, var(--gold) 38%, var(--gold2) 62%) 45%,
+    color-mix(in srgb, var(--gold2) 85%, #3d2414 15%) 100%
+  );
   box-shadow:
-    0 2px 0 rgba(120, 72, 24, 0.45),
-    inset 0 1px 0 rgba(255, 236, 180, 0.35),
-    inset 0 -2px 5px rgba(0, 0, 0, 0.22);
+    0 2px 0 rgba(92, 58, 34, 0.32),
+    inset 0 1px 0 rgba(255, 248, 237, 0.55),
+    inset 0 -4px 8px rgba(74, 48, 28, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+html[data-theme='dark'] .quiz-flow-scope .seal-stop.done .seal-item {
+  border-color: color-mix(in srgb, var(--gold) 40%, rgba(0, 0, 0, 0.35) 60%);
+  background: linear-gradient(
+    165deg,
+    color-mix(in srgb, var(--sf2) 35%, #3d2818 65%) 0%,
+    color-mix(in srgb, var(--gold2) 42%, #1a1410 58%) 55%,
+    color-mix(in srgb, #2a1810 70%, var(--gold2) 30%) 100%
+  );
+  box-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 236, 210, 0.14),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(201, 137, 69, 0.12);
 }
 
 .quiz-flow-scope .seal-stop.current .seal-item {
   transform: translateY(-4px) scale(1.16);
-  border: 2.5px solid color-mix(in srgb, var(--sq-btn-a) 88%, #1a1208);
+  border: 2.5px solid color-mix(in srgb, var(--gold2) 35%, #1a1208 65%);
   background: color-mix(in srgb, var(--sf, var(--sq-card)) 42%, transparent);
   animation: hud-node-breathe 2.75s ease-in-out infinite;
   box-shadow:
@@ -1378,10 +1403,17 @@ html[data-theme='dark'] .quiz-flow-scope .candle-floor-fill {
 
 .quiz-flow-scope .seal-stop.done .seal-item::after {
   position: absolute;
-  inset: 3px;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  inset: 2px;
+  border: 1px solid color-mix(in srgb, #fff 22%, transparent);
   border-radius: 50%;
   content: '';
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  pointer-events: none;
+}
+
+html[data-theme='dark'] .quiz-flow-scope .seal-stop.done .seal-item::after {
+  border-color: color-mix(in srgb, #fff 8%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 220, 180, 0.06);
 }
 
 .quiz-flow-scope .seal-inner {
@@ -1402,7 +1434,18 @@ html[data-theme='dark'] .quiz-flow-scope .candle-floor-fill {
 }
 
 .quiz-flow-scope .seal-stop.done .seal-inner {
-  color: var(--bg, var(--sq-sky1));
+  color: #fff8ed;
+  font-size: 0.68rem;
+  text-shadow:
+    0 1px 0 rgba(74, 48, 28, 0.45),
+    0 -1px 0 rgba(255, 255, 255, 0.12);
+}
+
+html[data-theme='dark'] .quiz-flow-scope .seal-stop.done .seal-inner {
+  color: #faf4e8;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.65),
+    0 -1px 0 rgba(255, 230, 190, 0.08);
 }
 
 .quiz-flow-scope .seal-num,
@@ -1419,15 +1462,21 @@ html[data-theme='dark'] .quiz-flow-scope .candle-floor-fill {
 }
 
 .quiz-flow-scope .seal-stop.current .seal-num,
-.quiz-flow-scope .candle-stop.current .c-lbl,
-.quiz-flow-scope .seal-stop.done .seal-num,
-.quiz-flow-scope .candle-stop.done .c-lbl {
+.quiz-flow-scope .candle-stop.current .c-lbl {
   color: var(--sq-btn-a);
 }
 
 .quiz-flow-scope .seal-stop.done .seal-num,
 .quiz-flow-scope .candle-stop.done .c-lbl {
+  color: color-mix(in srgb, var(--mut) 68%, var(--sq-btn-a) 32%);
   opacity: 0.78;
+  font-weight: 600;
+}
+
+html[data-theme='dark'] .quiz-flow-scope .seal-stop.done .seal-num,
+html[data-theme='dark'] .quiz-flow-scope .candle-stop.done .c-lbl {
+  color: color-mix(in srgb, var(--mut) 78%, var(--sq-btn-a) 22%);
+  opacity: 0.72;
 }
 
 .quiz-flow-scope .c-svg {
@@ -1537,7 +1586,7 @@ html[data-theme='light'] .quiz-flow-scope .btn-next {
 }
 
 .quiz-flow-scope .btn-next.submit {
-  border-color: var(--cor);
+  border-color: var(--sq-btn-a);
 }
 
 .quiz-flow-scope .question-actions {
@@ -2327,9 +2376,9 @@ html[data-theme='light'] .quiz-flow-scope .review-progress-strip {
 }
 
 .quiz-flow-scope .q-dot.cor {
-  border: 1.5px solid var(--cor, #2ea870);
+  border: 1.5px solid var(--cor);
   background: rgba(46, 168, 112, 0.15);
-  color: var(--cor, #2ea870);
+  color: var(--cor);
 }
 
 .quiz-flow-scope .q-dot.wrg {
@@ -2723,7 +2772,7 @@ html[data-theme='light'] .quiz-flow-scope .review-question-card.q-card.card-wrg 
 
 .quiz-flow-scope .rvc-si.ok {
   background: rgba(46, 168, 112, 0.12);
-  color: var(--cor, #2ea870);
+  color: var(--cor);
 }
 
 .quiz-flow-scope .rvc-si.bad {
@@ -2765,7 +2814,7 @@ html[data-theme='light'] .quiz-flow-scope .review-question-card.q-card.card-wrg 
 
 .quiz-flow-scope .rvc-result.ok {
   background: rgba(46, 168, 112, 0.12);
-  color: var(--cor, #2ea870);
+  color: var(--cor);
 }
 
 .quiz-flow-scope .rvc-result.bad {
@@ -2817,7 +2866,7 @@ html[data-theme='light'] .quiz-flow-scope .rvc-opt {
 }
 
 .quiz-flow-scope .rvc-opt.ok-ans {
-  border-color: var(--cor, #2ea870);
+  border-color: var(--cor);
   background: rgba(46, 168, 112, 0.07);
   color: var(--sq-txt);
 }
@@ -2846,7 +2895,7 @@ html[data-theme='light'] .quiz-flow-scope .rvc-opt {
 }
 
 .quiz-flow-scope .rvc-opt.ok-ans .rvc-ol {
-  background: var(--cor, #2ea870);
+  background: var(--cor);
   color: #fff;
 }
 
@@ -2867,7 +2916,7 @@ html[data-theme='light'] .quiz-flow-scope .rvc-opt {
 
 .quiz-flow-scope .rvc-opt.ok-ans .rvc-opt-tag {
   background: rgba(46, 168, 112, 0.15);
-  color: var(--cor, #2ea870);
+  color: var(--cor);
 }
 
 .quiz-flow-scope .rvc-opt.ur-bad .rvc-opt-tag {
@@ -3295,9 +3344,9 @@ html[data-theme='light'] .quiz-flow-scope.auth-start-screen .quiz-auth-card-host
 }
 
 .quiz-flow-scope.auth-start-screen .quiz-auth-card-host .auth-panel--quizframe .auth-notice--success {
-  border-color: color-mix(in srgb, var(--sq-btn-b) 48%, var(--sq-card-bd)) !important;
-  border-left-color: var(--sq-btn-b) !important;
-  background: color-mix(in srgb, var(--sq-btn-b) 14%, var(--sq-card)) !important;
+  border-color: color-mix(in srgb, var(--sq-success) 48%, var(--sq-card-bd)) !important;
+  border-left-color: var(--sq-success) !important;
+  background: color-mix(in srgb, var(--sq-success) 14%, var(--sq-card)) !important;
 }
 
 /* Dedicated /login & /register: lighter frame, clearer form focus */

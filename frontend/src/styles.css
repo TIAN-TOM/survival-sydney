@@ -9,8 +9,8 @@
   --qf-mut: #c2b2e6;
   --qf-gold: #d4a832;
   --qf-teal: #7050e8;
-  --qf-grass: #30b870;
-  --qf-cor: #30b870;
+  --qf-grass: #d4a832;
+  --qf-cor: #35815a;
   --qf-wrg: #e04848;
   --color-bg: #080610;
   --color-surface: rgba(24, 20, 52, 0.9);
@@ -375,8 +375,8 @@ td {
   --qf-mut: #6b4d36;
   --qf-gold: #b87333;
   --qf-teal: #5c4330;
-  --qf-grass: #3d8b5c;
-  --qf-cor: #3d8b5c;
+  --qf-grass: #9c5b2e;
+  --qf-cor: #35815a;
   --qf-wrg: #c95a4a;
   --color-bg: #f7f1e3;
   --color-surface: rgba(247, 241, 227, 0.96);
@@ -1900,7 +1900,7 @@ p[role='alert'] {
   background: var(--color-surface);
   padding: 1rem 1.1rem;
   box-shadow: var(--shadow-card);
-  border-left: 5px solid var(--qf-grass);
+  border-left: 5px solid var(--color-brand);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
