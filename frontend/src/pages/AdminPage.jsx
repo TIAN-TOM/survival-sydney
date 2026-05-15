@@ -3,9 +3,7 @@ import { useLocation } from 'react-router-dom';
 
 import api from '../api/api.js';
 import BulkImport from '../components/BulkImport.jsx';
-import FrameCorners from '../components/FrameCorners.jsx';
 import QuestionForm from '../components/QuestionForm.jsx';
-import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
 
 export default function AdminPage() {
   const { hash } = useLocation();
@@ -116,13 +114,10 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="quiz-flow-scope quiz-review-shell admin-layout">
-      <QuizWorldBackground usePhotoBackdrop />
-
+    <div className="quiz-flow-scope admin-cms-shell quiz-review-shell admin-layout">
       <main className="review-page quiz-review-page admin-dashboard-page">
         <section className="admin-section review-attempt-header review-attempt-panel review-attempt-panel--framed">
-          <FrameCorners />
-          <h1>Question Management</h1>
+          <h1 className="admin-page-title">Question bank</h1>
 
           <div className="review-attempt-final" role="status">
             <div className="review-attempt-final__label">Questions in bank</div>
@@ -187,7 +182,6 @@ export default function AdminPage() {
         ) : null}
 
         <section id="admin-bulk-import" className="admin-section review-attempt-panel review-attempt-panel--framed">
-          <FrameCorners />
           <h2 className="review-attempt-card__title admin-dashboard-section-title">Bulk Import</h2>
           <p className="review-attempt-hint admin-dashboard-section-lead">
             Paste a JSON array of questions, or an object with a <code>questions</code> array. Same shape as the
@@ -197,7 +191,6 @@ export default function AdminPage() {
         </section>
 
         <section id="admin-question-list" className="admin-section review-attempt-list review-attempt-panel review-attempt-panel--framed">
-          <FrameCorners />
           <div className="admin-list-header admin-toolbar">
             <h2 className="review-attempt-card__title admin-dashboard-section-title admin-list-header__title">Question list</h2>
             <button type="button" className="admin-btn-add" onClick={handleCreateClick}>
@@ -210,55 +203,91 @@ export default function AdminPage() {
           ) : questions.length === 0 ? (
             <p className="review-attempt-hint">No questions found. Add one or run a bulk import.</p>
           ) : (
-            <div className="admin-question-list admin-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Question</th>
-                    <th>Correct</th>
-                    <th>Status</th>
-                    <th>Explanation</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-
-                <tbody>
+            <div className="admin-question-list admin-table admin-data-table">
+              <div className="admin-qbank admin-qbank--cards" role="list" aria-label="Question list">
+                <div className="admin-qbank__body">
                   {questions.map(question => (
-                    <tr key={question._id}>
-                      <td>
-                        <strong>{question.questionText}</strong>
-                        <ol type="A">
-                          {question.options.map((option, index) => (
-                            <li key={`${question._id}-${index}`}>{option}</li>
-                          ))}
-                        </ol>
-                      </td>
-
-                      <td>Option {String.fromCharCode(65 + Number(question.correctAnswer))}</td>
-
-                      <td>{question.active ? 'Active' : 'Inactive'}</td>
-
-                      <td>{question.explanation || '—'}</td>
-
-                      <td>
-                        <div className="button-row">
-                          <button type="button" onClick={() => handleEditClick(question)}>
-                            Edit
-                          </button>
-
-                          <button type="button" onClick={() => handleToggleQuestion(question._id)}>
-                            {question.active ? 'Deactivate' : 'Activate'}
-                          </button>
-
-                          <button type="button" onClick={() => handleDeleteQuestion(question._id)}>
-                            Delete
-                          </button>
+                    <article key={question._id} className="admin-qbank-card" role="listitem">
+                      <div className="admin-qbank-card__top">
+                        <div className="admin-qbank-card__content">
+                          <h3 className="admin-q-title">{question.questionText}</h3>
+                          <ol className="admin-q-opts" type="A">
+                            {question.options.map((option, index) => (
+                              <li key={`${question._id}-${index}`}>{option}</li>
+                            ))}
+                          </ol>
                         </div>
-                      </td>
-                    </tr>
+
+                        <div className="admin-qbank-card__actions">
+                          <div className="admin-row-actions">
+                            <button
+                              type="button"
+                              className="admin-row-btn admin-row-btn--edit"
+                              onClick={() => handleEditClick(question)}
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              type="button"
+                              className="admin-row-btn admin-row-btn--toggle"
+                              onClick={() => handleToggleQuestion(question._id)}
+                            >
+                              {question.active ? 'Deactivate' : 'Activate'}
+                            </button>
+
+                            <button
+                              type="button"
+                              className="admin-row-btn admin-row-btn--delete"
+                              onClick={() => handleDeleteQuestion(question._id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <footer className="admin-qbank-card__meta" aria-label="Question metadata">
+                        <div className="admin-qbank-meta">
+                          <span className="admin-qbank-meta__label">Correct</span>
+                          <span className="admin-qbank-meta__value">
+                            Option {String.fromCharCode(65 + Number(question.correctAnswer))}
+                          </span>
+                        </div>
+
+                        <div className="admin-qbank-meta">
+                          <span className="admin-qbank-meta__label">Status</span>
+                          <span className="admin-qbank-meta__value">
+                            <span
+                              className={
+                                question.active
+                                  ? 'admin-status-pill admin-status-pill--active'
+                                  : 'admin-status-pill admin-status-pill--inactive'
+                              }
+                            >
+                              {question.active ? 'Active' : 'Inactive'}
+                            </span>
+                          </span>
+                        </div>
+
+                        <div className="admin-qbank-meta admin-qbank-meta--explain">
+                          <span className="admin-qbank-meta__label">Explanation</span>
+                          <span
+                            className="admin-qbank-meta__explain admin-explain-clamp"
+                            title={
+                              question.explanation && question.explanation.trim()
+                                ? question.explanation
+                                : undefined
+                            }
+                          >
+                            {question.explanation || '—'}
+                          </span>
+                        </div>
+                      </footer>
+                    </article>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              </div>
             </div>
           )}
         </section>
