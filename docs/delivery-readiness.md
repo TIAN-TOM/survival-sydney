@@ -1,6 +1,6 @@
 # Delivery Readiness Checklist
 
-Last updated: 2026-05-07
+Last updated: 2026-05-14
 
 This checklist records the current evidence for code readiness and the remaining submission blockers. It should be refreshed after the final Git commits and before creating the Canvas submission ZIP.
 
@@ -8,17 +8,17 @@ This checklist records the current evidence for code readiness and the remaining
 
 | Check | Result | Evidence |
 |---|---:|---|
-| Backend Jest + Supertest suite | PASS | `npm test --prefix backend -- --runInBand` -> 4 suites, 16 tests |
-| Frontend production build | PASS | `npm run build --prefix frontend -- --outDir /tmp/comp5347-a2-frontend-build --emptyOutDir` |
+| Backend Jest + Supertest suite | PASS | `npm test --prefix backend` -> 5 suites, 19 tests |
+| Frontend production build | PASS | `npm run build --prefix frontend` |
 | Postman collection JSON validity | PASS | `python3 -m json.tool docs/postman-collection.json >/dev/null` |
 | Swagger/app load with JWT secret | PASS | `JWT_SECRET=test-local-secret node -e "require('./backend/src/app')"` |
 | Whitespace diff check | PASS | `git diff --check` |
-| Real API smoke test | PASS | Register, start quiz, submit, duplicate submit rejection, review, admin login, invalid bulk import index |
-| Browser smoke test | PASS | Product-style Sydney Life home page, single quiz CTA, spaced header navigation, split light/dark theme control, high-contrast Login header action, protected-route login notices, register, 10-question quiz, completion, Review Mode, admin login via login page, admin page load, theme persistence |
+| Real API smoke test | NEEDS REFRESH | Previous notes predate current `dev`; rerun after final fixes if submission evidence is needed |
+| Browser smoke test | NEEDS REFRESH | Previous notes predate current `dev`; rerun against the final branch before submission |
 | Security/rate-limit mapping | PASS | `docs/security-validation.md` maps auth, RBAC, validation, rate limiting, injection protection, and error envelopes to implementation files |
 | Git workflow note | PASS | README documents repository URL, `main`, `git log --all --graph --oneline --decorate`, `git shortlog -sne --all`, and project-level reference commits |
-| Variation scope guard | PASS | README states Review Mode is the only implemented variation and clarifies that topic/difficulty metadata does not create a Categorised Quiz flow |
-| Bonus-eligible evidence | PASS | README documents metadata-rich sampling, durable Review snapshots, Review summary/filter, Review learning breakdown, actionable validation/import errors, and accessible feedback in What/Why/How format |
+| Variation scope guard | PASS | README states Review Mode is the only implemented variation and does not claim metadata-balanced sampling |
+| Documentation/API alignment | PASS | README, Swagger, Postman, and security notes describe current `dev` routes and fields |
 
 ## Current Full-Mark Risks
 
@@ -29,6 +29,7 @@ This checklist records the current evidence for code readiness and the remaining
 | Individual reflections | BLOCKED | Each student must write a 1-2 page PDF with subsystem scope, challenge, diagram, commit analysis, and Review Mode design reflection. |
 | Group coversheet | BLOCKED | Obtain the signed group assignment coversheet and include it in the final submission bundle. |
 | Final ZIP | PENDING | Build from the repo after commits; exclude `node_modules/`, `.env`, local build artifacts, and scratch files. |
+| Leaderboard contract | OWNER REVIEW | Backend route is currently public and sorts only by best score; frontend route is protected and rendering is still a placeholder. Confirm/fix with the quiz/leaderboard owner before final submission. |
 
 ## Final Pre-Submission Commands
 
@@ -48,7 +49,7 @@ Then run one manual browser pass using `docs/manual-test-checklist.md`.
 
 - The database is local MongoDB only.
 - Quiz attempts are generated dynamically from active `Question` documents.
-- In-progress quiz state is short-lived server memory plus frontend state; completed attempts are persisted in `Score`.
+- In-progress quiz state is held in frontend state; the backend does not persist started quiz sessions, and completed attempts are persisted in `Score`.
 - There is no persisted `Quiz` collection.
 - Admins use the same backend login mechanism as players; `/admin/login` is an optional frontend entry for admin workflow clarity.
-- Review Mode uses `Score.answers[].questionSnapshot` so completed attempts remain reviewable if questions are later edited or deleted.
+- Review Mode uses `Score.answers[]` plus current `Question` documents; deleted questions render as placeholders rather than durable snapshots.
