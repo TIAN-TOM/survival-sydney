@@ -229,7 +229,7 @@ function survivalRankBand(pct) {
   };
 }
 
-/** Guest landing on /quiz — narrative gate; sign-in lives on /login (staff: /admin/login). */
+/** Guest landing on /quiz — narrative gate; sign-in lives on /login. */
 export function QuizGateScreen() {
   const { isDarkMode, theme } = useTheme();
 
@@ -279,14 +279,6 @@ export function QuizGateScreen() {
               🪶
             </span>
             Test your knowledge. Earn your survival badge.
-          </p>
-          <p className="gate-admin-foot">
-            <Link to="/admin/login" className="gate-admin-link">
-              <span className="gate-admin-key" aria-hidden="true">
-                🔑
-              </span>
-              Admin access
-            </Link>
           </p>
         </div>
       </div>

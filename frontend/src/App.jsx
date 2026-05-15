@@ -15,7 +15,7 @@ import ReviewRouteRedirect from './components/ReviewRouteRedirect.jsx';
 import ReviewPage from './pages/ReviewPage.jsx';
 
 function motionShellClass(pathname) {
-  if (pathname.startsWith('/admin')) return 'motion-context--admin';
+  if (pathname.startsWith('/admin') || pathname === '/bosscoming') return 'motion-context--admin';
   if (pathname === '/quiz') return 'motion-context--quiz';
   if (pathname === '/leaderboard') return 'motion-page-enter motion-context--leaderboard';
   if (pathname === '/history') return 'motion-page-enter motion-context--history';
@@ -28,7 +28,7 @@ function App() {
   const { pathname } = location;
   const { user } = useAuth();
   const isAuthImmersive =
-    pathname === '/login' || pathname === '/register' || pathname === '/admin/login';
+    pathname === '/login' || pathname === '/register' || pathname === '/bosscoming';
   /** Unauthenticated /quiz gate: immersive entry (no app navbar). */
   const isGuestQuizGate = pathname === '/quiz' && !user;
   const hideAppShellHeader = isAuthImmersive || isGuestQuizGate;
@@ -56,7 +56,7 @@ function App() {
           <Routes location={location}>
           <Route path="/" element={<Navigate to="/quiz" replace />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/admin/login" element={<Login adminMode />} />
+          <Route path="/bosscoming" element={<Login adminMode />} />
           <Route path="/register" element={<Register />} />
           <Route path="/quiz" element={<QuizPage />} />
           <Route
