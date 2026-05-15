@@ -2,7 +2,7 @@ const Question = require('../models/Question');
 const Score = require('../models/Score');
 const { ok, fail } = require('../utils/responseEnvelope');
 const { shuffleQuestion, toStartQuizPayload } = require('../utils/shuffleQuestion');
-
+const mongoose = require('mongoose');
 /**
  * GET /api/quiz/start
  * Fixed 10 random active questions, without correctAnswer/explanation
@@ -64,6 +64,10 @@ const submitQuiz = async (req, res, next) => {
     for (const ans of answers) {
       if (!ans.questionId) {
         return res.status(400).json(fail('Missing questionId'));
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(ans.questionId)) {
+        return res.status(400).json(fail('Invalid questionId'));
       }
 
       if (
@@ -209,6 +213,10 @@ const getHistory = async (req, res, next) => {
  */
 const getAttemptDetail = async (req, res, next) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json(fail('Invalid attempt id'));
+    }
+
     const attempt = await Score.findOne({
       _id: req.params.id,
       userId: req.user.id,
