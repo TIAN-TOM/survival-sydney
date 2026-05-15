@@ -12,6 +12,7 @@ const {
 
 const authMiddleware = require('../middleware/auth.middleware');
 const forbidAdminQuiz = require('../middleware/forbidAdminQuiz.middleware');
+const { quizSubmitLimiter } = require('../middleware/rateLimiters');
 
 /**
  * GET /api/quiz/start
@@ -23,7 +24,7 @@ router.get('/start', authMiddleware, forbidAdminQuiz, startQuiz);
  * POST /api/quiz/submit
  * Submit quiz answers
  */
-router.post('/submit', authMiddleware, forbidAdminQuiz, submitQuiz);
+router.post('/submit', authMiddleware, forbidAdminQuiz, quizSubmitLimiter, submitQuiz);
 
 /**
  * GET /api/quiz/history
@@ -39,8 +40,8 @@ router.get('/history/:id', authMiddleware, forbidAdminQuiz, getAttemptDetail);
 
 /**
  * GET /api/quiz/leaderboard
- * Public leaderboard
+ * Current user's leaderboard
  */
-router.get('/leaderboard', getLeaderboard);
+router.get('/leaderboard', authMiddleware, forbidAdminQuiz, getLeaderboard);
 
 module.exports = router;
