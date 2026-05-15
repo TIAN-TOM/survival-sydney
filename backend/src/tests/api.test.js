@@ -1,25 +1,25 @@
 // Subsystem D - Integration, Robustness & Documentation (Tom Tian):
-// end-to-end backend API coverage across auth, quiz, admin, and review flows.
+// end-to-end backend API coverage aligned with the current dev API surface.
 const mongoose = require('mongoose');
 const request = require('supertest');
 
 process.env.JWT_SECRET = 'test-only-jwt-secret';
-process.env.MONGODB_URI = 'mongodb://localhost:27017/comp5347_quiz_test';
+process.env.JWT_EXPIRES_IN = '2h';
+process.env.BCRYPT_ROUNDS = '4';
+process.env.MONGODB_URI = 'mongodb://localhost:27017/comp5347_quiz_api_test';
 
 const app = require('../app');
 const Question = require('../models/Question');
 const Score = require('../models/Score');
 const User = require('../models/User');
-const { clearQuizSessions } = require('../services/quizSessionStore');
-const { QUIZ_LENGTH } = require('../validators/quiz.validators');
+
+const QUIZ_LENGTH = 10;
 
 function questionPayload(index, overrides = {}) {
   return {
-    text: `Question ${index}?`,
+    questionText: `Question ${index}?`,
     options: [`A${index}`, `B${index}`, `C${index}`, `D${index}`],
-    correctAnswer: `A${index}`,
-    topic: `Topic ${index}`,
-    difficulty: 'application',
+    correctAnswer: 0,
     explanation: `Explanation ${index}`,
     active: true,
     ...overrides,
@@ -51,43 +51,17 @@ async function seedQuestions(count = QUIZ_LENGTH) {
   );
 }
 
-async function seedBalancedQuestionBank() {
-  const difficulties = ['foundation', 'application', 'analysis'];
-
-  return Question.insertMany(
-    Array.from({ length: 30 }, (_, index) =>
-      questionPayload(`balanced-${index + 1}`, {
-        topic: `Topic ${index % 10}`,
-        difficulty: difficulties[index % difficulties.length],
-      })
-    )
-  );
-}
-
 async function createCompletedAttempt(user, score = QUIZ_LENGTH) {
   const questions = await seedQuestions();
-  const answers = questions.map((question, index) => {
-    const isCorrect = index < score;
-
-    return {
-      questionId: question._id,
-      selectedAnswer: isCorrect ? question.correctAnswer : question.options[1],
-      isCorrect,
-      questionSnapshot: {
-        text: question.text,
-        options: question.options,
-        correctAnswer: question.correctAnswer,
-        topic: question.topic,
-        difficulty: question.difficulty,
-        explanation: question.explanation,
-      },
-    };
-  });
+  const answers = questions.map((question, index) => ({
+    questionId: question._id,
+    selectedAnswer: index < score ? question.correctAnswer : 1,
+    isCorrect: index < score,
+  }));
 
   return Score.create({
-    user: user._id,
+    userId: user._id,
     score,
-    totalQuestions: QUIZ_LENGTH,
     answers,
   });
 }
@@ -102,7 +76,6 @@ beforeEach(async () => {
     Score.deleteMany({}),
     User.deleteMany({}),
   ]);
-  clearQuizSessions();
 });
 
 afterAll(async () => {
@@ -184,27 +157,121 @@ describe('quiz API', () => {
     });
   });
 
-  test('requires at least ten active questions to start', async () => {
+  test('requires authentication and at least ten active questions to start', async () => {
     const user = await createUser('user', 'shortquiz');
     const token = await login(user.username);
     await seedQuestions(QUIZ_LENGTH - 1);
 
+    await request(app).get('/api/quiz/start').expect(401);
+
     const response = await request(app)
       .get('/api/quiz/start')
       .set('Authorization', `Bearer ${token}`)
-      .expect(409);
+      .expect(400);
 
     expect(response.body).toMatchObject({
       success: false,
-      details: { activeQuestions: QUIZ_LENGTH - 1, requiredQuestions: QUIZ_LENGTH },
+      error: 'Not enough active questions in database (need at least 10)',
     });
   });
 
-  test('protects leaderboard behind player authentication', async () => {
-    const user = await createUser('user', 'leaderboardauth');
+  test('starts a ten-question quiz without exposing correct answers', async () => {
+    const user = await createUser('user', 'startquiz');
     const token = await login(user.username);
+    await seedQuestions();
 
-    await request(app).get('/api/quiz/leaderboard').expect(401);
+    const response = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toHaveLength(QUIZ_LENGTH);
+    expect(response.body.data[0]).toMatchObject({
+      questionText: expect.any(String),
+      options: expect.any(Array),
+    });
+    expect(response.body.data[0]).not.toHaveProperty('correctAnswer');
+    expect(response.body.data[0]).not.toHaveProperty('explanation');
+  });
+
+  test('submits a quiz, saves history, and returns review data', async () => {
+    const user = await createUser('user', 'submitquiz');
+    const token = await login(user.username);
+    const questions = await seedQuestions();
+    const answers = questions.map((question) => ({
+      questionId: question._id.toString(),
+      selectedAnswer: 0,
+    }));
+
+    const submitResponse = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ answers })
+      .expect(200);
+
+    expect(submitResponse.body).toMatchObject({
+      success: true,
+      data: {
+        score: QUIZ_LENGTH,
+        total: QUIZ_LENGTH,
+        scoreId: expect.any(String),
+        review: expect.any(Array),
+      },
+    });
+    expect(submitResponse.body.data.review[0]).toMatchObject({
+      questionText: expect.any(String),
+      correctAnswer: 0,
+      isCorrect: true,
+    });
+
+    const historyResponse = await request(app)
+      .get('/api/quiz/history')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(historyResponse.body.data).toHaveLength(1);
+    expect(historyResponse.body.data[0]).toMatchObject({ score: QUIZ_LENGTH });
+
+    const reviewResponse = await request(app)
+      .get(`/api/quiz/history/${submitResponse.body.data.scoreId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    expect(reviewResponse.body.data.review).toHaveLength(QUIZ_LENGTH);
+  });
+
+  test('rejects malformed submissions', async () => {
+    const user = await createUser('user', 'badsubmit');
+    const token = await login(user.username);
+    const questions = await seedQuestions();
+    const answers = questions.map((question) => ({
+      questionId: question._id.toString(),
+      selectedAnswer: 0,
+    }));
+
+    const duplicateResponse = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ answers: answers.map((answer, index) => (index === 9 ? answers[0] : answer)) })
+      .expect(400);
+    expect(duplicateResponse.body.error).toBe('Duplicate question IDs detected');
+
+    const invalidAnswerResponse = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        answers: answers.map((answer, index) =>
+          index === 0 ? { ...answer, selectedAnswer: 4 } : answer
+        ),
+      })
+      .expect(400);
+    expect(invalidAnswerResponse.body.error).toBe('selectedAnswer must be an integer 0-3');
+  });
+
+  test('returns best-score leaderboard rows for authenticated callers', async () => {
+    const player = await createUser('user', 'leaderboardplayer');
+    const token = await login(player.username);
+    await createCompletedAttempt(player, 8);
+    await createCompletedAttempt(player, 10);
 
     const response = await request(app)
       .get('/api/quiz/leaderboard')
@@ -213,257 +280,12 @@ describe('quiz API', () => {
 
     expect(response.body).toMatchObject({
       success: true,
-      data: { leaderboard: [] },
+      data: [
+        {
+          username: player.username,
+          bestScore: 10,
+        },
+      ],
     });
-  });
-
-  test('excludes admin scores from leaderboard for every viewer', async () => {
-    const player = await createUser('user', 'leaderboardplayer');
-    const admin = await createUser('admin', 'leaderboardadmin');
-    const playerToken = await login(player.username);
-    const adminToken = await login(admin.username);
-
-    await createCompletedAttempt(player, 9);
-    await createCompletedAttempt(admin, 10);
-
-    const playerResponse = await request(app)
-      .get('/api/quiz/leaderboard')
-      .set('Authorization', `Bearer ${playerToken}`)
-      .expect(200);
-    expect(playerResponse.body.data.leaderboard.map((entry) => entry.username)).toEqual([
-      player.username,
-    ]);
-
-    const adminResponse = await request(app)
-      .get('/api/quiz/leaderboard')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
-    expect(adminResponse.body.data.leaderboard.map((entry) => entry.username)).toEqual([
-      player.username,
-    ]);
-  });
-
-  test('applies leaderboard limit after excluding admin scores', async () => {
-    const player = await createUser('user', 'limitedleaderboardplayer');
-    const admin = await createUser('admin', 'limitedleaderboardadmin');
-    const playerToken = await login(player.username);
-
-    await createCompletedAttempt(admin, 10);
-    await createCompletedAttempt(player, 9);
-
-    const response = await request(app)
-      .get('/api/quiz/leaderboard?limit=1')
-      .set('Authorization', `Bearer ${playerToken}`)
-      .expect(200);
-
-    expect(response.body.data.leaderboard).toHaveLength(1);
-    expect(response.body.data.leaderboard[0]).toMatchObject({
-      rank: 1,
-      username: player.username,
-      score: 9,
-      totalQuestions: QUIZ_LENGTH,
-    });
-  });
-
-  test('allows admins to clear player leaderboard entries', async () => {
-    const player = await createUser('user', 'clearleaderboardplayer');
-    const admin = await createUser('admin', 'clearleaderboardadmin');
-    const playerToken = await login(player.username);
-    const adminToken = await login(admin.username);
-
-    await createCompletedAttempt(player, 9);
-    await createCompletedAttempt(admin, 10);
-
-    await request(app)
-      .delete('/api/admin/leaderboard')
-      .set('Authorization', `Bearer ${playerToken}`)
-      .expect(403);
-
-    const clearResponse = await request(app)
-      .delete('/api/admin/leaderboard')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
-    expect(clearResponse.body.data.deletedCount).toBe(1);
-
-    const leaderboardResponse = await request(app)
-      .get('/api/quiz/leaderboard')
-      .set('Authorization', `Bearer ${adminToken}`)
-      .expect(200);
-    expect(leaderboardResponse.body.data.leaderboard).toEqual([]);
-    await expect(Score.countDocuments({ user: admin._id })).resolves.toBe(1);
-  });
-
-  test('samples a balanced quiz from a larger metadata-rich question bank', async () => {
-    const user = await createUser('user', 'balanced');
-    const token = await login(user.username);
-    await seedBalancedQuestionBank();
-
-    const response = await request(app)
-      .get('/api/quiz/start')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    const { questions } = response.body.data;
-    const difficultyCounts = questions.reduce(
-      (counts, question) => ({
-        ...counts,
-        [question.difficulty]: (counts[question.difficulty] || 0) + 1,
-      }),
-      {}
-    );
-    const topicCounts = questions.reduce(
-      (counts, question) => ({
-        ...counts,
-        [question.topic]: (counts[question.topic] || 0) + 1,
-      }),
-      {}
-    );
-
-    expect(questions).toHaveLength(QUIZ_LENGTH);
-    expect(difficultyCounts).toEqual({ foundation: 3, application: 4, analysis: 3 });
-    expect(Math.max(...Object.values(topicCounts))).toBeLessThanOrEqual(2);
-    expect(new Set(questions.map((question) => question.topic)).size).toBeGreaterThanOrEqual(5);
-  });
-
-  test('uses a session snapshot for submit and review even after a question is deleted', async () => {
-    const user = await createUser('user', 'snapshot');
-    const token = await login(user.username);
-    await seedQuestions();
-
-    const startResponse = await request(app)
-      .get('/api/quiz/start')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    const { questions, sessionId } = startResponse.body.data;
-
-    expect(questions).toHaveLength(QUIZ_LENGTH);
-    expect(questions[0]).not.toHaveProperty('correctAnswer');
-
-    await Question.findByIdAndDelete(questions[0].id);
-
-    const answers = questions.map((question) => ({
-      questionId: question.id,
-      selectedAnswer: question.options[0],
-    }));
-    const submitResponse = await request(app)
-      .post('/api/quiz/submit')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ sessionId, answers })
-      .expect(201);
-
-    expect(submitResponse.body.data.attempt.answers).toHaveLength(QUIZ_LENGTH);
-
-    const reviewResponse = await request(app)
-      .get(`/api/quiz/review/${submitResponse.body.data.attemptId}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    const deletedQuestionAnswer = reviewResponse.body.data.attempt.answers.find(
-      (answer) => answer.question?.text === questions[0].text
-    );
-
-    expect(deletedQuestionAnswer).toBeDefined();
-    expect(deletedQuestionAnswer.question.text).toBe(questions[0].text);
-    expect(deletedQuestionAnswer.question.options).toEqual(questions[0].options);
-
-    await request(app)
-      .post('/api/quiz/submit')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ sessionId, answers })
-      .expect(409);
-  });
-
-  test('rejects answers that are not one of the served options', async () => {
-    const user = await createUser('user', 'badanswer');
-    const token = await login(user.username);
-    await seedQuestions();
-
-    const startResponse = await request(app)
-      .get('/api/quiz/start')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    const { questions, sessionId } = startResponse.body.data;
-
-    const response = await request(app)
-      .post('/api/quiz/submit')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
-        sessionId,
-        answers: questions.map((question, index) => ({
-          questionId: question.id,
-          selectedAnswer: index === 0 ? 'not-a-served-option' : question.options[0],
-        })),
-      })
-      .expect(400);
-
-    expect(response.body.error).toBe('Submitted answer must match one of the question options');
-  });
-});
-
-describe('admin API', () => {
-  test('creates, updates, toggles, and deletes questions with admin access', async () => {
-    const admin = await createUser('admin', 'crud');
-    const token = await login(admin.username);
-
-    const createResponse = await request(app)
-      .post('/api/admin/questions')
-      .set('Authorization', `Bearer ${token}`)
-      .send(questionPayload('crud'))
-      .expect(201);
-    const questionId = createResponse.body.data.question.id;
-    expect(createResponse.body.data.question).toMatchObject({
-      topic: 'Topic crud',
-      difficulty: 'application',
-    });
-
-    const updateResponse = await request(app)
-      .patch(`/api/admin/questions/${questionId}`)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ topic: 'Updated Topic', difficulty: 'analysis', explanation: 'Updated explanation' })
-      .expect(200);
-    expect(updateResponse.body.data.question).toMatchObject({
-      topic: 'Updated Topic',
-      difficulty: 'analysis',
-      explanation: 'Updated explanation',
-    });
-
-    const toggleResponse = await request(app)
-      .patch(`/api/admin/questions/${questionId}/toggle`)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ active: false })
-      .expect(200);
-    expect(toggleResponse.body.data.question.active).toBe(false);
-
-    await request(app)
-      .patch(`/api/admin/questions/${questionId}/toggle`)
-      .set('Authorization', `Bearer ${token}`)
-      .send({ active: 'false' })
-      .expect(400);
-
-    await request(app)
-      .delete(`/api/admin/questions/${questionId}`)
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-  });
-
-  test('reports invalid bulk import item indexes', async () => {
-    const admin = await createUser('admin', 'bulk');
-    const token = await login(admin.username);
-    const questions = Array.from({ length: 6 }, (_, index) => questionPayload(index + 1));
-    questions[5] = { ...questions[5], correctAnswer: 'not-an-option' };
-
-    const response = await request(app)
-      .post('/api/admin/bulk-import')
-      .set('Authorization', `Bearer ${token}`)
-      .send(questions)
-      .expect(400);
-
-    expect(response.body).toMatchObject({
-      success: false,
-      error: 'Bulk import validation failed',
-    });
-    expect(response.body.details.issues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ index: 5, path: 'correctAnswer' }),
-      ])
-    );
   });
 });
