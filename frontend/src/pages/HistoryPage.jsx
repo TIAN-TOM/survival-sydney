@@ -27,7 +27,7 @@ function pickBestAttempt(rows) {
   });
 }
 
-function HistoryAttemptCard({ attempt, attemptNo, navigate }) {
+function HistoryAttemptCard({ attempt, attemptNo, navigate, staggerIndex = 0 }) {
   const dt = new Date(attempt.createdAt).toLocaleString();
   const dateShort = new Date(attempt.createdAt).toLocaleDateString(undefined, {
     year: 'numeric',
@@ -41,7 +41,7 @@ function HistoryAttemptCard({ attempt, attemptNo, navigate }) {
   const chips = rawTopics.map((t) => formatReviewCategory(t)).filter(Boolean);
 
   return (
-    <article className="hist-attempt-card">
+    <article className="hist-attempt-card" style={{ '--motion-stagger-index': staggerIndex }}>
       <header className="hist-attempt-head">
         <span className="hist-attempt-no" aria-hidden="true">
           {attemptNo}
@@ -167,12 +167,12 @@ function HistoryPage() {
 
           {history.length > 0 && stats ? (
             <section className="hist-stats-row" aria-label="Progress summary">
-              <article className="hist-stat-card hist-stat-card--total">
+              <article className="hist-stat-card hist-stat-card--total" style={{ '--motion-stagger-index': 0 }}>
                 <span className="hist-stat-k">Total attempts</span>
                 <span className="hist-stat-v">{stats.total}</span>
                 <span className="hist-stat-sub">Runs saved to your archive</span>
               </article>
-              <article className="hist-stat-card hist-stat-card--best">
+              <article className="hist-stat-card hist-stat-card--best" style={{ '--motion-stagger-index': 1 }}>
                 <span className="hist-stat-k">Best performance</span>
                 <span className="hist-stat-v">
                   {stats.bestScore}/{stats.bestTotal}
@@ -184,7 +184,7 @@ function HistoryPage() {
                   %
                 </span>
               </article>
-              <article className="hist-stat-card hist-stat-card--latest">
+              <article className="hist-stat-card hist-stat-card--latest" style={{ '--motion-stagger-index': 2 }}>
                 <span className="hist-stat-k">Latest run</span>
                 <span className="hist-stat-v" style={{ fontSize: '1.05rem' }}>
                   {new Date(history[0].createdAt).toLocaleDateString(undefined, {
@@ -208,7 +208,7 @@ function HistoryPage() {
                 </button>
               </div>
               <div className="review-footer-actions">
-                <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--ghost" onClick={() => navigate('/')}>
+                <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--ghost" onClick={() => navigate('/quiz')}>
                   ← Home
                 </button>
               </div>
@@ -224,6 +224,7 @@ function HistoryPage() {
                       attempt={attempt}
                       attemptNo={attemptNo}
                       navigate={navigate}
+                      staggerIndex={index}
                     />
                   );
                 })}
@@ -238,7 +239,7 @@ function HistoryPage() {
                 <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--primary" onClick={() => navigate('/quiz')}>
                   New run
                 </button>
-                <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--ghost" onClick={() => navigate('/')}>
+                <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--ghost" onClick={() => navigate('/quiz')}>
                   Home
                 </button>
               </div>

@@ -52,8 +52,15 @@ html[data-theme='light'] .quiz-flow-scope .sq-world-bg.sq-world-bg--photo::after
   opacity: 0 !important;
 }
 
-.quiz-flow-scope:has(> .sq-world-bg--photo) {
-  background-color: transparent;
+/* Photo routes (quiz play, history, debrief): show harbour art — no parchment fill on the shell */
+.quiz-flow-scope:has(> .sq-world-bg--photo),
+html[data-theme='light'] .quiz-flow-scope:has(> .sq-world-bg--photo),
+html[data-theme='dark'] .quiz-flow-scope:has(> .sq-world-bg--photo) {
+  background: transparent !important;
+}
+
+html[data-theme='light'] body:has(.app-layout--quiz-fullscreen .sq-world-bg--photo)::after {
+  display: none;
 }
 
 /* ── Layout: question card in scroll region (progress + mission live in app header HUD) ── */

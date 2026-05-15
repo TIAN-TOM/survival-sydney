@@ -320,11 +320,10 @@ html[data-theme='light'] .quiz-flow-scope .start-screen__bg-pane--day {
 }
 
 .quiz-flow-scope .start-screen__bg-veil--night {
-  background: linear-gradient(
-    180deg,
-    rgba(6, 10, 22, 0.58) 0%,
-    rgba(6, 10, 22, 0.34) 45%,
-    rgba(4, 8, 18, 0.72) 100%
+  background: radial-gradient(
+    ellipse 120% 90% at 50% 18%,
+    rgba(6, 10, 22, 0.22) 0%,
+    transparent 58%
   );
   opacity: 1;
 }
@@ -334,24 +333,23 @@ html[data-theme='light'] .quiz-flow-scope .start-screen__bg-veil--night {
 }
 
 .quiz-flow-scope .start-screen__bg-veil--day {
-  background:
-    linear-gradient(rgba(255, 244, 218, 0.4), rgba(255, 244, 218, 0.4)),
-    linear-gradient(
-      180deg,
-      rgba(255, 252, 248, 0.55) 0%,
-      rgba(245, 248, 255, 0.22) 48%,
-      rgba(18, 26, 44, 0.38) 100%
-    );
+  background: radial-gradient(
+    ellipse 95% 70% at 50% 28%,
+    rgba(255, 248, 232, 0.12) 0%,
+    transparent 62%
+  );
   opacity: 0;
 }
 
+/* Light: no full-page veil — center bloom lives on .hero-overlay only */
 html[data-theme='light'] .quiz-flow-scope .start-screen__bg-veil--day {
-  opacity: 1;
+  opacity: 0;
 }
 
-.quiz-flow-scope .start-screen__inner {
+.quiz-flow-scope .start-screen__inner,
+.quiz-flow-scope .start-screen__inner.hero-content {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -3161,25 +3159,9 @@ html[data-theme='light'] .auth-immersive__theme {
   box-shadow: 0 6px 22px rgba(0, 0, 0, 0.1);
 }
 
-.auth-immersive__scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 92% 75% at 50% 44%, rgba(8, 6, 14, 0.62) 0%, transparent 58%),
-    radial-gradient(ellipse 130% 88% at 50% 108%, rgba(6, 4, 12, 0.45) 0%, transparent 52%);
-}
-
-html[data-theme='light'] .auth-immersive__scrim {
-  background:
-    radial-gradient(ellipse 92% 78% at 50% 42%, rgba(255, 252, 245, 0.78) 0%, transparent 56%),
-    radial-gradient(ellipse 130% 90% at 50% 108%, rgba(32, 24, 18, 0.1) 0%, transparent 50%);
-}
-
 .auth-immersive__content {
   position: relative;
-  z-index: 1;
+  z-index: 3;
 }
 
 .quiz-flow-scope.auth-start-screen.start-screen {

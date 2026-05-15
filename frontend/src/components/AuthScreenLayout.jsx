@@ -15,14 +15,14 @@ export default function AuthScreenLayout({ children, variant = 'readable' }) {
       <div className="auth-immersive__theme" role="region" aria-label="Appearance">
         <ThemeFloatingToggle />
       </div>
-      <div className="start-screen__bg-stack" aria-hidden="true">
-        <div className="start-screen__bg-pane start-screen__bg-pane--night" />
-        <div className="start-screen__bg-pane start-screen__bg-pane--day" />
+      <div className="start-screen__bg-stack hero-background" aria-hidden="true">
+        <div className="start-screen__bg-pane start-screen__bg-pane--night hero-background__pane" />
+        <div className="start-screen__bg-pane start-screen__bg-pane--day hero-background__pane" />
         <div className="start-screen__bg-veil start-screen__bg-veil--night" />
         <div className="start-screen__bg-veil start-screen__bg-veil--day" />
+        <div className="hero-overlay" aria-hidden="true" />
       </div>
-      <div className="auth-immersive__scrim" aria-hidden="true" />
-      <div className="start-screen__inner auth-start-screen__inner auth-immersive__content">
+      <div className="start-screen__inner auth-start-screen__inner auth-immersive__content hero-content">
         <div className="auth-start-screen__body quiz-auth-card-host auth-immersive__card-host">
           <div className="auth-start-sheet">{children}</div>
         </div>

@@ -4,31 +4,38 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import AppShellNavbar from './components/AppShellNavbar.jsx';
 import Login from './components/Login.jsx';
 import Leaderboard from './components/Leaderboard.jsx';
+import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Register from './components/Register.jsx';
 import { useAuth } from './contexts/AuthContext.jsx';
 import AdminPage from './pages/AdminPage.jsx';
 import HistoryPage from './pages/HistoryPage.jsx';
-import LandingPage from './pages/LandingPage.jsx';
 import QuizPage from './pages/QuizPage.jsx';
 import ReviewRouteRedirect from './components/ReviewRouteRedirect.jsx';
 import ReviewPage from './pages/ReviewPage.jsx';
 
+function motionShellClass(pathname) {
+  if (pathname.startsWith('/admin')) return 'motion-context--admin';
+  if (pathname === '/quiz') return 'motion-context--quiz';
+  if (pathname === '/leaderboard') return 'motion-page-enter motion-context--leaderboard';
+  if (pathname === '/history') return 'motion-page-enter motion-context--history';
+  if (pathname.startsWith('/history/')) return 'motion-page-enter motion-context--review';
+  return 'motion-page-enter';
+}
+
 function App() {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
   const { user } = useAuth();
-  const isLanding = pathname === '/';
   const isAuthImmersive =
     pathname === '/login' || pathname === '/register' || pathname === '/admin/login';
-  /** Unauthenticated /quiz gate: same pre-auth shell as landing (no strip navbar). */
+  /** Unauthenticated /quiz gate: immersive entry (no app navbar). */
   const isGuestQuizGate = pathname === '/quiz' && !user;
-  /** Landing + auth + guest quiz gate: no app shell header (theme lives in-page). */
-  const hideAppShellHeader = isLanding || isAuthImmersive || isGuestQuizGate;
+  const hideAppShellHeader = isAuthImmersive || isGuestQuizGate;
 
   const appClass = [
     'app-layout',
     'app-layout--quiz-fullscreen',
-    isLanding ? 'app-layout--landing' : '',
     isAuthImmersive ? 'app-layout--auth-immersive' : '',
     isGuestQuizGate ? 'app-layout--quiz-guest-gate' : '',
   ]
@@ -45,8 +52,9 @@ function App() {
       ) : null}
 
       <main className="app-layout__body">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
+        <div key={pathname} className={`motion-route-shell ${motionShellClass(pathname)}`}>
+          <Routes location={location}>
+          <Route path="/" element={<Navigate to="/quiz" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admin/login" element={<Login adminMode />} />
           <Route path="/register" element={<Register />} />
@@ -76,16 +84,15 @@ function App() {
             )}
           />
           <Route path="/review/:attemptId" element={<ReviewRouteRedirect />} />
-          <Route
-            path="/admin"
-            element={(
-              <ProtectedRoute adminOnly>
-                <AdminPage />
-              </ProtectedRoute>
-            )}
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/admin" element={<ProtectedAdminRoute />}>
+            <Route index element={<AdminPage />} />
+            <Route path="questions" element={<Navigate to="/admin#admin-question-list" replace />} />
+            <Route path="import" element={<Navigate to="/admin#admin-bulk-import" replace />} />
+            <Route path="dashboard" element={<Navigate to="/admin" replace />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/quiz" replace />} />
         </Routes>
+        </div>
       </main>
     </div>
   );

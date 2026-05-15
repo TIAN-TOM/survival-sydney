@@ -568,17 +568,25 @@ html[data-theme='dark'] .quiz-flow-scope .result-actions--finale .result-actions
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
   background: linear-gradient(180deg, #d4a057, #b87333) !important;
   border: 1px solid #8a5228 !important;
-  box-shadow: 0 4px 0 #8a5228, var(--ssq-shadow-card);
+  box-shadow:
+    0 4px 0 #8a5228,
+    0 10px 30px rgba(0, 0, 0, 0.28),
+    var(--ssq-shadow-card) !important;
 }
 
 .quiz-flow-scope.landing-page .landing-page__cta--primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 0 #8a5228, var(--ssq-shadow-card-hover);
+  box-shadow:
+    0 5px 0 #8a5228,
+    0 12px 34px rgba(0, 0, 0, 0.32),
+    var(--ssq-shadow-card-hover) !important;
 }
 
 .quiz-flow-scope.landing-page .landing-page__cta--ghost {
   border-radius: var(--ssq-radius-btn);
-  box-shadow: var(--ssq-shadow-card);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.28),
+    var(--ssq-shadow-card);
 }
 
 .quiz-flow-scope.landing-page .landing-page__cta--ghost:hover {

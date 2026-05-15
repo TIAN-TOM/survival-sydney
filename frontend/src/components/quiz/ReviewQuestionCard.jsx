@@ -43,6 +43,7 @@ export default function ReviewQuestionCard({ item, index }) {
     <article
       id={`rvc-${index}`}
       className={`review-q-card review-question-card ${isCorrect ? 'review-q-card--correct' : 'review-q-card--wrong'}`}
+      style={{ '--motion-stagger-index': index }}
     >
       <header className="review-q-head">
         <div className="review-q-head-main">

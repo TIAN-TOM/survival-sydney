@@ -82,7 +82,11 @@ export default function Leaderboard() {
                         place === 1 ? 'lb-row--p1' : place === 2 ? 'lb-row--p2' : place === 3 ? 'lb-row--p3' : '';
                       const rowClass = ['lb-row', podium, isMe ? 'me' : ''].filter(Boolean).join(' ');
                       return (
-                        <tr key={`${row.username}-${i}`} className={rowClass || undefined}>
+                        <tr
+                          key={`${row.username}-${i}`}
+                          className={rowClass || undefined}
+                          style={{ '--motion-stagger-index': i }}
+                        >
                           <td className="lb-col-rank">{place}</td>
                           <td className="lb-col-medal" aria-hidden="true">
                             {MEDALS[i] || '·'}

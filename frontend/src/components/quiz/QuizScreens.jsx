@@ -238,13 +238,14 @@ export function QuizGateScreen() {
       <div className="auth-immersive__theme" role="region" aria-label="Appearance">
         <ThemeFloatingToggle />
       </div>
-      <div className="start-screen__bg-stack" aria-hidden="true">
-        <div className="start-screen__bg-pane start-screen__bg-pane--night" />
-        <div className="start-screen__bg-pane start-screen__bg-pane--day" />
+      <div className="start-screen__bg-stack hero-background" aria-hidden="true">
+        <div className="start-screen__bg-pane start-screen__bg-pane--night hero-background__pane" />
+        <div className="start-screen__bg-pane start-screen__bg-pane--day hero-background__pane" />
         <div className="start-screen__bg-veil start-screen__bg-veil--night" />
         <div className="start-screen__bg-veil start-screen__bg-veil--day" />
+        <div className="hero-overlay" aria-hidden="true" />
       </div>
-      <div className="start-screen__inner">
+      <div className="start-screen__inner hero-content">
         <div className="start-wizard quiz-gate-wizard">
           <div className="start-wizard__brand">
             <img
@@ -278,6 +279,14 @@ export function QuizGateScreen() {
               🪶
             </span>
             Test your knowledge. Earn your survival badge.
+          </p>
+          <p className="gate-admin-foot">
+            <Link to="/admin/login" className="gate-admin-link">
+              <span className="gate-admin-key" aria-hidden="true">
+                🔑
+              </span>
+              Admin access
+            </Link>
           </p>
         </div>
       </div>
@@ -542,20 +551,22 @@ export function ResultScreen() {
             <QuizFramedPanel className="result-stack result-stack--finale result-card">
               <div className="result-hero-wrap">
                 <header className="result-hero-section">
-                  <p className="result-eyebrow">Trial complete</p>
-                  <div className="result-score-hero">
+                  <p className="result-eyebrow motion-result-reveal motion-result-reveal--score">Trial complete</p>
+                  <div className="result-score-hero motion-result-reveal motion-result-reveal--score">
                     <p className="result-score-line" aria-label={`Score ${correct} out of ${total}`}>
                       <span className="result-score">{correct}</span>
                       <span className="score-total">/{total}</span>
                     </p>
                   </div>
-                  <h2 className="result-ending-title">{rankBand.title}</h2>
-                  <div className="result-description">
+                  <div className="motion-result-reveal motion-result-reveal--title">
+                    <h2 className="result-ending-title">{rankBand.title}</h2>
+                    <div className="result-description">
                     <p className="result-description__lead">{msg}</p>
                     <p className="result-description__sub">{sub}</p>
                     <p className="result-description__aside">{rankBand.lines[0]}</p>
+                    </div>
                   </div>
-                  <div className="result-mini-stats">
+                  <div className="result-mini-stats motion-result-reveal motion-result-reveal--accuracy">
                     <div
                       className="result-accuracy-row"
                       aria-label={`${pct}% accuracy; final score; plus one point per correct answer`}
@@ -576,7 +587,7 @@ export function ResultScreen() {
                 </header>
               </div>
 
-              <div className="result-topics-wrap">
+              <div className="result-topics-wrap motion-result-reveal motion-result-reveal--topics">
                 <p className="result-topics-subline">
                   Where your instincts held — and where Sydney caught you off guard.
                 </p>
@@ -586,7 +597,7 @@ export function ResultScreen() {
                   role="list"
                   aria-label="Topic performance"
                 >
-                  {topicEntries.map(([name, { t: tgTotal, c }]) => {
+                  {topicEntries.map(([name, { t: tgTotal, c }], topicIndex) => {
                     const frac = tgTotal ? c / tgTotal : 0;
                     const tier = frac === 1 ? 'high' : frac >= 0.5 ? 'mid' : 'low';
                     return (
@@ -594,6 +605,7 @@ export function ResultScreen() {
                         key={name}
                         className={`topic-performance-card topic-performance-card--tier-${tier}`}
                         role="listitem"
+                        style={{ '--motion-stagger-index': topicIndex }}
                       >
                         <h4 className="topic-performance-card__title">
                           {formatReviewCategory(name) || name}
@@ -614,7 +626,7 @@ export function ResultScreen() {
                 </div>
               </div>
 
-              <div className="result-actions result-actions--finale">
+              <div className="result-actions result-actions--finale motion-result-reveal motion-result-reveal--actions">
                 <div className="result-actions__cluster">
                   <div className="result-actions__btn-row">
                     <button

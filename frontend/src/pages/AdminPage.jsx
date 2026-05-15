@@ -141,9 +141,9 @@ export default function AdminPage() {
         </section>
 
         {showForm ? (
-          <div className="admin-qa-overlay" role="presentation" onClick={handleCancelForm}>
+          <div className="admin-qa-overlay motion-modal-overlay" role="presentation" onClick={handleCancelForm}>
             <div
-              className="admin-qa-modal quiz-flow-scope"
+              className="admin-qa-modal quiz-flow-scope motion-modal-panel"
               role="dialog"
               aria-modal="true"
               aria-labelledby="admin-question-dialog-title"

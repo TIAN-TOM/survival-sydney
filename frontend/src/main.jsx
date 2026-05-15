@@ -16,6 +16,7 @@ import './styles/result-screen-compact.css';
 import './styles/quiz-play.css';
 import './styles/ssq-global-ui.css';
 import './styles/ssq-gothic-manuscript.css';
+import './styles/motion-system.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

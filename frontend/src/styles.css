@@ -665,213 +665,164 @@ body:has(.app-layout--quiz-fullscreen),
   -webkit-overflow-scrolling: touch;
 }
 
-.landing-page {
-  position: relative;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  color: var(--sq-txt, #f3e6cc);
-  isolation: isolate;
-}
+/* ── Gate / auth backdrop layering (inside .start-screen__bg-stack only) ── */
 
-.landing-page__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.landing-page__bg-pane {
-  position: absolute;
-  inset: 0;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: cover;
-  transition: opacity 1.2s ease;
-}
-
-.landing-page__bg-pane--night {
-  background-image:
-    linear-gradient(165deg, rgba(52, 32, 88, 0.5) 0%, rgba(18, 12, 32, 0.75) 100%),
-    url('/nightmode-bg.png');
-  opacity: 1;
-}
-
-.landing-page__bg-pane--day {
-  background-image: url('/daymode-bg.png');
-  opacity: 0;
-}
-
-html[data-theme='light'] .landing-page__bg-pane--night {
-  opacity: 0;
-}
-
-html[data-theme='light'] .landing-page__bg-pane--day {
-  opacity: 1;
-}
-
-.landing-page__bg-veil {
+.quiz-flow-scope .start-screen__bg-stack .hero-overlay {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  transition: opacity 1.2s ease;
+  z-index: 2;
 }
 
-.landing-page__bg-veil--night {
-  background: radial-gradient(ellipse 120% 80% at 50% 0%, rgba(200, 160, 60, 0.12), transparent 55%);
-  opacity: 1;
+/* Dark: cinematic menu — warm center, soft edge falloff */
+html[data-theme='dark'] .quiz-flow-scope .hero-background__pane {
+  filter: brightness(0.92) saturate(0.98) contrast(1.02);
 }
 
-.landing-page__bg-veil--day {
-  background: linear-gradient(180deg, rgba(255, 252, 245, 0.55) 0%, rgba(245, 236, 214, 0.2) 100%);
-  opacity: 0;
+html[data-theme='dark'] .quiz-flow-scope .hero-overlay {
+  background: radial-gradient(
+    ellipse 82% 62% at 50% 36%,
+    rgba(255, 228, 175, 0.11) 0%,
+    rgba(18, 22, 38, 0.06) 42%,
+    rgba(6, 8, 20, 0.2) 72%,
+    rgba(2, 4, 14, 0.34) 100%
+  );
+  box-shadow:
+    inset 0 0 72px rgba(0, 0, 0, 0.14),
+    inset 0 0 160px rgba(0, 0, 0, 0.1);
 }
 
-html[data-theme='light'] .landing-page__bg-veil--night {
-  opacity: 0;
+/*
+ * Light: illustration stays sharp edge-to-edge.
+ * Only a tight center bloom behind logo / title / button — no global blur or edge haze.
+ */
+html[data-theme='light'] .quiz-flow-scope .hero-background__pane {
+  filter: none;
 }
 
-html[data-theme='light'] .landing-page__bg-veil--day {
-  opacity: 1;
+html[data-theme='light'] .quiz-flow-scope .hero-overlay {
+  background:
+    radial-gradient(
+      ellipse 46% 36% at 50% 38%,
+      rgba(255, 252, 246, 0.26) 0%,
+      rgba(255, 248, 236, 0.1) 32%,
+      transparent 56%
+    ),
+    radial-gradient(
+      ellipse 40% 32% at 50% 38%,
+      rgba(255, 244, 220, 0.14) 0%,
+      transparent 50%
+    );
+  box-shadow: none;
 }
 
-.landing-page__main {
+.quiz-flow-scope .hero-content {
   position: relative;
-  z-index: 1;
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(4rem, 12vw, 6rem) clamp(1rem, 4vw, 2rem) 2.5rem;
-  box-sizing: border-box;
+  z-index: 3;
 }
 
-.landing-page__hero {
-  width: min(640px, 100%);
+/* Entry gate — dark: legibility via shadow */
+html[data-theme='dark'] .quiz-flow-scope .quiz-gate-wizard .start-wizard__brand-img {
+  filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.42));
+}
+
+html[data-theme='dark'] .quiz-flow-scope .quiz-gate-wizard .start-wizard__tagline-text {
+  text-shadow:
+    0 0 14px rgba(232, 192, 96, 0.22),
+    0 2px 8px rgba(0, 0, 0, 0.62);
+}
+
+html[data-theme='dark'] .quiz-flow-scope .quiz-gate-wizard .start-wizard__footer {
+  text-shadow:
+    0 0 10px rgba(232, 192, 96, 0.16),
+    0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+html[data-theme='dark'] .quiz-flow-scope .quiz-gate-wizard .btn-wizard-start {
+  box-shadow:
+    0 0 24px rgba(232, 192, 96, 0.24),
+    0 10px 32px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 230, 180, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Light: crisp UI + soft warm halo (no dark text shadows) */
+html[data-theme='light'] .quiz-flow-scope .quiz-gate-wizard .start-logo,
+html[data-theme='light'] .quiz-flow-scope .quiz-gate-wizard .start-wizard__title.start-logo {
+  color: #6b4518;
+  text-shadow:
+    0 0 22px rgba(255, 240, 210, 0.7),
+    0 0 40px rgba(255, 248, 238, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.85),
+    0 2px 4px rgba(140, 96, 48, 0.15);
+}
+
+html[data-theme='light'] .quiz-flow-scope .quiz-gate-wizard .start-wizard__brand-img {
+  filter: drop-shadow(0 2px 12px rgba(255, 252, 245, 0.95))
+    drop-shadow(0 10px 28px rgba(180, 130, 70, 0.16));
+}
+
+html[data-theme='light'] .quiz-flow-scope .quiz-gate-wizard .start-wizard__tagline,
+html[data-theme='light'] .quiz-flow-scope .quiz-gate-wizard .start-wizard__tagline-text {
+  color: #5c4330;
+  text-shadow:
+    0 0 20px rgba(255, 248, 235, 0.65),
+    0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+html[data-theme='light'] .quiz-flow-scope .quiz-gate-wizard .start-wizard__footer {
+  color: #6a5238;
+  text-shadow: 0 0 16px rgba(255, 248, 238, 0.55), 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+html[data-theme='light'] .quiz-flow-scope .quiz-gate-wizard .btn-wizard-start {
+  filter: none;
+  box-shadow:
+    0 4px 0 #8a5228,
+    0 0 20px rgba(255, 220, 160, 0.35),
+    0 10px 26px rgba(120, 80, 40, 0.18);
+}
+
+.gate-admin-foot {
+  margin: 1.5rem 0 0;
   text-align: center;
 }
 
-.landing-page__seal {
-  margin: 0 auto 1.25rem;
-  max-width: min(360px, 72vw);
-  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.35));
-}
-
-.landing-page__seal-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 12px;
-}
-
-.landing-page__title {
-  margin: 0 0 0.5rem;
-  font-family: var(--font-ui);
-  font-weight: 700;
-  font-size: clamp(2.1rem, 5vw, 3.1rem);
-  letter-spacing: 0.06em;
-  line-height: 1.1;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
-}
-
-html[data-theme='light'] .landing-page__title {
-  color: #3a2810;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-.landing-page__subtitle {
-  margin: 0 auto 2rem;
-  max-width: 34rem;
-  font-family: var(--font-editorial);
-  font-size: clamp(1.2rem, 2.6vw, 1.45rem);
-  line-height: 1.45;
-  opacity: 0.92;
-}
-
-html[data-theme='light'] .landing-page__subtitle {
-  color: #4a3820;
-}
-
-.landing-page__nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-}
-
-.landing-page__cta {
+/* Hidden staff entry — present but unobtrusive */
+.gate-admin-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.75rem;
-  padding: 0 1.35rem;
-  border-radius: 999px;
+  gap: 0.35rem;
   font-family: var(--font-ui);
-  font-size: 0.82rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-decoration: none;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  border: 1.5px solid transparent;
+  text-decoration: none;
+  opacity: 0.4;
+  color: color-mix(in srgb, var(--sq-txt2, #8a7a68) 55%, var(--sq-txt, #ead8b0) 45%);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease,
-    background 0.2s ease;
+    color 0.2s ease,
+    opacity 0.2s ease;
 }
 
-.landing-page__cta--primary {
-  color: #1a1018;
-  background: linear-gradient(180deg, #f0c86a, #c9923a);
-  border-color: rgba(120, 72, 24, 0.45);
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.28);
+.gate-admin-link:hover {
+  color: var(--sq-txt, #f3ead8);
+  opacity: 0.72;
 }
 
-.landing-page__cta--primary:hover {
-  transform: translateY(-1px);
-}
-
-.landing-page__cta--ghost {
-  color: inherit;
-  border-color: color-mix(in srgb, currentColor 35%, transparent);
-  background: rgba(8, 6, 16, 0.35);
-}
-
-html[data-theme='light'] .landing-page__cta--ghost {
-  background: rgba(255, 252, 245, 0.45);
-  color: #3a2810;
-}
-
-.landing-page__hint {
-  margin: 0;
-  font-family: var(--font-editorial);
-  font-size: 1rem;
+.gate-admin-key {
+  font-size: 0.9em;
+  line-height: 1;
   opacity: 0.85;
 }
 
-.landing-page__staff-foot {
-  margin: 2.25rem 0 0;
-  text-align: center;
-}
-
-/* Staff link: was nearly invisible (high transparent mix); keep tertiary but readable */
-.landing-page__staff-link {
-  font-family: var(--font-ui);
-  font-size: 0.76rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--sq-txt2, #8a7a68) 42%, var(--sq-txt, #ead8b0) 58%);
-  text-decoration: none;
-  border-bottom: 1px solid color-mix(in srgb, var(--sq-btn-a, #c9a24d) 40%, var(--sq-txt2) 35%);
-  padding-bottom: 0.12em;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.landing-page__staff-link:hover {
-  color: var(--sq-txt, #f3ead8);
-  border-bottom-color: color-mix(in srgb, var(--sq-btn-a, #c9a24d) 72%, transparent);
+html[data-theme='light'] .gate-admin-link {
+  color: color-mix(in srgb, #5c4330 65%, #7a4e1a 35%);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  opacity: 0.38;
 }
 
 .admin-dashboard-page {

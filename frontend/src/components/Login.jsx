@@ -7,7 +7,7 @@ export default function Login({ adminMode = false }) {
   const notice = location.state?.notice;
   const noticeTone = location.state?.noticeTone;
   const prefilledUsername = location.state?.registeredUsername || '';
-  const backTo = adminMode ? '/' : '/quiz';
+  const backTo = '/quiz';
 
   return (
     <AuthPageShell>
