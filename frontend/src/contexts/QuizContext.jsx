@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useReducer, useRef } from 'reac
 import api from '../api/api.js';
 
 const QuizContext = createContext(null);
+const ACTIVE_QUIZ_LEAVE_MESSAGE = 'You have an active quiz. Leave this page and lose current progress?';
 
 const initialState = {
   phase: 'gate',
@@ -85,6 +86,7 @@ function quizReducer(state, action) {
 export function QuizProvider({ children }) {
   const [state, dispatch] = useReducer(quizReducer, initialState);
   const submitOnceRef = useRef(false);
+  const hasActiveQuiz = state.questions.length > 0 && ['quiz', 'calculating'].includes(state.phase);
 
   const setPhase = useCallback((phase) => {
     dispatch({ type: 'SET_PHASE', payload: phase });
@@ -154,10 +156,18 @@ export function QuizProvider({ children }) {
     dispatch({ type: 'RESTART' });
   }, []);
 
+  const confirmActiveQuizExit = useCallback(() => {
+    if (!hasActiveQuiz) return true;
+    return window.confirm(ACTIVE_QUIZ_LEAVE_MESSAGE);
+  }, [hasActiveQuiz]);
+
   return (
     <QuizContext.Provider
       value={{
         state,
+        hasActiveQuiz,
+        activeQuizLeaveMessage: ACTIVE_QUIZ_LEAVE_MESSAGE,
+        confirmActiveQuizExit,
         setPhase,
         resetToGate,
         startQuiz,

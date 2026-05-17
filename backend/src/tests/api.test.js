@@ -100,6 +100,21 @@ afterAll(async () => {
   await mongoose.disconnect();
 });
 
+describe('backend service metadata', () => {
+  test('describes the API at the root route', async () => {
+    const response = await request(app).get('/').expect(200);
+
+    expect(response.body).toEqual({
+      success: true,
+      data: {
+        message: 'COMP5347 Quiz API',
+        docs: '/api-docs',
+        health: '/api/health',
+      },
+    });
+  });
+});
+
 describe('auth and access control API', () => {
   test('registers users as players even when role is submitted', async () => {
     const response = await request(app)

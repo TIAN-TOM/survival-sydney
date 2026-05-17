@@ -176,7 +176,7 @@ const swaggerDefinition = {
           }),
           400: failResponse('Validation failed'),
           409: failResponse('Username or email already exists'),
-          429: failResponse('Too many login attempts. Please wait and try again.')
+          429: failResponse('Too many registration attempts. Please wait and try again.')
         }
       }
     },

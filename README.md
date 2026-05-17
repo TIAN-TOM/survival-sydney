@@ -186,6 +186,34 @@ docs/postman-collection.json
 | Allen Ji | Admin question CRUD, active toggle, bulk import |
 | Tom Tian | Integration, response envelope, validation, theme, docs, tests |
 
+## Git Workflow and Commit Evidence
+
+The project was developed on Sydney GitHub Enterprise using feature branches and pull requests. The assessment-ready branch is `final`; `main` is not the delivery branch.
+
+Markers can inspect the preserved commit history with:
+
+```bash
+git fetch --all
+git log --all --graph --decorate --oneline
+git log origin/final --author="Tracy Cui"
+git log origin/final --author="RachlGew"
+git log origin/final --author="f1sh11"
+git log origin/final --author="Tom Tian"
+```
+
+Some commits appear under GitHub usernames, including `RachlGew` for Raven Ge and `f1sh11` for Allen Ji.
+
+Representative commits for each subsystem:
+
+| Member | Subsystem | Representative commits |
+|---|---|---|
+| Tracy Cui | Authentication, JWT, role checks, login/register UI | [`1642971`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/16429718e940bdf68013f30a73ee41a4bac647ba) auth routes with rate limiting and Swagger docs; [`dac2108`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/dac21086da074f224f9858c299e4c91347ac86a4) register validation hardening; [`be281ed`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/be281ed5447059fa64e7509f9c745897255f9ae6) ProtectedRoute localStorage guard |
+| Raven Ge | Quiz flow, scoring, Review Mode, history, leaderboard | [`62ca283`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/62ca283f94bfde49d79dc16cd85a3ceed2f8ce6f) quiz frontend flow and review system; [`268d0c6`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/268d0c6e35037c88528fce9a5414dbabe0f64376) quiz logic and UI updates; [`41f7ce8`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/41f7ce813ecf55f73e652c63f52e8a9d728b1bb2) quiz question logic fix |
+| Allen Ji | Admin question CRUD, active toggle, bulk import | [`2479978`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/2479978f04643eb7fd4cd7705a8fe6e0862cf40e) admin question controller and protected routes; [`df3c0cc`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/df3c0cc1b6b0af0fa415bb05868f26b1411565b6) admin dashboard form and bulk import; [`284fd25`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/284fd25a2882c1eec7b30b5cb0ae68c4ff50898f) admin controller tests |
+| Tom Tian | Integration, response envelope, validation, theme, docs, tests | [`7a61d82`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/7a61d826193c0c4f375b5dc81d967e154051665e) bootstrap layout and project hygiene; [`972fc77`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/972fc7706a4a59432248ece76562b1e994dd63b2) integration QA docs and tests; [`bba8b06`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/bba8b06d27da0633a2bf5de5a2b6a95674b21bb9) shuffled-answer API test alignment; [`d0d07f6`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/d0d07f6f64aa6d90b45fc7cf07b5a2b875b005ce) quiz route error-response documentation |
+
+Each individual reflection PDF provides the fuller technical explanation and commit evidence for that member.
+
 ## Test and Build
 
 ```bash

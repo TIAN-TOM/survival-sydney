@@ -7,10 +7,11 @@ import { quizSealLogoSrc } from '../../quizBrandAssets.js';
 
 function PlayerNavLogout() {
   const { logout } = useAuth();
-  const { resetToGate } = useQuiz();
+  const { confirmActiveQuizExit, resetToGate } = useQuiz();
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    if (!confirmActiveQuizExit()) return;
     resetToGate();
     logout();
     navigate('/quiz', { replace: true });
@@ -39,18 +40,25 @@ const navLinkClass = ({ isActive }) => `quiz-top-link${isActive ? ' quiz-top-lin
  * Player shell: quiz, history (incl. attempt debrief), leaderboard, identity, logout, theme.
  */
 export default function PlayerNavbar() {
-  const { restart } = useQuiz();
+  const { confirmActiveQuizExit, restart } = useQuiz();
   const { user } = useAuth();
   const { isDarkMode, theme, toggleTheme } = useTheme();
+
+  const handleRestartNavigation = (event) => {
+    if (!confirmActiveQuizExit()) {
+      event.preventDefault();
+      return;
+    }
+    restart();
+  };
 
   return (
     <header className="quiz-top-navbar player-navbar" role="banner" aria-label="Quiz player">
       <Link
         className="quiz-top-logo"
         to="/quiz"
-        onClick={() => {
-          restart();
-        }}
+        data-active-quiz-restart="true"
+        onClick={handleRestartNavigation}
       >
         <span className="quiz-top-logo-seal quiz-top-logo-seal--brand" aria-hidden="true">
           <img
@@ -63,7 +71,13 @@ export default function PlayerNavbar() {
         Sydney Survival
       </Link>
       <nav className="quiz-top-links" aria-label="Player">
-        <NavLink to="/quiz" end className={navLinkClass} onClick={() => restart()}>
+        <NavLink
+          to="/quiz"
+          end
+          className={navLinkClass}
+          data-active-quiz-restart="true"
+          onClick={handleRestartNavigation}
+        >
           Quiz
         </NavLink>
         <NavLink className={navLinkClass} to="/history">

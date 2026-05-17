@@ -1,7 +1,7 @@
 const express = require('express');
 const { register, login, me } = require('../controllers/auth.controller');
 const auth = require('../middleware/auth.middleware');
-const { loginLimiter } = require('../middleware/rateLimiters');
+const { loginLimiter, registerLimiter } = require('../middleware/rateLimiters');
 const { validate, registerSchema, loginSchema } = require('../validators/auth.validators');
 
 const router = express.Router();
@@ -29,7 +29,7 @@ const router = express.Router();
  *       409: { description: Username or email already taken }
  *       429: { description: Rate limit exceeded }
  */
-router.post('/register', loginLimiter, validate(registerSchema), register);
+router.post('/register', registerLimiter, validate(registerSchema), register);
 
 /**
  * @swagger

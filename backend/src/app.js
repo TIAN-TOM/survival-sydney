@@ -19,6 +19,14 @@ app.use(cors({ origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173' }));
 app.use(express.json({ limit: '1mb' }));
 app.use(mongoSanitize());
 
+app.get('/', (req, res) => {
+  res.json(ok({
+    message: 'COMP5347 Quiz API',
+    docs: '/api-docs',
+    health: '/api/health',
+  }));
+});
+
 app.get('/api/health', (req, res) => {
   res.json(ok({ status: 'ok' }));
 });
