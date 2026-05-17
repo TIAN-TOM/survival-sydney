@@ -12,6 +12,7 @@ const app = require('../app');
 const Question = require('../models/Question');
 const Score = require('../models/Score');
 const User = require('../models/User');
+const { shuffleQuestion } = require('../utils/shuffleQuestion');
 
 const QUIZ_LENGTH = 10;
 
@@ -51,11 +52,27 @@ async function seedQuestions(count = QUIZ_LENGTH) {
   );
 }
 
+function shuffledCorrectAnswer(question) {
+  return shuffleQuestion(question.toObject()).correctAnswer;
+}
+
+function shuffledWrongAnswer(question) {
+  return (shuffledCorrectAnswer(question) + 1) % 4;
+}
+
+function answerPayload(question, isCorrect = true) {
+  return {
+    questionId: question._id.toString(),
+    selectedAnswer: isCorrect ? shuffledCorrectAnswer(question) : shuffledWrongAnswer(question),
+  };
+}
+
 async function createCompletedAttempt(user, score = QUIZ_LENGTH) {
   const questions = await seedQuestions();
   const answers = questions.map((question, index) => ({
     questionId: question._id,
-    selectedAnswer: index < score ? question.correctAnswer : 1,
+    selectedAnswer:
+      index < score ? shuffledCorrectAnswer(question) : shuffledWrongAnswer(question),
     isCorrect: index < score,
   }));
 
@@ -199,10 +216,20 @@ describe('quiz API', () => {
     const user = await createUser('user', 'submitquiz');
     const token = await login(user.username);
     const questions = await seedQuestions();
-    const answers = questions.map((question) => ({
+    const correctTextById = {};
+    for (const question of questions) {
+      correctTextById[question._id.toString()] = question.options[question.correctAnswer];
+    }
+
+    const startResponse = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const answers = startResponse.body.data.map((question) => ({
       questionId: question._id.toString(),
-      selectedAnswer: 0,
+      selectedAnswer: question.options.indexOf(correctTextById[question._id.toString()]),
     }));
+    expect(answers.every((answer) => answer.selectedAnswer >= 0)).toBe(true);
 
     const submitResponse = await request(app)
       .post('/api/quiz/submit')
@@ -221,7 +248,7 @@ describe('quiz API', () => {
     });
     expect(submitResponse.body.data.review[0]).toMatchObject({
       questionText: expect.any(String),
-      correctAnswer: 0,
+      correctAnswer: expect.any(Number),
       isCorrect: true,
     });
 
@@ -243,10 +270,7 @@ describe('quiz API', () => {
     const user = await createUser('user', 'badsubmit');
     const token = await login(user.username);
     const questions = await seedQuestions();
-    const answers = questions.map((question) => ({
-      questionId: question._id.toString(),
-      selectedAnswer: 0,
-    }));
+    const answers = questions.map((question) => answerPayload(question));
 
     const duplicateResponse = await request(app)
       .post('/api/quiz/submit')
