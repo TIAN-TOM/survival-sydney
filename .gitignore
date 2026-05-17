@@ -14,3 +14,13 @@ yarn-error.log*
 .DS_Store
 .vscode/
 .idea/
+
+# Local-only review notes
+docs/final-rubric-session-review.md
+docs/rubric-assessment.md
+
+# LaTeX build artifacts
+*.aux
+*.out
+*.toc
+*.synctex.gz
