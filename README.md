@@ -236,7 +236,7 @@ docs/postman-collection.json
 
 ## Git Workflow and Commit Evidence
 
-The project was developed on Sydney GitHub Enterprise using feature branches and pull requests. The assessment-ready branch is `final-shuffled-answer-tests`; `main` is not the delivery branch.
+The project was developed on Sydney GitHub Enterprise using feature branches and pull requests. The assessment-ready branch is `final`; `main` is not the delivery branch.
 
 Markers can inspect the preserved commit history with:
 

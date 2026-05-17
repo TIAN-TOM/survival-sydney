@@ -3,9 +3,9 @@
 | Field | Value |
 |---|---|
 | Audit date | 2026-05-18 |
-| Branch | `final-shuffled-answer-tests` |
-| HEAD commit | `fd08cc8` — `fix: enforce admin login boundaries` + working tree changes (uncommitted) |
-| Working tree | Contains uncommitted implementation changes from this refresh |
+| Branch | `final` |
+| HEAD commit | Final branch HEAD after `docs: restore final branch submission notes` |
+| Working tree | Clean after final correction commit |
 | Approved variation | Review Mode after completion |
 | Spec sources | `docs/assignment/A2_Specification.md` + `docs/assignment/A2_Ed_Discussion_Supplement.md` |
 | Scope | Submission-readiness implementation pass after the previous audit found populate, frontend-test, per-attempt shuffle, admin-boundary, and packaging risks |
@@ -209,7 +209,7 @@ Reflection deliverables currently present:
 | `docs/individual-reflections/AllenJi-reflection.pdf` | 99,750 B |
 | `docs/individual-reflections/RavenGe-reflection.pdf` | 204,778 B |
 | `docs/individual-reflections/TomTian-reflection.pdf` | 152,940 B |
-| `docs/individual-reflections/TracyCui-reflection.pdf` | 85,619 B |
+| `docs/individual-reflections/TracyCui-reflection.pdf` | 403,276 B |
 | `docs/individual-reflections/TracyCui-reflection.md` | removed; PDF is the deliverable |
 
 `git ls-files | rg '(^|/)node_modules/'` returned no tracked `node_modules` entries.
