@@ -1,284 +1,200 @@
-# COMP5347 Assignment 2 - MERN Quiz Platform
+# COMP5347 Assignment 2 - MERN Quiz Game
 
-[English](README.md) | [中文](README.zh-CN.md)
+Single-player MERN quiz game with a player quiz flow, Review Mode after completion, leaderboard, attempt history, and a protected admin question-management interface.
 
-A full-stack single-player quiz application built for COMP5347 Assignment 2. The player experience is themed around a Sydney Life Survival Quiz for international students, with registration/login, a dynamic 10-question quiz flow, Review Mode after completion, history pages, backend leaderboard data, and an admin interface for managing the question bank.
-
-## 🧭 At a Glance
+## Key Information
 
 | Item | Value |
 |---|---|
 | Approved variation | Review Mode after completion |
-| Quiz length | Fixed 10 questions |
-| One-command demo | `npm run demo` |
-| Admin demo account | `admin` / `AdminPass123` |
-| Player demo accounts | `player1` / `PlayerPass123`, `player2` / `PlayerPass123` |
-| Seeded question bank | 50 Sydney life questions from the source JSON |
-| Frontend visual theme | Sydney University ochre/orange-red and charcoal styling with Sydney-life landing copy |
+| Quiz length | 10 questions per attempt |
+| Frontend | `http://localhost:5173` |
+| Backend | `http://localhost:5001` |
 | API docs | `http://localhost:5001/api-docs` |
+| Admin login URL | `http://localhost:5173/bosscoming` |
+| Admin account | `admin` / `AdminPass123` |
+| Player accounts | `player1` / `PlayerPass123`, `player2` / `PlayerPass123` |
 
-## 🧩 Features
+## Features
 
-- Local username/password authentication with bcrypt and JWT.
-- Role-based access control for player and admin workflows.
-- Dynamic quiz attempts generated from active questions.
-- Sydney life question bank with question text, four options, correct answer index, active state, and optional explanation.
-- Fixed-length quiz generation from active questions.
-- Fixed 10-question attempts for comparable leaderboard scores.
-- Product-style Sydney Life Quiz landing page aligned to the seeded question-bank theme and a USYD-inspired ochre/orange-red and charcoal colour system.
-- One answer per question, locked after selection.
-- Review Mode with selected answers, correctness, correct answers, and explanations while source questions still exist.
-- Admin CRUD, active/inactive toggle, and JSON bulk import with validation.
-- Persistent dark mode across player and admin interfaces.
-- Swagger API docs and Postman collection.
-- Backend Supertest/Jest coverage for core API flows.
+- User registration, login, logout, and JWT-based protected routes.
+- Player quiz flow using 10 randomly selected active questions.
+- Each question has exactly four options and one correct answer.
+- One answer can be selected per question; submitted answers cannot be changed.
+- Final score is saved with user ID, score, timestamp, and full answer list.
+- Review Mode shows selected answers, correctness, correct answers, and explanations.
+- Leaderboard shows each user's best score, highest first.
+- Past attempts can be viewed from the history page.
+- Admin interface supports question create, edit, delete, active/inactive toggle, and JSON bulk import.
+- Dark mode is persisted in `localStorage`.
+- Backend uses response envelope format: `{ success, data?, error? }`.
+- Login/register and quiz submission endpoints use rate limiting.
 
-## 🧱 Tech Stack
+## Tech Stack
 
-| Layer | Technology |
+| Layer | Tools |
 |---|---|
-| Frontend | React, Vite, React Router, Context + useReducer |
-| Forms | React Hook Form, Zod |
+| Frontend | React, Vite, React Router |
+| State | React Context + `useReducer` |
+| Forms | React Hook Form + Zod |
 | Backend | Node.js, Express |
-| Database | Local MongoDB, Mongoose |
-| Auth | bcrypt, JSON Web Token |
-| API docs | Swagger/OpenAPI, Postman |
-| Testing | Jest, Supertest |
+| Database | MongoDB, Mongoose |
+| Auth | bcrypt, JWT |
+| Docs/Tests | Swagger, Postman, Jest, Supertest |
 
-## 👥 Team Roles
+## Setup
 
-| Member | Role | Primary subsystem |
-|---|---|---|
-| Tracy Cui | A | Authentication, JWT, role checks, login/register UI |
-| Raven Ge | B | Quiz flow, scoring, Review Mode, history, leaderboard data |
-| Allen Ji | C | Admin question CRUD, active toggle, bulk import |
-| Tom Tian | D | Integration, response envelope, error handling, theme, docs, tests |
-
-Representative subsystem ownership is also marked in the main backend/frontend entry files.
-
-## 🔀 Git Workflow and Marker Evidence
-
-The repository is hosted on Sydney University GitHub Enterprise:
-
-```text
-https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5
-```
-
-The final integration branch is `dev`, and final release should be merged to `main` after the group has reviewed and verified the complete implementation. To inspect contribution history locally:
-
-```bash
-git log --all --graph --oneline --decorate
-git shortlog -sne --all
-```
-
-Each student's individual reflection should cite their own selected commit evidence and explain the subsystem decisions they personally owned.
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 20 or later
-- npm
-- Docker, for local MongoDB
-
-### One-Command Demo
-
-```bash
-npm run demo
-```
-
-This command prepares local `.env` files when they are missing, installs missing dependencies, starts a Docker MongoDB container when no local MongoDB is reachable, seeds demo questions and demo users, and then starts the backend and frontend together.
-
-- Frontend: `http://localhost:5173`
-- Backend: `http://localhost:5001`
-- Swagger UI: `http://localhost:5001/api-docs`
-- Admin login: `admin` / `AdminPass123`
-- Player logins: `player1` / `PlayerPass123`, `player2` / `PlayerPass123`
-
-To stop only the demo MongoDB container created by the helper:
-
-```bash
-npm run demo:stop
-```
-
-### Manual Setup
-
-#### 1. Start Local MongoDB
-
-```bash
-docker run -d -p 27017:27017 --name mongo mongo:7
-```
-
-The backend defaults to:
-
-```bash
-MONGODB_URI=mongodb://localhost:27017/comp5347_quiz
-```
-
-#### 2. Install Dependencies
+### 1. Install dependencies
 
 ```bash
 npm install
 npm run install:all
 ```
 
-#### 3. Configure Environment
+### 2. Create environment files
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Backend environment:
+Example backend `.env`:
 
-```bash
-JWT_SECRET=replace-with-a-long-local-secret
-JWT_EXPIRES_IN=2h
+```env
 MONGODB_URI=mongodb://localhost:27017/comp5347_quiz
+JWT_SECRET=replace-with-a-long-secret
+JWT_EXPIRES_IN=2h
+BCRYPT_ROUNDS=10
 CLIENT_ORIGIN=http://localhost:5173
+PORT=5001
 ```
 
-Frontend environment:
+Example frontend `.env`:
 
-```bash
+```env
 VITE_API_BASE_URL=http://localhost:5001/api
 ```
 
-The backend refuses to start without `JWT_SECRET` outside the Jest test environment.
+### 3. Start MongoDB
 
-#### 4. Seed Demo Data
+```bash
+docker run -d -p 27017:27017 --name mongo mongo:7
+```
+
+### 4. Seed demo data
 
 ```bash
 npm run seed --prefix backend
 ```
 
-Seeded admin account:
-
-```text
-username: admin
-password: AdminPass123
-```
-
-Seeded player accounts:
-
-```text
-username: player1
-password: PlayerPass123
-
-username: player2
-password: PlayerPass123
-```
-
-The seed also creates 50 active Sydney life questions from `backend/src/seeds/data/sydney_life_survival_quiz_50_questions.json`. The source bank covers arrival basics, transport, housing and consumer rights, work/tax/health, and safety/scam awareness for international students, giving the fixed 10-question quiz enough surplus inventory for varied random attempts.
-
-#### 5. Run the App
+### 5. Run the app
 
 ```bash
 npm run dev
 ```
 
-- Backend: `http://localhost:5001`
-- Frontend: `http://localhost:5173`
-- Swagger UI: `http://localhost:5001/api-docs`
+Open:
 
-## 🗂️ Project Structure
+- Player site: `http://localhost:5173`
+- Admin login: `http://localhost:5173/bosscoming`
+- API documentation: `http://localhost:5001/api-docs`
 
-```text
-.
-├── backend/                 # Express API, Mongoose models, tests, Swagger
-├── frontend/                # React/Vite application
-├── docs/                    # Architecture, Postman, manual checks, readiness notes
-├── package.json             # Root helper scripts
-└── README.md
+## One-Command Demo
+
+The project also includes a helper script:
+
+```bash
+npm run demo
 ```
 
-## 🏗️ Architecture
+This prepares local env files, checks MongoDB, seeds demo data, and starts frontend and backend together.
+
+To stop the helper MongoDB container:
+
+```bash
+npm run demo:stop
+```
+
+## Architecture Summary
 
 ```mermaid
 flowchart LR
-  User["Player/Admin Browser"] --> React["React Frontend"]
-  React --> ApiClient["Axios API Client"]
-  ApiClient --> Express["Express API"]
-  Express --> Auth["JWT + Role Middleware"]
-  Express --> Quiz["Quiz/Score Controllers"]
-  Express --> Admin["Admin Question Controllers"]
-  Quiz --> Mongo[("Local MongoDB")]
-  Admin --> Mongo
-  Auth --> Mongo
+  React[React Frontend] --> API[Express REST API]
+  API --> Auth[JWT + Role Middleware]
+  API --> Controllers[Controllers]
+  Controllers --> Models[Mongoose Models]
+  Models --> MongoDB[(MongoDB)]
 ```
 
-The backend returns consistent response envelopes from `backend/src/utils/responseEnvelope.js`. The frontend uses `frontend/src/api/api.js` for quiz and admin API calls, and protected requests include a bearer JWT.
+Main backend structure:
 
-## 👀 Review Mode Variation
+```text
+backend/src/
+  config/
+  controllers/
+  middleware/
+  models/
+  routes/
+  seeds/
+  tests/
+```
 
-The approved variation is Review Mode after completion. After submitting a quiz, users can review every answered question, their selected answer, whether it was correct, the correct answer, and optional explanation text.
+Main frontend structure:
 
-Variation scope boundary: Review Mode is the only approved variation implemented. The app does not implement timed questions, a category-selection quiz flow, image-based questions, multiplayer, real-time behaviour, adaptive branching, metadata-balanced sampling, or any alternative scoring scheme.
+```text
+frontend/src/
+  api/
+  components/
+  contexts/
+  pages/
+```
 
-Design decisions:
+## Review Mode Variation
 
-- `Question.explanation` is optional so the question bank can be populated gradually.
-- `Score.answers` stores `questionId`, `selectedAnswer`, and `isCorrect`.
-- The app intentionally uses `Question` and `Score` collections, not a persisted `Quiz` collection.
-- Review/history endpoints rebuild review details from the current `Question` documents and show a deleted-question placeholder if the source question no longer exists.
+The approved assignment variation is **Review Mode after completion**.
 
-## 🏆 Quiz and Leaderboard Rules
+After a quiz is submitted, the backend stores the full answer list in the `Score` model. The user can then review each question, their selected answer, whether it was correct, the correct answer, and the explanation when available.
 
-- Quiz length: fixed 10 questions.
-- Question selection: backend randomly samples 10 active questions per attempt.
-- Scoring: +1 per correct answer only.
-- Leaderboard: backend returns the best score per user, sorted by score descending. The backend leaderboard endpoint is currently public; the frontend `/leaderboard` route is protected but still renders a placeholder. Tie-break ordering and admin-score filtering need quiz/leaderboard owner follow-up before final submission.
+This project does not implement timed questions, category selection, image-based questions, multiplayer, real-time features, adaptive branching, or alternative scoring schemes.
 
-## 📘 API Documentation
+## Main API Routes
 
-- Swagger UI: `http://localhost:5001/api-docs`
-- Postman collection: [`docs/postman-collection.json`](docs/postman-collection.json)
-- Security and validation map: [`docs/security-validation.md`](docs/security-validation.md)
-
-Key route groups:
-
-- `/api/auth/register`, `/api/auth/login`, `/api/auth/me`
-- `/api/quiz/start`, `/api/quiz/submit`, `/api/quiz/history`, `/api/quiz/history/:id`, `/api/quiz/leaderboard`
-- `/api/admin/questions`, `/api/admin/questions/:id`, `/api/admin/questions/:id/toggle`, `/api/admin/questions/bulk-import`
-
-## 🔒 Security and Validation
-
-| Requirement | Implementation |
+| Area | Routes |
 |---|---|
-| Local authentication | Users register/log in with username and password; passwords are hashed with bcrypt before storage. |
-| JWT protected routes | Quiz start, submit, history/review, and admin routes require `Authorization: Bearer <token>`; the current backend leaderboard endpoint is public even though the frontend route is protected. |
-| Backend RBAC | `/api/admin/*` routes require both authentication and `role === "admin"`. |
-| Frontend RBAC | Admin navigation and `/admin` are restricted by `ProtectedRoute adminOnly`. |
-| Rate limiting | Login uses `express-rate-limit` via `backend/src/middleware/rateLimiters.js`; quiz submit has a limiter helper defined but not mounted. |
-| Server validation | Auth routes use Zod validators; quiz and admin controllers use explicit request checks plus Mongoose validation. |
-| Injection/XSS protection | `helmet`, `express-mongo-sanitize`, strict validation, and React's default escaping are used; the app does not render user HTML. |
-| Error safety | Global error middleware hides 5xx internals and keeps failure responses in the same envelope shape. |
+| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` |
+| Quiz | `GET /api/quiz/start`, `POST /api/quiz/submit`, `GET /api/quiz/history`, `GET /api/quiz/history/:id`, `GET /api/quiz/leaderboard` |
+| Admin | `GET /api/admin/questions`, `POST /api/admin/questions`, `PATCH /api/admin/questions/:id`, `DELETE /api/admin/questions/:id`, `PATCH /api/admin/questions/:id/toggle`, `POST /api/admin/questions/bulk` |
 
-## 🛠️ Scripts
+Full API documentation is available at:
 
-```bash
-npm run demo              # prepare env, MongoDB, seed data, then run the full demo
-npm run demo:stop         # stop the helper-created demo MongoDB container
-npm run install:all       # install backend and frontend dependencies
-npm run dev               # run backend and frontend together
-npm test --prefix backend # run backend Jest/Supertest suite
-npm run build --prefix frontend
+```text
+http://localhost:5001/api-docs
 ```
 
-## ✅ Verification
+A Postman collection is also provided in:
+
+```text
+docs/postman-collection.json
+```
+
+## Team Roles
+
+| Member | Primary responsibility |
+|---|---|
+| Tracy Cui | Authentication, JWT, role checks, login/register UI |
+| Raven Ge | Quiz flow, scoring, Review Mode, history, leaderboard |
+| Allen Ji | Admin question CRUD, active toggle, bulk import |
+| Tom Tian | Integration, response envelope, validation, theme, docs, tests |
+
+## Test and Build
 
 ```bash
 npm test --prefix backend -- --runInBand
 npm run build --prefix frontend
-python3 -m json.tool docs/postman-collection.json >/dev/null
-JWT_SECRET=test-local-secret node -e "require('./backend/src/app'); console.log('app-load-ok')"
-git diff --check
 ```
 
-The backend suite includes Supertest API coverage for auth, quiz start/submit/history/review data, leaderboard, admin access, admin CRUD, and invalid bulk import indexes.
+## Submission Notes
 
-Additional manual checks are listed in [`docs/manual-test-checklist.md`](docs/manual-test-checklist.md). Delivery readiness notes are tracked in [`docs/delivery-readiness.md`](docs/delivery-readiness.md).
-
-## ✨ Additional Evidence
-
-The current implementation keeps a practical Sydney-life question bank, unified API response envelopes, JWT/RBAC protection, login rate limiting, frontend form validation, and a themed React shell. Avoid claiming metadata-balanced sampling, durable deleted-question snapshots, or `/api/quiz/review/:attemptId` unless those features are implemented in a later branch.
+- Do not include `node_modules` in the submitted ZIP.
+- Include the group coversheet if required by Canvas submission.
+- Each student should submit their individual contribution reflection with commit evidence, subsystem explanation, challenge, diagram, and Review Mode design reflection.
