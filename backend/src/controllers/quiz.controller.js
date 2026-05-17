@@ -277,20 +277,25 @@ const getAttemptDetail = async (req, res, next) => {
   }
 };
 
+const LEADERBOARD_TOP_N = 50;
+
 /**
  * GET /api/quiz/leaderboard
- * Each user's best score, highest first, with username
+ * Top 50 scholars by best score; ties broken by earliest attempt that reached that best.
  */
 const getLeaderboard = async (req, res, next) => {
   try {
     const leaderboard = await Score.aggregate([
+      { $sort: { userId: 1, score: -1, createdAt: 1 } },
       {
         $group: {
           _id: '$userId',
-          bestScore: { $max: '$score' },
+          bestScore: { $first: '$score' },
+          bestAchievedAt: { $first: '$createdAt' },
         },
       },
-      { $sort: { bestScore: -1 } },
+      { $sort: { bestScore: -1, bestAchievedAt: 1 } },
+      { $limit: LEADERBOARD_TOP_N },
       {
         $lookup: {
           from: 'users',
@@ -305,6 +310,7 @@ const getLeaderboard = async (req, res, next) => {
           _id: 0,
           username: '$user.username',
           bestScore: 1,
+          bestAchievedAt: 1,
         },
       },
     ]);

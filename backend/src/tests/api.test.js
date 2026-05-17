@@ -326,5 +326,78 @@ describe('quiz API', () => {
         },
       ],
     });
+    expect(response.body.data[0]).toHaveProperty('bestAchievedAt');
+  });
+
+  test('returns at most 50 leaderboard rows', async () => {
+    const questions = await seedQuestions();
+    const answers = questions.map((question, index) => ({
+      questionId: question._id,
+      selectedAnswer:
+        index < 5 ? shuffledCorrectAnswer(question) : shuffledWrongAnswer(question),
+      isCorrect: index < 5,
+    }));
+
+    const players = await Promise.all(
+      Array.from({ length: 55 }, (_, i) => createUser('user', `lblimit${i}`))
+    );
+
+    await Score.insertMany(
+      players.map((player, i) => ({
+        userId: player._id,
+        score: i,
+        answers,
+        createdAt: new Date(Date.UTC(2024, 0, 1, 0, 0, i)),
+      }))
+    );
+
+    const token = await login(players[0].username);
+    const response = await request(app)
+      .get('/api/quiz/leaderboard')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body.data).toHaveLength(50);
+    expect(response.body.data[0].bestScore).toBe(54);
+    expect(response.body.data[49].bestScore).toBe(5);
+    expect(response.body.data.some((row) => row.bestScore === 4)).toBe(false);
+  });
+
+  test('ranks tied best scores by earliest attempt that reached that score', async () => {
+    const early = await createUser('user', 'lbearly');
+    const late = await createUser('user', 'lblate');
+    const token = await login(early.username);
+
+    const questions = await seedQuestions();
+    const answers = questions.map((question, index) => ({
+      questionId: question._id,
+      selectedAnswer:
+        index < 8 ? shuffledCorrectAnswer(question) : shuffledWrongAnswer(question),
+      isCorrect: index < 8,
+    }));
+
+    await Score.create({
+      userId: early._id,
+      score: 8,
+      answers,
+      createdAt: new Date('2024-06-01T10:00:00.000Z'),
+    });
+    await Score.create({
+      userId: late._id,
+      score: 8,
+      answers,
+      createdAt: new Date('2024-06-02T10:00:00.000Z'),
+    });
+
+    const response = await request(app)
+      .get('/api/quiz/leaderboard')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body.data.map((row) => row.username)).toEqual([early.username, late.username]);
+    expect(response.body.data[0].bestScore).toBe(8);
+    expect(new Date(response.body.data[0].bestAchievedAt).getTime()).toBeLessThan(
+      new Date(response.body.data[1].bestAchievedAt).getTime()
+    );
   });
 });

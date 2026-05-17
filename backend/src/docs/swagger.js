@@ -327,7 +327,8 @@ const swaggerDefinition = {
     '/quiz/leaderboard': {
       get: {
         summary: 'Best-per-user leaderboard',
-        description: 'Returns leaderboard rows for authenticated player users. Admin users are blocked from player quiz routes.',
+        description:
+          'Returns up to 50 leaderboard rows for authenticated player users (best score per user, highest first). Ties use the earliest attempt that achieved that best score. Admin users are blocked from player quiz routes.',
         security: [{ bearerAuth: [] }],
         responses: {
           200: okDataResponse('Leaderboard rows sorted by best score', {
@@ -337,6 +338,7 @@ const swaggerDefinition = {
               properties: {
                 username: { type: 'string' },
                 bestScore: { type: 'integer' },
+                bestAchievedAt: { type: 'string', format: 'date-time' },
               },
             },
           }),

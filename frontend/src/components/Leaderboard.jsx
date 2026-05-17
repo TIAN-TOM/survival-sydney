@@ -46,8 +46,10 @@ export default function Leaderboard() {
           <h1 id="leaderboard-page-title" className="leaderboard-panel__title">
             Hall of Merit
           </h1>
-          <p className="leaderboard-panel__sub">Best attempt per scholar · highest score first</p>
-          <p className="leaderboard-panel__note">Sydney Survival Quiz — all players</p>
+          <p className="leaderboard-panel__sub">
+            Best attempt per scholar · highest score first · ties by earliest time at that score
+          </p>
+          <p className="leaderboard-panel__note">Sydney Survival Quiz — top 50 scholars</p>
 
           {loading ? <p className="leaderboard-panel__status">Loading…</p> : null}
           {error ? <p className="leaderboard-panel__error">{error}</p> : null}
