@@ -14,7 +14,7 @@ function PlayerNavLogout() {
     if (!confirmActiveQuizExit()) return;
     resetToGate();
     logout();
-    navigate('/quiz', { replace: true });
+    navigate('/quiz', { replace: true, state: null });
   };
 
   return (

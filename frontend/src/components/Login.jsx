@@ -22,14 +22,7 @@ export default function Login({ adminMode = false }) {
         noticeTone={noticeTone}
         prefilledUsername={prefilledUsername}
         showRegisterLink={!adminMode}
-        resolveNavigatePath={() => {
-          if (adminMode) return '/admin';
-          const from = location.state?.from;
-          if (typeof from === 'string' && from.startsWith('/') && from !== '/login' && from !== '/register') {
-            return from;
-          }
-          return '/quiz';
-        }}
+        resolveNavigatePath={() => (adminMode ? '/admin' : '/quiz')}
       />
     </AuthPageShell>
   );

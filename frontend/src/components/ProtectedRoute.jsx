@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 
 function readStoredUser() {
   try {
@@ -10,12 +10,11 @@ function readStoredUser() {
 
 /** Player-only areas (history, leaderboard, etc.). Admin routes use ProtectedAdminRoute. */
 export default function ProtectedRoute({ blockAdmin = false, children }) {
-  const location = useLocation();
   const token = localStorage.getItem('jwt');
   const user = readStoredUser();
 
   if (!token) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/login" replace />;
   }
 
   if (blockAdmin && user?.role === 'admin') {

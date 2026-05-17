@@ -10,6 +10,20 @@ const MEDALS = ['🥇', '🥈', '🥉'];
 /** Board denominator for display (quiz length). */
 const SCORE_DENOM = 10;
 
+function RankCell({ place }) {
+  if (place <= 3) {
+    return (
+      <td className="lb-col-rank lb-col-rank--medal">
+        <span className="lb-rank-medal" aria-hidden="true">
+          {MEDALS[place - 1]}
+        </span>
+        <span className="sr-only">{`Rank ${place}`}</span>
+      </td>
+    );
+  }
+  return <td className="lb-col-rank">{place}</td>;
+}
+
 export default function Leaderboard() {
   const { user } = useAuth();
   const [rows, setRows] = useState([]);
@@ -65,9 +79,6 @@ export default function Leaderboard() {
                       <th className="lb-col-rank lb-th--place" scope="col">
                         Rank
                       </th>
-                      <th className="lb-col-medal" scope="col">
-                        <span className="sr-only">Award</span>
-                      </th>
                       <th className="lb-col-name-h" scope="col">
                         <span className="sr-only">Scholar</span>
                       </th>
@@ -89,10 +100,7 @@ export default function Leaderboard() {
                           className={rowClass || undefined}
                           style={{ '--motion-stagger-index': i }}
                         >
-                          <td className="lb-col-rank">{place}</td>
-                          <td className="lb-col-medal" aria-hidden="true">
-                            {MEDALS[i] || '·'}
-                          </td>
+                          <RankCell place={place} />
                           <td className="lb-col-name">{row.username}</td>
                           <td className="lb-col-score">
                             <span className="lb-score-metric">

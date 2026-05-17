@@ -2521,7 +2521,6 @@ html[data-theme='dark'] .quiz-flow-scope.leaderboard-page::after {
   letter-spacing: 0.06em;
 }
 
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__thead .lb-col-medal,
 .quiz-flow-scope.leaderboard-page .leaderboard-panel__thead .lb-col-name-h {
   font-style: normal;
   padding-left: 0.35rem;
@@ -2576,7 +2575,7 @@ html[data-theme='dark'] .quiz-flow-scope.leaderboard-page::after {
 }
 
 .quiz-flow-scope.leaderboard-page .leaderboard-panel__table .lb-col-rank {
-  width: 3.5rem;
+  width: 3.25rem;
   padding-left: 0.85rem;
   padding-right: 0.5rem;
   font-family: var(--font-ui);
@@ -2585,43 +2584,45 @@ html[data-theme='dark'] .quiz-flow-scope.leaderboard-page::after {
   font-variant-numeric: tabular-nums;
   color: color-mix(in srgb, var(--sq-txt2) 88%, var(--sq-txt) 12%);
   text-align: center;
+  vertical-align: middle;
 }
 
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p1 .lb-col-rank {
-  color: color-mix(in srgb, var(--sq-btn-a) 72%, var(--sq-txt2) 28%);
-  font-weight: 700;
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table .lb-col-rank--medal {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
 }
 
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p2 .lb-col-rank,
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p3 .lb-col-rank {
-  color: color-mix(in srgb, var(--sq-btn-a) 48%, var(--sq-txt2) 52%);
-}
-
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.me .lb-col-rank {
-  color: color-mix(in srgb, var(--sq-btn-a) 62%, var(--sq-txt2) 38%);
-}
-
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__table .lb-col-medal {
-  width: 2.75rem;
-  padding-left: 0.15rem;
-  padding-right: 0.35rem;
-  text-align: center;
-  font-size: 1.08rem;
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table .lb-rank-medal {
+  display: block;
   line-height: 1;
   opacity: 0.92;
 }
 
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p1 .lb-col-medal {
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p1 .lb-col-rank--medal .lb-rank-medal {
   font-size: 1.38rem;
   opacity: 1;
 }
 
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p2 .lb-col-medal {
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p2 .lb-col-rank--medal .lb-rank-medal {
   font-size: 1.22rem;
 }
 
-.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p3 .lb-col-medal {
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p3 .lb-col-rank--medal .lb-rank-medal {
   font-size: 1.12rem;
+}
+
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p1 .lb-col-rank:not(.lb-col-rank--medal) {
+  color: color-mix(in srgb, var(--sq-btn-a) 72%, var(--sq-txt2) 28%);
+  font-weight: 700;
+}
+
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p2 .lb-col-rank:not(.lb-col-rank--medal),
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.lb-row--p3 .lb-col-rank:not(.lb-col-rank--medal) {
+  color: color-mix(in srgb, var(--sq-btn-a) 48%, var(--sq-txt2) 52%);
+}
+
+.quiz-flow-scope.leaderboard-page .leaderboard-panel__table tbody tr.me .lb-col-rank:not(.lb-col-rank--medal) {
+  color: color-mix(in srgb, var(--sq-btn-a) 62%, var(--sq-txt2) 38%);
 }
 
 .quiz-flow-scope.leaderboard-page .leaderboard-panel__table .lb-col-name {
