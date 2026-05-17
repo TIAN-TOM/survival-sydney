@@ -176,6 +176,7 @@ const swaggerDefinition = {
           }),
           400: failResponse('Validation failed'),
           409: failResponse('Username or email already exists'),
+          429: failResponse('Too many login attempts. Please wait and try again.')
         }
       }
     },
@@ -199,7 +200,8 @@ const swaggerDefinition = {
             user: { $ref: '#/components/schemas/User' },
           }),
           400: failResponse('Validation failed'),
-          401: failResponse('Invalid credentials')
+          401: failResponse('Invalid credentials'),
+          429: failResponse('Too many login attempts. Please wait and try again.')
         }
       }
     },
@@ -225,7 +227,8 @@ const swaggerDefinition = {
             items: { $ref: '#/components/schemas/PublicQuestion' },
           }),
           401: failResponse('Authentication required'),
-          400: failResponse('Not enough active questions')
+          400: failResponse('Not enough active questions'),
+          403: failResponse('Admins cannot take quizzes.')
         }
       }
     },
@@ -274,7 +277,9 @@ const swaggerDefinition = {
             review: { $ref: '#/components/schemas/Attempt/properties/review' },
           }),
           400: failResponse('Invalid answers'),
-          401: failResponse('Authentication required')
+          401: failResponse('Authentication required'),
+          403: failResponse('Admins cannot take quizzes.'),
+          429: failResponse('Too many quiz submissions. Please wait and try again.')
         }
       }
     },
@@ -294,7 +299,8 @@ const swaggerDefinition = {
               },
             },
           }),
-          401: failResponse('Authentication required')
+          401: failResponse('Authentication required'),
+          403: failResponse('Admins cannot take quizzes.')
         }
       }
     },
@@ -313,6 +319,7 @@ const swaggerDefinition = {
         responses: {
           200: okDataResponse('Review-ready attempt', { $ref: '#/components/schemas/Attempt' }),
           401: failResponse('Authentication required'),
+          403: failResponse('Admins cannot take quizzes.'),
           404: failResponse('Attempt not found')
         }
       }
