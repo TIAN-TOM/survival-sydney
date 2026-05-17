@@ -11,7 +11,7 @@ export default function ProtectedAdminRoute() {
   const hasJwt = Boolean(localStorage.getItem('jwt'));
 
   if (!hasJwt) {
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/bosscoming" replace state={{ from: location.pathname }} />;
   }
 
   if (loading) {
@@ -35,7 +35,7 @@ export default function ProtectedAdminRoute() {
   }
 
   if (!user) {
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to="/bosscoming" replace state={{ from: location.pathname }} />;
   }
 
   if (user.role !== 'admin') {
