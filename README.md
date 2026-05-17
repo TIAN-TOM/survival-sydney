@@ -157,13 +157,47 @@ After a quiz is submitted, the backend stores the full answer list in the `Score
 
 This project does not implement timed questions, category selection, image-based questions, multiplayer, real-time features, adaptive branching, or alternative scoring schemes.
 
+## Beyond the Specification — Bonus Features
+
+This project includes several additions beyond the minimum A2 requirements. Each item is documented with what was added, why it was added, and how it integrates with the rest of the system, following Ed Discussion #143.
+
+### Active-quiz navigation guard
+
+- **What:** The app confirms before a player leaves an in-progress quiz through refresh, browser back navigation, internal links, or logout.
+- **Why:** This protects players from accidental progress loss and reduces the refresh-until-easy-question pattern.
+- **How it integrates:** `ActiveQuizNavigationGuard` is mounted in `frontend/src/App.jsx` and reads `QuizContext.hasActiveQuiz`; it handles `beforeunload`, `popstate`, and document-level link clicks while the quiz is active.
+
+### Dual API documentation
+
+- **What:** The backend serves Swagger UI at `/api-docs`, and the repository also includes `docs/postman-collection.json`.
+- **Why:** Swagger supports quick browser inspection, while Postman gives markers a ready-to-run request collection.
+- **How it integrates:** `backend/src/docs/swagger.js` is loaded by `backend/src/app.js`, and the Postman collection mirrors the same auth, quiz, and admin endpoints.
+
+### Theme transition polish
+
+- **What:** The UI supports persisted light/dark themes with a `document.startViewTransition` enhancement where the browser supports it.
+- **Why:** The quiz keeps a consistent visual identity while making theme switching feel deliberate instead of abrupt.
+- **How it integrates:** `frontend/src/contexts/ThemeContext.jsx` owns the persisted theme state and is consumed by the shared navbars and theme toggle components.
+
+### Immersive admin sign-in entry
+
+- **What:** Admin users sign in through `/bosscoming`, a themed admin entry point that reuses the normal auth form with admin-mode validation.
+- **Why:** It separates the admin workflow visually without creating a second authentication mechanism.
+- **How it integrates:** `frontend/src/App.jsx` routes `/bosscoming` to the shared login component with `adminMode`, and protected admin pages still rely on backend role checks.
+
+### Accessibility and feedback polish
+
+- **What:** The interface includes ARIA labels, live/status regions, consistent response envelopes, and friendly error states for auth, quiz, and admin actions.
+- **Why:** These details improve usability and make failures easier to understand during marking or live demo.
+- **How it integrates:** Frontend components use `aria-*`/`role` attributes, while backend controllers and middleware return the shared `{ success, data?, error? }` envelope.
+
 ## Main API Routes
 
 | Area | Routes |
 |---|---|
 | Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` |
 | Quiz | `GET /api/quiz/start`, `POST /api/quiz/submit`, `GET /api/quiz/history`, `GET /api/quiz/history/:id`, `GET /api/quiz/leaderboard` |
-| Admin | `GET /api/admin/questions`, `POST /api/admin/questions`, `PATCH /api/admin/questions/:id`, `DELETE /api/admin/questions/:id`, `PATCH /api/admin/questions/:id/toggle`, `POST /api/admin/questions/bulk` |
+| Admin | `GET /api/admin/questions`, `POST /api/admin/questions`, `PUT /api/admin/questions/:id`, `DELETE /api/admin/questions/:id`, `PATCH /api/admin/questions/:id/toggle`, `POST /api/admin/questions/bulk-import` |
 
 Full API documentation is available at:
 
