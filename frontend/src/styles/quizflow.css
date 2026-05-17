@@ -1635,7 +1635,7 @@ html[data-theme='light'] .quiz-flow-scope .btn-next {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), var(--sq-nav-bg)),
     linear-gradient(135deg, rgba(112, 80, 232, 0.3), rgba(212, 168, 50, 0.12)),
-    url('/background.png') center bottom / cover;
+    url('/nightmode-bg.png') center bottom / cover;
 }
 
 .quiz-flow-scope .lore-image-card span,
