@@ -83,14 +83,16 @@ export function LoginFormPanel({
         setServerError('This account is not an administrator.');
         return;
       }
+      if (!adminMode && signedInUser.role === 'admin') {
+        logout();
+        setServerError('Administrators must use the admin sign-in page.');
+        return;
+      }
       if (typeof onSuccess === 'function') {
         onSuccess(signedInUser);
         return;
       }
       let path = typeof resolveNavigatePath === 'function' ? resolveNavigatePath() : '/quiz';
-      if (!adminMode && signedInUser.role === 'admin') {
-        path = '/admin';
-      }
       navigate(path, { replace: true });
     } catch (err) {
       const status = err.status;

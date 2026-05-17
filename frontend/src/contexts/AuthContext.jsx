@@ -2,25 +2,40 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import api from '../api/api.js';
 
 const AuthContext = createContext(null);
+const TOKEN_KEY = 'jwt';
+const USER_KEY = 'user';
+
+const clearStoredAuth = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+};
+
+const hasStoredToken = () => Boolean(localStorage.getItem(TOKEN_KEY));
 
 const readStoredUser = () => {
+  if (!hasStoredToken()) {
+    localStorage.removeItem(USER_KEY);
+    return null;
+  }
+
   try {
-    return JSON.parse(localStorage.getItem('user') || 'null');
+    return JSON.parse(localStorage.getItem(USER_KEY) || 'null');
   } catch {
+    clearStoredAuth();
     return null;
   }
 };
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(readStoredUser);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(hasStoredToken);
 
   const login = useCallback(async (username, password) => {
     setLoading(true);
     try {
       const data = await api.post('/auth/login', { username, password });
-      localStorage.setItem('jwt', data.token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem(TOKEN_KEY, data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
       setUser(data.user);
       return data.user;
     } finally {
@@ -39,26 +54,30 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('jwt');
-    localStorage.removeItem('user');
+    clearStoredAuth();
     setUser(null);
   }, []);
 
   useEffect(() => {
-    if (!localStorage.getItem('jwt')) return;
+    if (!hasStoredToken()) {
+      localStorage.removeItem(USER_KEY);
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
     api
       .get('/auth/me')
       .then((data) => {
         if (cancelled) return;
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
         setUser(data.user);
       })
       .catch(() => {
         if (cancelled) return;
-        localStorage.removeItem('jwt');
-        localStorage.removeItem('user');
+        clearStoredAuth();
         setUser(null);
       })
       .finally(() => {
@@ -73,7 +92,7 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       loading,
-      isAuthenticated: Boolean(user),
+      isAuthenticated: Boolean(user && hasStoredToken()),
       isAdmin: user?.role === 'admin',
       login,
       register,
