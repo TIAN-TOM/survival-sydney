@@ -49,7 +49,7 @@ export default function Leaderboard() {
           <p className="leaderboard-panel__sub">
             Best attempt per scholar · highest score first · ties by earliest time at that score
           </p>
-          <p className="leaderboard-panel__note">Sydney Survival Quiz — top 50 scholars</p>
+          <p className="leaderboard-panel__note">Best attempts · top 50</p>
 
           {loading ? <p className="leaderboard-panel__status">Loading…</p> : null}
           {error ? <p className="leaderboard-panel__error">{error}</p> : null}
