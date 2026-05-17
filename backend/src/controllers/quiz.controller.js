@@ -146,6 +146,7 @@ const submitQuiz = async (req, res, next) => {
     const detailedAnswers = decoded.items.map(item => {
       const question = questionMap[item.qid];
       const ans = answerByQid[item.qid];
+      // selectedAnswer is the visible shuffled index; optionOrder maps it back to the stored correctAnswer index.
       const originalIndex = item.order[ans.selectedAnswer];
       const isCorrect = originalIndex === question.correctAnswer;
 

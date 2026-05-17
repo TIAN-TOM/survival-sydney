@@ -5,7 +5,7 @@
 | Audit date | 2026-05-18 |
 | Branch | `final` |
 | HEAD commit | Final branch HEAD after `docs: restore final branch submission notes` |
-| Working tree | Clean after final correction commit |
+| Working tree | Local correction pass pending final commit/review |
 | Approved variation | Review Mode after completion |
 | Spec sources | `docs/assignment/A2_Specification.md` + `docs/assignment/A2_Ed_Discussion_Supplement.md` |
 | Scope | Submission-readiness implementation pass after the previous audit found populate, frontend-test, per-attempt shuffle, admin-boundary, and packaging risks |
@@ -30,13 +30,13 @@ Backend tests pass, frontend smoke tests pass, and the frontend production build
 | Postman/Swagger stale for quiz submit | Fixed | `backend/src/docs/swagger.js` and `docs/postman-collection.json` include `attemptToken`. |
 | Tracy extra markdown source included | Fixed | `docs/individual-reflections/TracyCui-reflection.md` removed; `TracyCui-reflection.pdf` remains. |
 
-### Projected Total
+### Internal Readiness Estimate
 
-Range, not a point estimate, because reflection marks depend on the PDF content and marker strictness.
+Range, not a point estimate or claimed mark, because reflection marks depend on the PDF content and marker strictness.
 
-| Scenario | Projected /100 | Bonus | Confidence |
+| Scenario | Internal estimate /100 | Bonus readiness | Confidence |
 |---|---:|---:|---|
-| Post-refresh working tree, before any final commit | **93-99** | **+3 to +5** | Medium-high |
+| Local correction pass after reflection and README cleanup | **93-99** | **+3 to +5** | Medium-high |
 
 Remaining uncertainty is mostly outside code: individual reflection quality, live demo execution, coversheet/signature expectations, and marker interpretation.
 
@@ -55,15 +55,15 @@ PASS src/tests/forbidAdminQuiz.middleware.test.js
 PASS src/tests/errorHandler.test.js
 PASS src/tests/envelope.test.js
 Test Suites: 6 passed, 6 total
-Tests:       28 passed, 28 total
-Time:        1.828 s
+Tests:       29 passed, 29 total
+Time:        1.921 s
 ```
 
 ```text
 $ npm test --prefix frontend
 Test Files  4 passed (4)
 Tests       13 passed (13)
-Duration    1.03 s
+Duration    976ms
 ```
 
 ```text
@@ -71,9 +71,26 @@ $ npm run build --prefix frontend
 vite v6.4.2 building for production...
 ✓ 137 modules transformed.
 dist/index.html                   1.18 kB │ gzip:   0.54 kB
-dist/assets/index-BuCV_qF3.css  252.78 kB │ gzip:  42.77 kB
-dist/assets/index-DuSML9dL.js   367.80 kB │ gzip: 112.72 kB
-✓ built in 1.04s
+dist/assets/index-CmeMD9mv.css  257.01 kB │ gzip:  43.22 kB
+dist/assets/index-Cl4madbN.js   369.55 kB │ gzip: 113.14 kB
+✓ built in 717ms
+```
+
+```text
+$ npm run demo
+MongoDB is already reachable
+Seeded 50 active questions, admin/AdminPass123, and player1/player2/PlayerPass123
+Frontend: http://localhost:5173
+Backend:  http://localhost:5001
+Swagger:  http://localhost:5001/api-docs
+
+Local smoke results:
+frontend 200 root-ok
+swagger 200
+player-login 200 ok
+quiz-start 200 ok
+quiz-submit 200 ok
+admin-quiz-block 403 ok
 ```
 
 ```text
@@ -93,9 +110,11 @@ OK: no node_modules tracked
 
 ---
 
-## §3 — Rubric Scoring Matrix
+## §3 — Internal Readiness Estimate
 
-| # | Criterion | Cap | Status | Projected | Driver / evidence |
+This is an internal readiness estimate, not a marker-facing score claim. It is retained to show which rubric risks were checked before submission.
+
+| # | Criterion | Cap | Status | Estimate | Driver / evidence |
 |---:|---|---:|---|---:|---|
 | 1 | Backend Architecture & APIs | 25 | Implemented | 24-25 | Controllers use consistent envelopes, JWT/RBAC, validation, Review Mode APIs, and now `.populate()` where appropriate. |
 | 2 | Frontend UI & UX | 25 | Implemented | 23-25 | React Router, Context/useReducer, RHF/Zod forms, protected routes, dark mode, and 4 Vitest/RTL smoke files. |
@@ -165,7 +184,7 @@ The deferred surface is `ActiveQuizNavigationGuard`; it remains a good post-subm
 | R-01 | Reflection PDF content not deeply audited | Medium | Files exist; marks depend on individual content quality and marker reading. |
 | R-02 | No automated E2E browser suite | Low | Manual checklist exists; frontend and backend tests now cover critical smoke surfaces. |
 | R-03 | `ActiveQuizNavigationGuard` not unit-tested | Low-medium | Guard remains implemented; route guards and reducer/parser smoke tests cover higher-value stable surfaces. |
-| R-04 | Live demo not executed in this audit pass | Medium | Cannot be replaced by static audit; run `npm run demo` before submission/demo. |
+| R-04 | Live demo smoke test remains manual | Low | `npm run demo` started successfully in this correction pass; marker-day demo should still be checked on the presenting machine. |
 | R-05 | Build artifacts are generated locally but not part of the current diff | Info | `git status --short` did not show `frontend/dist`; no action needed unless the group intentionally wants to refresh built assets. |
 
 No current backend/frontend code blocker was found.
@@ -185,7 +204,7 @@ backend/src/tests/forbidAdminQuiz.middleware.test.js 23 lines
 backend/src/tests/validators.test.js                 29 lines
 ```
 
-Backend total: 842 test lines / 28 tests.
+Backend total: 842 test lines / 29 tests.
 
 ### Frontend
 
@@ -236,5 +255,5 @@ The Postman collection remains valid JSON after the update.
 Recommended final pre-submit actions:
 
 1. Review the uncommitted diff once as a group because the quiz attempt contract changed.
-2. Run `npm run demo` and manually verify player flow, history review, admin route blocking, Postman start/submit/replay, and Swagger UI.
+2. Re-run `npm run demo` on the presenting machine and manually verify player flow, history review, admin route blocking, Postman start/submit/replay, and Swagger UI.
 3. Commit only after reviewing the uncommitted diff and confirming the expanded attempt-token contract is acceptable to the group.

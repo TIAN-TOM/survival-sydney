@@ -99,6 +99,14 @@ Open:
 - Admin login: `http://localhost:5173/bosscoming`
 - API documentation: `http://localhost:5001/api-docs`
 
+### Troubleshooting
+
+- If port `5001` or `5173` is already in use, stop the old backend/frontend process and rerun `npm run dev`.
+- If MongoDB is unavailable, start the Docker container from step 3 or update `MONGODB_URI` to a running local MongoDB instance.
+- If login fails after editing env files, confirm `JWT_SECRET` is set in `backend/.env` and restart the backend.
+- If the quiz has no questions, rerun `npm run seed --prefix backend`.
+- If the frontend cannot reach the API, confirm `VITE_API_BASE_URL=http://localhost:5001/api` and restart Vite.
+
 ## One-Command Demo
 
 The project also includes a helper script:
@@ -155,6 +163,8 @@ The approved assignment variation is **Review Mode after completion**.
 
 After a quiz is submitted, the backend stores the full answer list in the `Score` model. The user can then review each question, their selected answer, whether it was correct, the correct answer, and the explanation when available.
 
+Because the approved variation is Review Mode, there is no pre-quiz category selection step; topics are surfaced per question and summarised in result/history views.
+
 This project does not implement timed questions, category selection, image-based questions, multiplayer, real-time features, adaptive branching, or alternative scoring schemes.
 
 ## Quiz Logic and Attempt Integrity
@@ -166,6 +176,13 @@ The `attemptToken` TTL is 2 hours, aligned with `JWT_EXPIRES_IN`. This is a secu
 ## Beyond the Specification — Bonus Features
 
 This project includes several additions beyond the minimum A2 requirements. Each item is documented with what was added, why it was added, and how it integrates with the rest of the system, following Ed Discussion #143.
+
+### Robustness highlights
+
+- Signed attempt tokens bind each quiz attempt to the authenticated user, exact question IDs, and the shuffled option order.
+- Replay protection is enforced by both a controller pre-check and a unique `Score.attemptId` index.
+- `optionOrder` persistence lets Review Mode and history render the same option order the player originally saw.
+- Edge cases for invalid tokens, wrong users, duplicate question IDs, malformed answers, admin-player boundary violations, and rate limits return consistent response envelopes.
 
 ### Active-quiz navigation guard
 
@@ -247,9 +264,10 @@ git log origin/final --author="Tracy Cui"
 git log origin/final --author="RachlGew"
 git log origin/final --author="f1sh11"
 git log origin/final --author="Tom Tian"
+git log origin/final --author="Tom_Tian"
 ```
 
-Some commits appear under GitHub usernames, including `RachlGew` for Raven Ge and `f1sh11` for Allen Ji.
+Some commits appear under GitHub usernames, including `RachlGew` for Raven Ge and `f1sh11` for Allen Ji. Tom Tian also has four early commits under the personal alias `Tom_Tian`; include both `Tom Tian` and `Tom_Tian` when checking Tom's contribution history.
 
 Representative commits for each subsystem:
 
@@ -273,5 +291,5 @@ npm run build --prefix frontend
 ## Submission Notes
 
 - Do not include `node_modules` in the submitted ZIP.
-- Include the group coversheet if required by Canvas submission.
+- The group coversheet is included as `Assignment 2 Group Assignment Coversheet.pdf`.
 - Each student should submit their individual contribution reflection with commit evidence, subsystem explanation, challenge, diagram, and Review Mode design reflection.
