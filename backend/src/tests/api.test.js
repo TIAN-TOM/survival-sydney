@@ -19,6 +19,7 @@ const {
   generateOptionOrder,
   isValidPermutation,
 } = require('../utils/shuffleQuestion');
+const { signAttemptToken, verifyAttemptToken } = require('../utils/quizAttemptToken');
 
 const IDENTITY_ORDER = [0, 1, 2, 3];
 
@@ -229,11 +230,65 @@ describe('quiz API', () => {
       questionText: expect.any(String),
       options: expect.any(Array),
     });
+
+    const decodedAttempt = verifyAttemptToken(response.body.data.attemptToken, user._id);
+    const orderById = Object.fromEntries(
+      decodedAttempt.items.map(item => [item.qid, item.order])
+    );
+
     for (const question of response.body.data.questions) {
+      const sourceOptions = optionsById[question._id];
+      const order = orderById[question._id];
       expect(question.options).toHaveLength(OPTIONS_PER_QUESTION);
-      expect([...question.options].sort()).toEqual([...optionsById[question._id]].sort());
+      expect(isValidPermutation(order)).toBe(true);
+      expect(question.options).toEqual(order.map(index => sourceOptions[index]));
       expect(question).not.toHaveProperty('correctAnswer');
       expect(question).not.toHaveProperty('explanation');
+    }
+  });
+
+  test('scores displayed answer indexes against the original question-bank correct answer', async () => {
+    const user = await createUser('user', 'shuffledmapping');
+    const token = await login(user.username);
+    const questions = await Question.insertMany(
+      Array.from({ length: QUIZ_LENGTH }, (_, index) =>
+        questionPayload(index + 1, {
+          options: [`A${index}`, `B${index}`, `C${index}`, `D${index}`],
+          correctAnswer: index % OPTIONS_PER_QUESTION,
+        })
+      )
+    );
+    const forcedOrder = [2, 0, 3, 1];
+    const { token: attemptToken } = signAttemptToken({
+      userId: user._id,
+      questions: questions.map(question => ({
+        _id: question._id,
+        optionOrder: forcedOrder,
+      })),
+    });
+    const answers = questions.map(question => ({
+      questionId: question._id.toString(),
+      selectedAnswer: forcedOrder.indexOf(question.correctAnswer),
+    }));
+
+    const response = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken, answers })
+      .expect(200);
+
+    expect(response.body.data.score).toBe(QUIZ_LENGTH);
+    for (const reviewRow of response.body.data.review) {
+      const sourceQuestion = questions.find(
+        question => question._id.toString() === reviewRow.questionId
+      );
+      const displayedCorrectIndex = forcedOrder.indexOf(sourceQuestion.correctAnswer);
+      expect(reviewRow.correctAnswer).toBe(displayedCorrectIndex);
+      expect(reviewRow.selectedAnswer).toBe(displayedCorrectIndex);
+      expect(reviewRow.options[reviewRow.correctAnswer]).toBe(
+        sourceQuestion.options[sourceQuestion.correctAnswer]
+      );
+      expect(reviewRow.isCorrect).toBe(true);
     }
   });
 
