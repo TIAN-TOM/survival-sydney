@@ -320,7 +320,8 @@ const swaggerDefinition = {
     '/quiz/leaderboard': {
       get: {
         summary: 'Best-per-user leaderboard',
-        description: 'Current backend route returns leaderboard rows without enforcing bearer authentication; the frontend route is protected.',
+        description: 'Returns leaderboard rows for authenticated player users. Admin users are blocked from player quiz routes.',
+        security: [{ bearerAuth: [] }],
         responses: {
           200: okDataResponse('Leaderboard rows sorted by best score', {
             type: 'array',
@@ -331,7 +332,9 @@ const swaggerDefinition = {
                 bestScore: { type: 'integer' },
               },
             },
-          })
+          }),
+          401: failResponse('Authentication required'),
+          403: failResponse('Admins cannot take quizzes.')
         }
       }
     },
