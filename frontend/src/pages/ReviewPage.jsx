@@ -5,6 +5,7 @@ import api from '../api/api.js';
 import GameplayHudPortal from '../components/GameplayHudPortal.jsx';
 import ReviewQuestionCard from '../components/quiz/ReviewQuestionCard.jsx';
 import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
+import { useQuiz } from '../contexts/QuizContext.jsx';
 
 function ReviewArchiveHudStrip({ attempt, activeDot, onJump, onArchive }) {
   const correctCount = attempt.review.filter((r) => r.isCorrect).length;
@@ -49,6 +50,7 @@ function ReviewArchiveHudStrip({ attempt, activeDot, onJump, onArchive }) {
 function ReviewPage() {
   const navigate = useNavigate();
   const { attemptId } = useParams();
+  const { startQuiz } = useQuiz();
 
   const [attempt, setAttempt] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +64,11 @@ function ReviewPage() {
       block: 'start',
     });
   }, []);
+
+  const startNewRun = useCallback(async () => {
+    await startQuiz();
+    navigate('/quiz');
+  }, [navigate, startQuiz]);
 
   useEffect(() => {
     const fetchAttempt = async () => {
@@ -163,7 +170,7 @@ function ReviewPage() {
             >
               ← Archive
             </button>
-            <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--primary" onClick={() => navigate('/quiz')}>
+            <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--primary" onClick={startNewRun}>
               New run
             </button>
           </div>

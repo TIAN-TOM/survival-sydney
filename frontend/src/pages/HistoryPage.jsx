@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/api.js';
 import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
 import { formatReviewCategory } from '../components/quiz/reviewFormatUtils.js';
+import { useQuiz } from '../contexts/QuizContext.jsx';
 
 const CHIP_ORDER = ['renting', 'transport', 'safety', 'scam', 'food', 'general'];
 
@@ -86,10 +87,21 @@ function HistoryAttemptCard({ attempt, attemptNo, navigate, staggerIndex = 0 }) 
 
 function HistoryPage() {
   const navigate = useNavigate();
+  const { resetToGate, startQuiz } = useQuiz();
 
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const goHome = () => {
+    resetToGate();
+    navigate('/quiz');
+  };
+
+  const startNewRun = async () => {
+    await startQuiz();
+    navigate('/quiz');
+  };
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -198,21 +210,14 @@ function HistoryPage() {
           ) : null}
 
           {history.length === 0 ? (
-            <>
-              <div className="hist-empty" role="status">
-                <div className="hist-empty-illu" aria-hidden="true" />
-                <h2>No survival records yet</h2>
-                <p>Your first journey through the quiz will appear here as a scored parchment — ready for review whenever you return.</p>
-                <button type="button" className="hist-empty-cta" onClick={() => navigate('/quiz')}>
-                  Begin first quiz
-                </button>
-              </div>
-              <div className="review-footer-actions">
-                <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--ghost" onClick={() => navigate('/quiz')}>
-                  ← Home
-                </button>
-              </div>
-            </>
+            <div className="hist-empty" role="status">
+              <div className="hist-empty-illu" aria-hidden="true" />
+              <h2>No survival records yet</h2>
+              <p>Your first journey through the quiz will appear here as a scored parchment — ready for review whenever you return.</p>
+              <button type="button" className="hist-empty-cta" onClick={startNewRun}>
+                Begin first quiz
+              </button>
+            </div>
           ) : (
             <>
               <section className="hist-attempts" aria-label="Past attempts">
@@ -236,10 +241,10 @@ function HistoryPage() {
                 scholar notes.
               </p>
               <div className="review-footer-actions">
-                <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--primary" onClick={() => navigate('/quiz')}>
+                <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--primary" onClick={startNewRun}>
                   New run
                 </button>
-                <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--ghost" onClick={() => navigate('/quiz')}>
+                <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--ghost" onClick={goHome}>
                   Home
                 </button>
               </div>
