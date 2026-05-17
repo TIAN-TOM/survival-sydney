@@ -15,6 +15,14 @@ const loginLimiter = rateLimit({
   handler: limiterResponse('Too many login attempts. Please wait and try again.')
 });
 
+const registerLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: process.env.NODE_ENV === 'test' ? 1000 : 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: limiterResponse('Too many registration attempts. Please wait and try again.')
+});
+
 const quizSubmitLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: process.env.NODE_ENV === 'test' ? 1000 : 20,
@@ -24,4 +32,4 @@ const quizSubmitLimiter = rateLimit({
   handler: limiterResponse('Too many quiz submissions. Please wait and try again.')
 });
 
-module.exports = { loginLimiter, quizSubmitLimiter };
+module.exports = { loginLimiter, registerLimiter, quizSubmitLimiter };
