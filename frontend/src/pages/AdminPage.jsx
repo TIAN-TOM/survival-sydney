@@ -5,6 +5,8 @@ import api from '../api/api.js';
 import BulkImport from '../components/BulkImport.jsx';
 import QuestionForm from '../components/QuestionForm.jsx';
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50];
+
 export default function AdminPage() {
   const { hash } = useLocation();
   const [questions, setQuestions] = useState([]);
@@ -13,6 +15,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
@@ -44,6 +49,28 @@ export default function AdminPage() {
   }, [hash]);
 
   const activeCount = useMemo(() => questions.filter((q) => q.active).length, [questions]);
+  const totalPages = Math.max(1, Math.ceil(questions.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, questions.length);
+  const visibleQuestions = useMemo(
+    () => questions.slice(startIndex, endIndex),
+    [endIndex, questions, startIndex]
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    setPendingDeleteId(null);
+  }, [currentPage, pageSize]);
+
+  const handlePageSizeChange = event => {
+    setPageSize(Number(event.target.value));
+    setCurrentPage(1);
+  };
 
   const handleCreateClick = () => {
     setEditingQuestion(null);
@@ -85,12 +112,10 @@ export default function AdminPage() {
   };
 
   const handleDeleteQuestion = async (questionId) => {
-    const confirmed = window.confirm('Are you sure you want to delete this question?');
-    if (!confirmed) return;
-
     try {
       await api.delete(`/admin/questions/${questionId}`);
       showMessage('success', 'Question deleted successfully.');
+      setPendingDeleteId(null);
       await fetchQuestions();
     } catch (err) {
       showMessage('error', err.message || 'Failed to delete question.');
@@ -204,11 +229,30 @@ export default function AdminPage() {
             <p className="review-attempt-hint">No questions found. Add one or run a bulk import.</p>
           ) : (
             <div className="admin-question-list admin-table admin-data-table">
+              <div className="admin-question-list__toolbar" aria-label="Question bank list controls">
+                <p aria-live="polite">
+                  Showing {startIndex + 1}-{endIndex} of {questions.length} questions
+                </p>
+                <label>
+                  Questions per page
+                  <select value={pageSize} onChange={handlePageSizeChange}>
+                    {PAGE_SIZE_OPTIONS.map(option => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
               <div className="admin-qbank admin-qbank--cards" role="list" aria-label="Question list">
                 <div className="admin-qbank__body">
-                  {questions.map(question => (
+                  {visibleQuestions.map((question, index) => (
                     <article key={question._id} className="admin-qbank-card" role="listitem">
                       <div className="admin-qbank-card__top">
+                        <div className="admin-qbank-card__number" aria-label={`Question number ${startIndex + index + 1}`}>
+                          No. {startIndex + index + 1}
+                        </div>
                         <div className="admin-qbank-card__content">
                           <h3 className="admin-q-title">{question.questionText}</h3>
                           <ol className="admin-q-opts" type="A">
@@ -220,29 +264,51 @@ export default function AdminPage() {
 
                         <div className="admin-qbank-card__actions">
                           <div className="admin-row-actions">
-                            <button
-                              type="button"
-                              className="admin-row-btn admin-row-btn--edit"
-                              onClick={() => handleEditClick(question)}
-                            >
-                              Edit
-                            </button>
+                            {pendingDeleteId === question._id ? (
+                              <>
+                                <button
+                                  type="button"
+                                  className="admin-row-btn admin-row-btn--confirm-delete"
+                                  onClick={() => handleDeleteQuestion(question._id)}
+                                >
+                                  Confirm delete
+                                </button>
 
-                            <button
-                              type="button"
-                              className="admin-row-btn admin-row-btn--toggle"
-                              onClick={() => handleToggleQuestion(question._id)}
-                            >
-                              {question.active ? 'Deactivate' : 'Activate'}
-                            </button>
+                                <button
+                                  type="button"
+                                  className="admin-row-btn admin-row-btn--cancel-delete"
+                                  onClick={() => setPendingDeleteId(null)}
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  className="admin-row-btn admin-row-btn--edit"
+                                  onClick={() => handleEditClick(question)}
+                                >
+                                  Edit
+                                </button>
 
-                            <button
-                              type="button"
-                              className="admin-row-btn admin-row-btn--delete"
-                              onClick={() => handleDeleteQuestion(question._id)}
-                            >
-                              Delete
-                            </button>
+                                <button
+                                  type="button"
+                                  className="admin-row-btn admin-row-btn--toggle"
+                                  onClick={() => handleToggleQuestion(question._id)}
+                                >
+                                  {question.active ? 'Deactivate' : 'Activate'}
+                                </button>
+
+                                <button
+                                  type="button"
+                                  className="admin-row-btn admin-row-btn--delete"
+                                  onClick={() => setPendingDeleteId(question._id)}
+                                >
+                                  Delete
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -288,6 +354,44 @@ export default function AdminPage() {
                   ))}
                 </div>
               </div>
+
+              <nav className="admin-pagination" aria-label="Question bank pagination">
+                <button
+                  type="button"
+                  className="admin-pagination__btn"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                >
+                  First
+                </button>
+                <button
+                  type="button"
+                  className="admin-pagination__btn"
+                  onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <span className="admin-pagination__status" aria-live="polite">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="admin-pagination__btn"
+                  onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+                <button
+                  type="button"
+                  className="admin-pagination__btn"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  Last
+                </button>
+              </nav>
             </div>
           )}
         </section>
