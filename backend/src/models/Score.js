@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { OPTIONS_PER_QUESTION, QUIZ_LENGTH } = require('../config/quiz');
 
 const answerSchema = new mongoose.Schema(
   {
@@ -16,6 +17,21 @@ const answerSchema = new mongoose.Schema(
     isCorrect: {
       type: Boolean,
       required: true,
+    },
+    optionOrder: {
+      type: [Number],
+      required: true,
+      validate: {
+        validator: function (arr) {
+          return (
+            Array.isArray(arr) &&
+            arr.length === OPTIONS_PER_QUESTION &&
+            new Set(arr).size === OPTIONS_PER_QUESTION &&
+            arr.every(n => Number.isInteger(n) && n >= 0 && n < OPTIONS_PER_QUESTION)
+          );
+        },
+        message: 'optionOrder must be a permutation of 0..3',
+      },
     },
   },
   {
@@ -35,19 +51,31 @@ const scoreSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    attemptId: {
+      type: String,
+      required: true,
+    },
     answers: {
       type: [answerSchema],
       required: true,
       validate: {
         validator: function (arr) {
-          return Array.isArray(arr) && arr.length >= 1;
+          return Array.isArray(arr) && arr.length === QUIZ_LENGTH;
         },
-        message: 'A quiz attempt must contain at least one answer.',
+        message: `A quiz attempt must contain exactly ${QUIZ_LENGTH} answers.`,
       },
     },
   },
   {
     timestamps: true,
+  }
+);
+
+scoreSchema.index(
+  { attemptId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { attemptId: { $type: 'string' } },
   }
 );
 

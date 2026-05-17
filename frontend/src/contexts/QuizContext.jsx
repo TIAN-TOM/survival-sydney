@@ -7,6 +7,7 @@ const ACTIVE_QUIZ_LEAVE_MESSAGE = 'You have an active quiz. Leave this page and 
 
 const initialState = {
   phase: 'gate',
+  attemptToken: null,
   questions: [],
   currentQ: 0,
   answers: [],
@@ -24,7 +25,8 @@ function quizReducer(state, action) {
       return {
         ...initialState,
         phase: 'quiz',
-        questions: action.payload,
+        attemptToken: action.payload.attemptToken,
+        questions: action.payload.questions,
       };
 
     case 'LOCK_ANSWER':
@@ -138,6 +140,7 @@ export function QuizProvider({ children }) {
       }));
 
       const data = await api.post('/quiz/submit', {
+        attemptToken: state.attemptToken,
         answers: answersPayload,
       });
 
@@ -187,3 +190,5 @@ export function useQuiz() {
   if (!ctx) throw new Error('useQuiz must be used within QuizProvider');
   return ctx;
 }
+
+export { quizReducer, initialState };

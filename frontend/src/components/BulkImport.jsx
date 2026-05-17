@@ -70,6 +70,8 @@ function parseImportPayload(jsonText) {
   }));
 }
 
+export { parseImportPayload };
+
 export default function BulkImport({ onImportSuccess }) {
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState(null);

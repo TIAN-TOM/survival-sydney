@@ -1,5 +1,6 @@
 // Subsystem D - Integration, Robustness & Documentation (Tom Tian):
 // end-to-end backend API coverage aligned with the current dev API surface.
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const request = require('supertest');
 
@@ -12,9 +13,14 @@ const app = require('../app');
 const Question = require('../models/Question');
 const Score = require('../models/Score');
 const User = require('../models/User');
-const { shuffleQuestion } = require('../utils/shuffleQuestion');
+const { QUIZ_LENGTH, OPTIONS_PER_QUESTION } = require('../config/quiz');
+const {
+  applyOptionOrder,
+  generateOptionOrder,
+  isValidPermutation,
+} = require('../utils/shuffleQuestion');
 
-const QUIZ_LENGTH = 10;
+const IDENTITY_ORDER = [0, 1, 2, 3];
 
 function questionPayload(index, overrides = {}) {
   return {
@@ -52,19 +58,12 @@ async function seedQuestions(count = QUIZ_LENGTH) {
   );
 }
 
-function shuffledCorrectAnswer(question) {
-  return shuffleQuestion(question.toObject()).correctAnswer;
+function correctAnswer(question) {
+  return question.correctAnswer;
 }
 
-function shuffledWrongAnswer(question) {
-  return (shuffledCorrectAnswer(question) + 1) % 4;
-}
-
-function answerPayload(question, isCorrect = true) {
-  return {
-    questionId: question._id.toString(),
-    selectedAnswer: isCorrect ? shuffledCorrectAnswer(question) : shuffledWrongAnswer(question),
-  };
+function wrongAnswer(question) {
+  return (correctAnswer(question) + 1) % OPTIONS_PER_QUESTION;
 }
 
 async function createCompletedAttempt(user, score = QUIZ_LENGTH) {
@@ -72,12 +71,14 @@ async function createCompletedAttempt(user, score = QUIZ_LENGTH) {
   const answers = questions.map((question, index) => ({
     questionId: question._id,
     selectedAnswer:
-      index < score ? shuffledCorrectAnswer(question) : shuffledWrongAnswer(question),
+      index < score ? correctAnswer(question) : wrongAnswer(question),
     isCorrect: index < score,
+    optionOrder: IDENTITY_ORDER,
   }));
 
   return Score.create({
     userId: user._id,
+    attemptId: crypto.randomUUID(),
     score,
     answers,
   });
@@ -210,7 +211,10 @@ describe('quiz API', () => {
   test('starts a ten-question quiz without exposing correct answers', async () => {
     const user = await createUser('user', 'startquiz');
     const token = await login(user.username);
-    await seedQuestions();
+    const seeded = await seedQuestions();
+    const optionsById = Object.fromEntries(
+      seeded.map(question => [question._id.toString(), question.options])
+    );
 
     const response = await request(app)
       .get('/api/quiz/start')
@@ -218,13 +222,19 @@ describe('quiz API', () => {
       .expect(200);
 
     expect(response.body.success).toBe(true);
-    expect(response.body.data).toHaveLength(QUIZ_LENGTH);
-    expect(response.body.data[0]).toMatchObject({
+    expect(response.body.data.attemptToken).toEqual(expect.any(String));
+    expect(response.body.data.attemptToken.length).toBeGreaterThan(0);
+    expect(response.body.data.questions).toHaveLength(QUIZ_LENGTH);
+    expect(response.body.data.questions[0]).toMatchObject({
       questionText: expect.any(String),
       options: expect.any(Array),
     });
-    expect(response.body.data[0]).not.toHaveProperty('correctAnswer');
-    expect(response.body.data[0]).not.toHaveProperty('explanation');
+    for (const question of response.body.data.questions) {
+      expect(question.options).toHaveLength(OPTIONS_PER_QUESTION);
+      expect([...question.options].sort()).toEqual([...optionsById[question._id]].sort());
+      expect(question).not.toHaveProperty('correctAnswer');
+      expect(question).not.toHaveProperty('explanation');
+    }
   });
 
   test('submits a quiz, saves history, and returns review data', async () => {
@@ -240,7 +250,7 @@ describe('quiz API', () => {
       .get('/api/quiz/start')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    const answers = startResponse.body.data.map((question) => ({
+    const answers = startResponse.body.data.questions.map((question) => ({
       questionId: question._id.toString(),
       selectedAnswer: question.options.indexOf(correctTextById[question._id.toString()]),
     }));
@@ -249,7 +259,7 @@ describe('quiz API', () => {
     const submitResponse = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${token}`)
-      .send({ answers })
+      .send({ attemptToken: startResponse.body.data.attemptToken, answers })
       .expect(200);
 
     expect(submitResponse.body).toMatchObject({
@@ -279,18 +289,32 @@ describe('quiz API', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
     expect(reviewResponse.body.data.review).toHaveLength(QUIZ_LENGTH);
+
+    const persisted = await Score.findById(submitResponse.body.data.scoreId).lean();
+    expect(persisted.attemptId).toEqual(expect.any(String));
+    expect(isValidPermutation(persisted.answers[0].optionOrder)).toBe(true);
   });
 
   test('rejects malformed submissions', async () => {
     const user = await createUser('user', 'badsubmit');
     const token = await login(user.username);
-    const questions = await seedQuestions();
-    const answers = questions.map((question) => answerPayload(question));
+    await seedQuestions();
+    const startResponse = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const answers = startResponse.body.data.questions.map((question) => ({
+      questionId: question._id.toString(),
+      selectedAnswer: 0,
+    }));
 
     const duplicateResponse = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${token}`)
-      .send({ answers: answers.map((answer, index) => (index === 9 ? answers[0] : answer)) })
+      .send({
+        attemptToken: startResponse.body.data.attemptToken,
+        answers: answers.map((answer, index) => (index === 9 ? answers[0] : answer)),
+      })
       .expect(400);
     expect(duplicateResponse.body.error).toBe('Duplicate question IDs detected');
 
@@ -298,12 +322,97 @@ describe('quiz API', () => {
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${token}`)
       .send({
+        attemptToken: startResponse.body.data.attemptToken,
         answers: answers.map((answer, index) =>
           index === 0 ? { ...answer, selectedAnswer: 4 } : answer
         ),
       })
       .expect(400);
     expect(invalidAnswerResponse.body.error).toBe('selectedAnswer must be an integer 0-3');
+  });
+
+  test('rejects missing, tampered, replayed, and wrong-user attempt tokens', async () => {
+    const owner = await createUser('user', 'tokenowner');
+    const other = await createUser('user', 'tokenother');
+    const ownerToken = await login(owner.username);
+    const otherToken = await login(other.username);
+    await seedQuestions();
+
+    const startResponse = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .expect(200);
+    const answers = startResponse.body.data.questions.map(question => ({
+      questionId: question._id.toString(),
+      selectedAnswer: 0,
+    }));
+    const attemptToken = startResponse.body.data.attemptToken;
+
+    const missingResponse = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ answers })
+      .expect(400);
+    expect(missingResponse.body.error).toBe('Missing attemptToken');
+
+    const tamperedResponse = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({
+        attemptToken: attemptToken.replace(/\.[^.]+$/, '.invalidsignature'),
+        answers,
+      })
+      .expect(401);
+    expect(tamperedResponse.body.error).toBe('Invalid attempt token');
+
+    const wrongUserResponse = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${otherToken}`)
+      .send({ attemptToken, answers })
+      .expect(401);
+    expect(wrongUserResponse.body.error).toBe('Attempt token does not belong to current user');
+
+    await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ attemptToken, answers })
+      .expect(200);
+
+    const replayResponse = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${ownerToken}`)
+      .send({ attemptToken, answers })
+      .expect(409);
+    expect(replayResponse.body.error).toBe('Attempt already submitted');
+  });
+
+  test('rejects submitted question IDs that do not match the attempt token', async () => {
+    const user = await createUser('user', 'qidmismatch');
+    const token = await login(user.username);
+    const seeded = await seedQuestions(QUIZ_LENGTH + 1);
+
+    const startResponse = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const startIds = new Set(startResponse.body.data.questions.map(question => question._id.toString()));
+    const extraQuestion = seeded.find(question => !startIds.has(question._id.toString()));
+    const answers = startResponse.body.data.questions.map(question => ({
+      questionId: question._id.toString(),
+      selectedAnswer: 0,
+    }));
+    answers[0] = {
+      questionId: extraQuestion._id.toString(),
+      selectedAnswer: 0,
+    };
+
+    const response = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken: startResponse.body.data.attemptToken, answers })
+      .expect(400);
+
+    expect(response.body.error).toBe('Submitted question IDs do not match attempt token');
   });
 
   test('returns best-score leaderboard rows for authenticated callers', async () => {
@@ -334,8 +443,9 @@ describe('quiz API', () => {
     const answers = questions.map((question, index) => ({
       questionId: question._id,
       selectedAnswer:
-        index < 5 ? shuffledCorrectAnswer(question) : shuffledWrongAnswer(question),
+        index < 5 ? correctAnswer(question) : wrongAnswer(question),
       isCorrect: index < 5,
+      optionOrder: IDENTITY_ORDER,
     }));
 
     const players = await Promise.all(
@@ -345,6 +455,7 @@ describe('quiz API', () => {
     await Score.insertMany(
       players.map((player, i) => ({
         userId: player._id,
+        attemptId: crypto.randomUUID(),
         score: i,
         answers,
         createdAt: new Date(Date.UTC(2024, 0, 1, 0, 0, i)),
@@ -372,18 +483,21 @@ describe('quiz API', () => {
     const answers = questions.map((question, index) => ({
       questionId: question._id,
       selectedAnswer:
-        index < 8 ? shuffledCorrectAnswer(question) : shuffledWrongAnswer(question),
+        index < 8 ? correctAnswer(question) : wrongAnswer(question),
       isCorrect: index < 8,
+      optionOrder: IDENTITY_ORDER,
     }));
 
     await Score.create({
       userId: early._id,
+      attemptId: crypto.randomUUID(),
       score: 8,
       answers,
       createdAt: new Date('2024-06-01T10:00:00.000Z'),
     });
     await Score.create({
       userId: late._id,
+      attemptId: crypto.randomUUID(),
       score: 8,
       answers,
       createdAt: new Date('2024-06-02T10:00:00.000Z'),
@@ -399,5 +513,25 @@ describe('quiz API', () => {
     expect(new Date(response.body.data[0].bestAchievedAt).getTime()).toBeLessThan(
       new Date(response.body.data[1].bestAchievedAt).getTime()
     );
+  });
+});
+
+describe('quiz option order utilities', () => {
+  test('generates deterministic output with an injected RNG and applies option order', () => {
+    const rngValues = [0.1, 0.9, 0.3];
+    const order = generateOptionOrder(() => rngValues.shift());
+
+    expect(order).toEqual([1, 3, 2, 0]);
+    expect(isValidPermutation(order)).toBe(true);
+
+    const question = questionPayload(1, {
+      options: ['Alpha', 'Beta', 'Gamma', 'Delta'],
+      correctAnswer: 3,
+    });
+
+    expect(applyOptionOrder(question, [2, 0, 3, 1])).toMatchObject({
+      options: ['Gamma', 'Alpha', 'Delta', 'Beta'],
+      correctAnswer: 2,
+    });
   });
 });

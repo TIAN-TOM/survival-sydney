@@ -1,7 +1,14 @@
 const Question = require('../models/Question');
 const Score = require('../models/Score');
+const { QUIZ_LENGTH, OPTIONS_PER_QUESTION } = require('../config/quiz');
 const { ok, fail } = require('../utils/responseEnvelope');
-const { shuffleQuestion, toStartQuizPayload } = require('../utils/shuffleQuestion');
+const {
+  applyOptionOrder,
+  generateOptionOrder,
+  isValidPermutation,
+  toStartQuizPayload,
+} = require('../utils/shuffleQuestion');
+const { signAttemptToken, verifyAttemptToken } = require('../utils/quizAttemptToken');
 const mongoose = require('mongoose');
 /**
  * GET /api/quiz/start
@@ -11,7 +18,7 @@ const startQuiz = async (req, res, next) => {
   try {
     const raw = await Question.aggregate([
       { $match: { active: true } },
-      { $sample: { size: 10 } },
+      { $sample: { size: QUIZ_LENGTH } },
       {
         $project: {
           questionText: 1,
@@ -22,15 +29,23 @@ const startQuiz = async (req, res, next) => {
       },
     ]);
 
-    if (raw.length < 10) {
+    if (raw.length < QUIZ_LENGTH) {
       return res
         .status(400)
-        .json(fail('Not enough active questions in database (need at least 10)'));
+        .json(fail(`Not enough active questions in database (need at least ${QUIZ_LENGTH})`));
     }
 
-    const questions = raw.map((q) => toStartQuizPayload(shuffleQuestion(q)));
+    const withOrder = raw.map(q => ({
+      ...q,
+      optionOrder: generateOptionOrder(),
+    }));
+    const { token } = signAttemptToken({
+      userId: req.user.id,
+      questions: withOrder.map(q => ({ _id: q._id, optionOrder: q.optionOrder })),
+    });
+    const questions = withOrder.map(q => toStartQuizPayload(applyOptionOrder(q, q.optionOrder)));
 
-    return res.json(ok(questions));
+    return res.json(ok({ attemptToken: token, questions }));
   } catch (err) {
     next(err);
   }
@@ -43,15 +58,32 @@ const startQuiz = async (req, res, next) => {
  */
 const submitQuiz = async (req, res, next) => {
   try {
-    const { answers } = req.body;
+    const { attemptToken, answers } = req.body;
+
+    if (!attemptToken) {
+      return res.status(400).json(fail('Missing attemptToken'));
+    }
+
+    let decoded;
+    try {
+      decoded = verifyAttemptToken(attemptToken, req.user.id);
+    } catch (err) {
+      const message =
+        err.code === 'expired'
+          ? 'Attempt token expired'
+          : err.code === 'wrong_user'
+            ? 'Attempt token does not belong to current user'
+            : 'Invalid attempt token';
+      return res.status(401).json(fail(message, 401));
+    }
 
     // --- input validation ---
     if (!answers || !Array.isArray(answers)) {
       return res.status(400).json(fail('Invalid answers format'));
     }
 
-    if (answers.length !== 10) {
-      return res.status(400).json(fail('Must submit exactly 10 answers'));
+    if (answers.length !== QUIZ_LENGTH) {
+      return res.status(400).json(fail(`Must submit exactly ${QUIZ_LENGTH} answers`));
     }
 
     // check for duplicate questionIds
@@ -74,17 +106,34 @@ const submitQuiz = async (req, res, next) => {
         typeof ans.selectedAnswer !== 'number' ||
         !Number.isInteger(ans.selectedAnswer) ||
         ans.selectedAnswer < 0 ||
-        ans.selectedAnswer > 3
+        ans.selectedAnswer >= OPTIONS_PER_QUESTION
       ) {
         return res.status(400).json(fail('selectedAnswer must be an integer 0-3'));
       }
     }
 
-    // --- fetch all questions in one query ---
-    const questionIds = answers.map(a => a.questionId);
-    const questions = await Question.find({ _id: { $in: questionIds } });
+    const answerByQid = Object.fromEntries(answers.map(a => [String(a.questionId), a]));
+    const tokenQids = decoded.items.map(item => item.qid);
+    const tokenQidSet = new Set(tokenQids);
+    const submittedQids = answers.map(a => String(a.questionId));
+    const submittedQidSet = new Set(submittedQids);
 
-    if (questions.length !== 10) {
+    if (
+      submittedQids.length !== tokenQids.length ||
+      submittedQidSet.size !== tokenQidSet.size ||
+      !tokenQids.every(qid => submittedQidSet.has(qid))
+    ) {
+      return res.status(400).json(fail('Submitted question IDs do not match attempt token'));
+    }
+
+    if (await Score.exists({ attemptId: decoded.attemptId })) {
+      return res.status(409).json(fail('Attempt already submitted', 409));
+    }
+
+    // --- fetch all questions in one query ---
+    const questions = await Question.find({ _id: { $in: tokenQids } });
+
+    if (questions.length !== QUIZ_LENGTH) {
       return res.status(400).json(fail('Some question IDs are invalid'));
     }
 
@@ -94,35 +143,41 @@ const submitQuiz = async (req, res, next) => {
     });
 
     // --- score calculation ---
-    let score = 0;
-    const detailedAnswers = [];
+    const detailedAnswers = decoded.items.map(item => {
+      const question = questionMap[item.qid];
+      const ans = answerByQid[item.qid];
+      const originalIndex = item.order[ans.selectedAnswer];
+      const isCorrect = originalIndex === question.correctAnswer;
 
-    for (const ans of answers) {
-      const question = questionMap[ans.questionId];
-      if (!question) continue;
-
-      const shuffled = shuffleQuestion(question.toObject());
-      const isCorrect = ans.selectedAnswer === shuffled.correctAnswer;
-      if (isCorrect) score++;
-
-      detailedAnswers.push({
+      return {
         questionId: question._id,
         selectedAnswer: ans.selectedAnswer,
         isCorrect,
-      });
-    }
+        optionOrder: item.order,
+      };
+    });
+    const score = detailedAnswers.filter(answer => answer.isCorrect).length;
 
     // --- save to database ---
-    const scoreRecord = await Score.create({
-      userId: req.user.id,
-      score,
-      answers: detailedAnswers,
-    });
+    let scoreRecord;
+    try {
+      scoreRecord = await Score.create({
+        userId: req.user.id,
+        attemptId: decoded.attemptId,
+        score,
+        answers: detailedAnswers,
+      });
+    } catch (err) {
+      if (err && err.code === 11000 && (!err.keyPattern || err.keyPattern.attemptId)) {
+        return res.status(409).json(fail('Attempt already submitted', 409));
+      }
+      throw err;
+    }
 
     // --- build review data for Review Mode ---
     const review = detailedAnswers.map(da => {
       const q = questionMap[da.questionId.toString()];
-      const shuffled = shuffleQuestion(q.toObject());
+      const shuffled = applyOptionOrder(q.toObject(), da.optionOrder);
 
       return {
         questionId: da.questionId,
@@ -131,6 +186,7 @@ const submitQuiz = async (req, res, next) => {
         selectedAnswer: da.selectedAnswer,
         correctAnswer: shuffled.correctAnswer,
         isCorrect: da.isCorrect,
+        optionOrder: da.optionOrder,
         topic: shuffled.topic || 'general',
         explanation: (q.explanation && String(q.explanation).trim()) || null,
       };
@@ -157,35 +213,15 @@ const getHistory = async (req, res, next) => {
   try {
     const history = await Score.find({ userId: req.user.id })
       .select('score createdAt answers')
+      .populate({ path: 'answers.questionId', select: 'topic' })
       .sort({ createdAt: -1 })
       .lean();
-
-    const idStrings = [];
-    for (const row of history) {
-      for (const a of row.answers || []) {
-        if (a.questionId) idStrings.push(a.questionId.toString());
-      }
-    }
-    const uniqueIds = [...new Set(idStrings)];
-
-    const questions =
-      uniqueIds.length > 0
-        ? await Question.find({ _id: { $in: uniqueIds } })
-            .select('topic')
-            .lean()
-        : [];
-
-    const topicByQuestionId = {};
-    for (const q of questions) {
-      topicByQuestionId[q._id.toString()] = q.topic || 'general';
-    }
 
     const enriched = history.map((row) => {
       const topics = [];
       const seen = new Set();
       for (const a of row.answers || []) {
-        const tid = a.questionId?.toString();
-        const t = tid ? topicByQuestionId[tid] || 'general' : 'general';
+        const t = a.questionId?.topic || 'general';
         if (!seen.has(t)) {
           seen.add(t);
           topics.push(t);
@@ -220,45 +256,43 @@ const getAttemptDetail = async (req, res, next) => {
     const attempt = await Score.findOne({
       _id: req.params.id,
       userId: req.user.id,
+    }).populate({
+      path: 'answers.questionId',
+      select: 'questionText options correctAnswer topic explanation',
     });
 
     if (!attempt) {
       return res.status(404).json(fail('Attempt not found', 404));
     }
 
-    const questionIds = attempt.answers.map(a => a.questionId);
-    const questions = await Question.find({ _id: { $in: questionIds } });
-
-    const qMap = {};
-    questions.forEach(q => {
-      qMap[q._id.toString()] = q;
-    });
-
     const review = attempt.answers.map(a => {
-      const q = qMap[a.questionId.toString()];
+      const q = a.questionId;
 
       if (!q) {
         return {
-          questionId: a.questionId,
+          questionId: null,
           questionText: '[Question deleted]',
           options: [],
           selectedAnswer: a.selectedAnswer,
           correctAnswer: null,
           isCorrect: a.isCorrect,
+          optionOrder: isValidPermutation(a.optionOrder) ? a.optionOrder : [],
           topic: 'general',
           explanation: null,
         };
       }
 
-      const shuffled = shuffleQuestion(q.toObject());
+      const order = isValidPermutation(a.optionOrder) ? a.optionOrder : [0, 1, 2, 3];
+      const shuffled = applyOptionOrder(q.toObject(), order);
 
       return {
-        questionId: a.questionId,
+        questionId: q._id,
         questionText: shuffled.questionText,
         options: shuffled.options,
         selectedAnswer: a.selectedAnswer,
         correctAnswer: shuffled.correctAnswer,
         isCorrect: a.isCorrect,
+        optionOrder: order,
         topic: shuffled.topic || 'general',
         explanation: (q.explanation && String(q.explanation).trim()) || null,
       };

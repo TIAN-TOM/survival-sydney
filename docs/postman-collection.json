@@ -7,6 +7,7 @@
     { "key": "baseUrl", "value": "http://localhost:5001/api" },
     { "key": "token", "value": "" },
     { "key": "adminToken", "value": "" },
+    { "key": "attemptToken", "value": "" },
     { "key": "scoreId", "value": "" },
     { "key": "questionId1", "value": "" },
     { "key": "questionId2", "value": "" },
@@ -63,11 +64,12 @@
           "script": {
             "type": "text/javascript",
             "exec": [
-              "const data = pm.response.json().data;",
-              "data.forEach((question, index) => {",
-              "  const position = index + 1;",
-              "  pm.collectionVariables.set(`questionId${position}`, question._id);",
-              "});"
+            "const data = pm.response.json().data;",
+            "if (data?.attemptToken) pm.collectionVariables.set('attemptToken', data.attemptToken);",
+            "(data?.questions || []).forEach((question, index) => {",
+            "  const position = index + 1;",
+            "  pm.collectionVariables.set(`questionId${position}`, question._id);",
+            "});"
             ]
           }
         }
@@ -85,7 +87,7 @@
         "url": "{{baseUrl}}/quiz/submit",
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"answers\": [\n    { \"questionId\": \"{{questionId1}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId2}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId3}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId4}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId5}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId6}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId7}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId8}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId9}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId10}}\", \"selectedAnswer\": 0 }\n  ]\n}"
+          "raw": "{\n  \"attemptToken\": \"{{attemptToken}}\",\n  \"answers\": [\n    { \"questionId\": \"{{questionId1}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId2}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId3}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId4}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId5}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId6}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId7}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId8}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId9}}\", \"selectedAnswer\": 0 },\n    { \"questionId\": \"{{questionId10}}\", \"selectedAnswer\": 0 }\n  ]\n}"
         }
       },
       "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const json = pm.response.json();", "if (json.success && json.data?.scoreId) pm.collectionVariables.set('scoreId', json.data.scoreId);"] } }]

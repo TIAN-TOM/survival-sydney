@@ -145,6 +145,13 @@ const swaggerDefinition = {
                 selectedAnswer: { type: 'integer' },
                 correctAnswer: { type: 'integer', nullable: true },
                 isCorrect: { type: 'boolean' },
+                optionOrder: {
+                  type: 'array',
+                  description: 'Original option indexes in the order shown during the attempt.',
+                  minItems: 4,
+                  maxItems: 4,
+                  items: { type: 'integer', minimum: 0, maximum: 3 },
+                },
                 explanation: { type: 'string', nullable: true },
               },
             },
@@ -222,9 +229,22 @@ const swaggerDefinition = {
         summary: 'Start a random fixed 10-question quiz',
         security: [{ bearerAuth: [] }],
         responses: {
-          200: okDataResponse('Ten active questions without correct answers', {
-            type: 'array',
-            items: { $ref: '#/components/schemas/PublicQuestion' },
+          200: okDataResponse('Attempt token and ten active questions without correct answers', {
+            type: 'object',
+            required: ['attemptToken', 'questions'],
+            properties: {
+              attemptToken: {
+                type: 'string',
+                description:
+                  'Signed short-lived attempt token that carries the per-attempt option order.',
+              },
+              questions: {
+                type: 'array',
+                minItems: 10,
+                maxItems: 10,
+                items: { $ref: '#/components/schemas/PublicQuestion' },
+              },
+            },
           }),
           401: failResponse('Authentication required'),
           400: failResponse('Not enough active questions'),
@@ -242,8 +262,12 @@ const swaggerDefinition = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['answers'],
+                required: ['attemptToken', 'answers'],
                 properties: {
+                  attemptToken: {
+                    type: 'string',
+                    description: 'Token returned by GET /quiz/start.',
+                  },
                   answers: {
                     type: 'array',
                     minItems: 10,
@@ -253,6 +277,7 @@ const swaggerDefinition = {
                 },
               },
               example: {
+                attemptToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
                 answers: [
                   { questionId: '507f1f77bcf86cd799439011', selectedAnswer: 0 },
                   { questionId: '507f1f77bcf86cd799439012', selectedAnswer: 1 },
@@ -277,7 +302,8 @@ const swaggerDefinition = {
             review: { $ref: '#/components/schemas/Attempt/properties/review' },
           }),
           400: failResponse('Invalid answers'),
-          401: failResponse('Authentication required'),
+          401: failResponse('Authentication required or attempt token invalid/expired/wrong user'),
+          409: failResponse('Attempt already submitted'),
           403: failResponse('Admins cannot take quizzes.'),
           429: failResponse('Too many quiz submissions. Please wait and try again.')
         }

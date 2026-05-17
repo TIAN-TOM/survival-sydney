@@ -23,7 +23,7 @@ Single-player MERN quiz game with a player quiz flow, Review Mode after completi
 - One answer can be selected per question; submitted answers cannot be changed.
 - Final score is saved with user ID, score, timestamp, and full answer list.
 - Review Mode shows selected answers, correctness, correct answers, and explanations.
-- Leaderboard shows each user's best score, highest first.
+- Leaderboard shows each user's best attempt, highest score first; ties are broken by the earliest attempt timestamp.
 - Past attempts can be viewed from the history page.
 - Admin interface supports question create, edit, delete, active/inactive toggle, and JSON bulk import.
 - Dark mode is persisted in `localStorage`.
@@ -40,7 +40,7 @@ Single-player MERN quiz game with a player quiz flow, Review Mode after completi
 | Backend | Node.js, Express |
 | Database | MongoDB, Mongoose |
 | Auth | bcrypt, JWT |
-| Docs/Tests | Swagger, Postman, Jest, Supertest |
+| Docs/Tests | Swagger, Postman, Jest, Supertest, Vitest, React Testing Library |
 
 ## Setup
 
@@ -157,6 +157,12 @@ After a quiz is submitted, the backend stores the full answer list in the `Score
 
 This project does not implement timed questions, category selection, image-based questions, multiplayer, real-time features, adaptive branching, or alternative scoring schemes.
 
+## Quiz Logic and Attempt Integrity
+
+Question order is randomised per attempt through MongoDB `$sample`. Option order is also generated freshly per attempt; the backend signs the per-question option permutation into a short-lived `attemptToken` returned from `GET /api/quiz/start`. The same token must be sent back to `POST /api/quiz/submit` and is rejected if missing, tampered, expired, bound to a different user, or replayed.
+
+The `attemptToken` TTL is 2 hours, aligned with `JWT_EXPIRES_IN`. This is a security expiry only; it is not a timed-quiz mechanic and does not affect scoring. Review Mode persists the option order to `Score.answers[i].optionOrder` so history and review pages render options in the same order the player originally saw them.
+
 ## Beyond the Specification — Bonus Features
 
 This project includes several additions beyond the minimum A2 requirements. Each item is documented with what was added, why it was added, and how it integrates with the rest of the system, following Ed Discussion #143.
@@ -172,6 +178,12 @@ This project includes several additions beyond the minimum A2 requirements. Each
 - **What:** The backend serves Swagger UI at `/api-docs`, and the repository also includes `docs/postman-collection.json`.
 - **Why:** Swagger supports quick browser inspection, while Postman gives markers a ready-to-run request collection.
 - **How it integrates:** `backend/src/docs/swagger.js` is loaded by `backend/src/app.js`, and the Postman collection mirrors the same auth, quiz, and admin endpoints.
+
+### Signed attempt replay protection
+
+- **What:** Quiz attempts carry a signed `attemptToken` with the exact question IDs and option order shown to the player.
+- **Why:** It prevents client-side answer-key reconstruction, cross-user submission, tampering, and duplicate replay of the same attempt.
+- **How it integrates:** `backend/src/utils/quizAttemptToken.js`, `backend/src/controllers/quiz.controller.js`, and `backend/src/models/Score.js` work together to sign, verify, persist, and enforce unique attempt IDs.
 
 ### Theme transition polish
 
@@ -199,6 +211,8 @@ This project includes several additions beyond the minimum A2 requirements. Each
 | Quiz | `GET /api/quiz/start`, `POST /api/quiz/submit`, `GET /api/quiz/history`, `GET /api/quiz/history/:id`, `GET /api/quiz/leaderboard` |
 | Admin | `GET /api/admin/questions`, `POST /api/admin/questions`, `PUT /api/admin/questions/:id`, `DELETE /api/admin/questions/:id`, `PATCH /api/admin/questions/:id/toggle`, `POST /api/admin/questions/bulk-import` |
 
+Admin accounts are intentionally blocked from player quiz routes: `/api/quiz/start`, `/api/quiz/submit`, `/api/quiz/history`, and `/api/quiz/leaderboard`. The admin responsibility is question management, not gameplay, so the backend enforces this boundary with `forbidAdminQuiz` and the frontend mirrors it with `<ProtectedRoute blockAdmin>`.
+
 Full API documentation is available at:
 
 ```text
@@ -222,7 +236,7 @@ docs/postman-collection.json
 
 ## Git Workflow and Commit Evidence
 
-The project was developed on Sydney GitHub Enterprise using feature branches and pull requests. The assessment-ready branch is `final`; `main` is not the delivery branch.
+The project was developed on Sydney GitHub Enterprise using feature branches and pull requests. The assessment-ready branch is `final-shuffled-answer-tests`; `main` is not the delivery branch.
 
 Markers can inspect the preserved commit history with:
 
@@ -252,6 +266,7 @@ Each individual reflection PDF provides the fuller technical explanation and com
 
 ```bash
 npm test --prefix backend -- --runInBand
+npm test --prefix frontend
 npm run build --prefix frontend
 ```
 
