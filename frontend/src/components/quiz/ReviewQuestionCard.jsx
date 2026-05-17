@@ -42,20 +42,19 @@ export default function ReviewQuestionCard({ item, index }) {
   return (
     <article
       id={`rvc-${index}`}
-      className={`review-q-card review-question-card ${isCorrect ? 'review-q-card--correct' : 'review-q-card--wrong'}`}
+      className={`hist-attempt-card review-q-card ${isCorrect ? 'review-q-card--correct' : 'review-q-card--wrong'}`}
       style={{ '--motion-stagger-index': index }}
     >
-      <header className="review-q-head">
-        <div className="review-q-head-main">
-          <span className="review-q-num">
-            <span className="review-q-num-label">Question</span>
-            <span className="review-q-num-value">{index + 1}</span>
-          </span>
-          <span className="review-q-cat">{categoryLabel}</span>
-        </div>
-        <span className={`review-q-verdict ${isCorrect ? 'is-ok' : 'is-bad'}`}>
-          {isCorrect ? 'Correct' : 'Incorrect'}
+      <header className="hist-attempt-head">
+        <span className="hist-attempt-no" aria-label={`Question ${index + 1}`}>
+          {index + 1}
         </span>
+        <h2 className="hist-attempt-title">{categoryLabel}</h2>
+        <div className="hist-attempt-badges">
+          <span className={`hist-badge ${isCorrect ? '' : 'hist-badge--wrong'}`}>
+            {isCorrect ? 'Correct' : 'Incorrect'}
+          </span>
+        </div>
       </header>
 
       <div className="review-q-block review-q-block--question">

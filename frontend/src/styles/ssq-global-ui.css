@@ -611,6 +611,7 @@ html[data-theme='dark'] .quiz-flow-scope .result-actions--finale .result-actions
 
 .quiz-flow-scope .hist-stat-card,
 .quiz-flow-scope .hist-attempt-card,
+.quiz-flow-scope .review-q-card,
 .quiz-flow-scope .hist-empty {
   border-radius: var(--ssq-radius-card);
   border-width: 2px;
@@ -626,14 +627,9 @@ html[data-theme='dark'] .quiz-flow-scope .result-actions--finale .result-actions
     linear-gradient(165deg, #fffdf8 0%, #f8ebd7 100%);
 }
 
-.quiz-flow-scope .hist-attempt-card {
-  background:
-    radial-gradient(ellipse 95% 48% at 50% 0%, rgba(255, 248, 237, 0.42), transparent 55%),
-    linear-gradient(180deg, #fffaf3 0%, #f8ebd7 52%, #f3e4cf 100%);
-}
-
 html[data-theme='dark'] .quiz-flow-scope .hist-stat-card,
 html[data-theme='dark'] .quiz-flow-scope .hist-attempt-card,
+html[data-theme='dark'] .quiz-flow-scope .review-q-card,
 html[data-theme='dark'] .quiz-flow-scope .hist-empty {
   border-color: color-mix(in srgb, var(--gold) 48%, transparent);
 }
@@ -644,14 +640,9 @@ html[data-theme='dark'] .quiz-flow-scope .hist-stat-card {
     linear-gradient(165deg, rgba(38, 32, 54, 0.98) 0%, rgba(22, 18, 34, 0.99) 100%);
 }
 
-html[data-theme='dark'] .quiz-flow-scope .hist-attempt-card {
-  background:
-    radial-gradient(ellipse 100% 48% at 50% 0%, rgba(201, 139, 71, 0.08), transparent 52%),
-    linear-gradient(180deg, rgba(42, 36, 58, 0.98) 0%, rgba(22, 18, 34, 0.99) 100%);
-}
-
 .quiz-flow-scope .hist-stat-card:hover,
-.quiz-flow-scope .hist-attempt-card:hover {
+.quiz-flow-scope .hist-attempt-card:hover,
+.quiz-flow-scope .review-q-card:hover {
   box-shadow: var(--ssq-shadow-card-hover), var(--ssq-shadow-inset-parchment);
 }
 
@@ -668,54 +659,8 @@ html[data-theme='dark'] .quiz-flow-scope .hist-empty {
     linear-gradient(180deg, rgba(42, 36, 58, 0.95), rgba(20, 16, 30, 0.98));
 }
 
-.quiz-flow-scope .hist-attempt-head {
-  padding: 1.1rem 1.35rem 1.05rem;
-}
-
-.quiz-flow-scope .hist-attempt-foot {
-  padding: 1rem 1.35rem 1.2rem;
-}
-
 .quiz-flow-scope .hist-attempt-no {
   border-radius: var(--ssq-radius-input);
-}
-
-.quiz-flow-scope .review-q-card {
-  border-radius: var(--ssq-radius-card) !important;
-  border-width: 2px !important;
-  border-style: solid !important;
-  border-color: color-mix(in srgb, var(--gold2, #9c5b2e) 50%, var(--sq-btn-a) 50%) !important;
-  padding: 0.15rem 0.15rem 0.05rem;
-  background:
-    radial-gradient(ellipse 95% 58% at 50% 0%, rgba(255, 248, 237, 0.48), transparent 56%),
-    linear-gradient(180deg, #fffbf6 0%, #f8ebd7 100%) !important;
-  box-shadow: var(--ssq-archival-stack) !important;
-}
-
-html[data-theme='dark'] .quiz-flow-scope .review-q-card {
-  background:
-    radial-gradient(ellipse 95% 52% at 50% 0%, rgba(201, 139, 71, 0.1), transparent 54%),
-    linear-gradient(180deg, rgba(44, 38, 62, 0.98) 0%, rgba(22, 18, 36, 0.99) 100%) !important;
-}
-
-.quiz-flow-scope .review-q-card:hover {
-  box-shadow: var(--ssq-shadow-card-hover), var(--ssq-shadow-inset-parchment) !important;
-}
-
-.quiz-flow-scope .review-q-head {
-  padding: 0.85rem 1.25rem 0.88rem;
-}
-
-.quiz-flow-scope .review-q-block {
-  padding: 0.88rem 1.28rem 0.95rem;
-}
-
-.quiz-flow-scope .review-q-block--choices {
-  padding: 0.62rem 1.22rem 0.58rem;
-}
-
-.quiz-flow-scope .quiz-review-page .review-cards {
-  gap: 1.2rem;
 }
 
 /* Options — align with control radius */

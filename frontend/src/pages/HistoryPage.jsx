@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import api from '../api/api.js';
-import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
+import LearningDashboardLayout from '../components/LearningDashboardLayout.jsx';
 import { formatReviewCategory } from '../components/quiz/reviewFormatUtils.js';
 import { useQuiz } from '../contexts/QuizContext.jsx';
 
@@ -135,124 +135,108 @@ function HistoryPage() {
 
   if (loading) {
     return (
-      <div className="quiz-flow-scope quiz-review-shell hist-learning-page">
-        <QuizWorldBackground usePhotoBackdrop />
-        <main className="review-page quiz-review-page">
-          <div className="rv-center">
-            <p className="loading-state ld-page-lead">Loading your archive…</p>
-          </div>
-        </main>
-      </div>
+      <LearningDashboardLayout>
+        <p className="loading-state ld-page-lead">Loading your archive…</p>
+      </LearningDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="quiz-flow-scope quiz-review-shell hist-learning-page">
-        <QuizWorldBackground usePhotoBackdrop />
-        <main className="review-page quiz-review-page">
-          <div className="rv-center">
-            <p className="error-message">{error}</p>
-          </div>
-        </main>
-      </div>
+      <LearningDashboardLayout>
+        <p className="error-message">{error}</p>
+      </LearningDashboardLayout>
     );
   }
 
   return (
-    <div className="quiz-flow-scope quiz-review-shell hist-learning-page">
-      <QuizWorldBackground usePhotoBackdrop />
+    <LearningDashboardLayout>
+      <header>
+        <h1 className="ld-page-title">
+          Survival
+          {' '}
+          <em>Archive</em>
+        </h1>
+        <p className="ld-page-lead">
+          A parchment record of every run through Sydney — scores, topics, and deep review when you are ready to
+          learn from each attempt.
+        </p>
+      </header>
 
-      <main className="review-page quiz-review-page">
-        <div className="rv-center">
-          <header>
-            <h1 className="ld-page-title">
-              Survival
+      {history.length > 0 && stats ? (
+        <section className="hist-stats-row" aria-label="Progress summary">
+          <article className="hist-stat-card hist-stat-card--total" style={{ '--motion-stagger-index': 0 }}>
+            <span className="hist-stat-k">Total attempts</span>
+            <span className="hist-stat-v">{stats.total}</span>
+            <span className="hist-stat-sub">Runs saved to your archive</span>
+          </article>
+          <article className="hist-stat-card hist-stat-card--best" style={{ '--motion-stagger-index': 1 }}>
+            <span className="hist-stat-k">Best performance</span>
+            <span className="hist-stat-v">
+              {stats.bestScore}/{stats.bestTotal}
+            </span>
+            <span className="hist-stat-sub">
+              Highest accuracy:
               {' '}
-              <em>Archive</em>
-            </h1>
-            <p className="ld-page-lead">
-              A parchment record of every run through Sydney — scores, topics, and deep review when you are ready to
-              learn from each attempt.
-            </p>
-          </header>
+              {stats.bestPct}
+              %
+            </span>
+          </article>
+          <article className="hist-stat-card hist-stat-card--latest" style={{ '--motion-stagger-index': 2 }}>
+            <span className="hist-stat-k">Latest run</span>
+            <span className="hist-stat-v" style={{ fontSize: '1.05rem' }}>
+              {new Date(history[0].createdAt).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+              })}
+            </span>
+            <span className="hist-stat-sub">{stats.latestLabel}</span>
+          </article>
+        </section>
+      ) : null}
 
-          {history.length > 0 && stats ? (
-            <section className="hist-stats-row" aria-label="Progress summary">
-              <article className="hist-stat-card hist-stat-card--total" style={{ '--motion-stagger-index': 0 }}>
-                <span className="hist-stat-k">Total attempts</span>
-                <span className="hist-stat-v">{stats.total}</span>
-                <span className="hist-stat-sub">Runs saved to your archive</span>
-              </article>
-              <article className="hist-stat-card hist-stat-card--best" style={{ '--motion-stagger-index': 1 }}>
-                <span className="hist-stat-k">Best performance</span>
-                <span className="hist-stat-v">
-                  {stats.bestScore}/{stats.bestTotal}
-                </span>
-                <span className="hist-stat-sub">
-                  Highest accuracy:
-                  {' '}
-                  {stats.bestPct}
-                  %
-                </span>
-              </article>
-              <article className="hist-stat-card hist-stat-card--latest" style={{ '--motion-stagger-index': 2 }}>
-                <span className="hist-stat-k">Latest run</span>
-                <span className="hist-stat-v" style={{ fontSize: '1.05rem' }}>
-                  {new Date(history[0].createdAt).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </span>
-                <span className="hist-stat-sub">{stats.latestLabel}</span>
-              </article>
-            </section>
-          ) : null}
-
-          {history.length === 0 ? (
-            <div className="hist-empty" role="status">
-              <div className="hist-empty-illu" aria-hidden="true" />
-              <h2>No survival records yet</h2>
-              <p>Your first journey through the quiz will appear here as a scored parchment — ready for review whenever you return.</p>
-              <button type="button" className="hist-empty-cta" onClick={startNewRun}>
-                Begin first quiz
-              </button>
-            </div>
-          ) : (
-            <>
-              <section className="hist-attempts" aria-label="Past attempts">
-                {history.map((attempt, index) => {
-                  const attemptNo = history.length - index;
-                  return (
-                    <HistoryAttemptCard
-                      key={attempt._id}
-                      attempt={attempt}
-                      attemptNo={attemptNo}
-                      navigate={navigate}
-                      staggerIndex={index}
-                    />
-                  );
-                })}
-              </section>
-              <p className="ld-meta-line">
-                <strong>Tip:</strong>
-                {' '}
-                open any attempt for the same structured debrief as Trial Debrief — your pick, the keyed answer, and
-                scholar notes.
-              </p>
-              <div className="review-footer-actions">
-                <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--primary" onClick={startNewRun}>
-                  New run
-                </button>
-                <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--ghost" onClick={goHome}>
-                  Home
-                </button>
-              </div>
-            </>
-          )}
+      {history.length === 0 ? (
+        <div className="hist-empty" role="status">
+          <div className="hist-empty-illu" aria-hidden="true" />
+          <h2>No survival records yet</h2>
+          <p>Your first journey through the quiz will appear here as a scored parchment — ready for review whenever you return.</p>
+          <button type="button" className="hist-empty-cta" onClick={startNewRun}>
+            Begin first quiz
+          </button>
         </div>
-      </main>
-    </div>
+      ) : (
+        <>
+          <section className="hist-attempts" aria-label="Past attempts">
+            {history.map((attempt, index) => {
+              const attemptNo = history.length - index;
+              return (
+                <HistoryAttemptCard
+                  key={attempt._id}
+                  attempt={attempt}
+                  attemptNo={attemptNo}
+                  navigate={navigate}
+                  staggerIndex={index}
+                />
+              );
+            })}
+          </section>
+          <p className="ld-meta-line">
+            <strong>Tip:</strong>
+            {' '}
+            open any attempt for the same structured debrief as Trial Debrief — your pick, the keyed answer, and
+            scholar notes.
+          </p>
+          <div className="review-footer-actions">
+            <button type="button" className="btn-rv-again ld-footer-btn ld-footer-btn--primary" onClick={startNewRun}>
+              New run
+            </button>
+            <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--ghost" onClick={goHome}>
+              Home
+            </button>
+          </div>
+        </>
+      )}
+    </LearningDashboardLayout>
   );
 }
 

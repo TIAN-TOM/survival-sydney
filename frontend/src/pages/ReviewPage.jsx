@@ -3,8 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import api from '../api/api.js';
 import GameplayHudPortal from '../components/GameplayHudPortal.jsx';
+import LearningDashboardLayout from '../components/LearningDashboardLayout.jsx';
 import ReviewQuestionCard from '../components/quiz/ReviewQuestionCard.jsx';
-import QuizWorldBackground from '../components/quiz/QuizWorldBackground.jsx';
 import { useQuiz } from '../contexts/QuizContext.jsx';
 
 function ReviewArchiveHudStrip({ attempt, activeDot, onJump, onArchive }) {
@@ -87,96 +87,77 @@ function ReviewPage() {
 
   if (loading) {
     return (
-      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
-        <QuizWorldBackground usePhotoBackdrop />
-        <main className="review-page quiz-review-page">
-          <div className="rv-center">
-            <p className="loading-state ld-page-lead">Opening your debrief…</p>
-          </div>
-        </main>
-      </div>
+      <LearningDashboardLayout>
+        <p className="loading-state ld-page-lead">Opening your debrief…</p>
+      </LearningDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
-        <QuizWorldBackground usePhotoBackdrop />
-        <main className="review-page quiz-review-page">
-          <div className="rv-center">
-            <p className="error-message">{error}</p>
-          </div>
-        </main>
-      </div>
+      <LearningDashboardLayout>
+        <p className="error-message">{error}</p>
+      </LearningDashboardLayout>
     );
   }
 
   if (!attempt) {
     return (
-      <div className="quiz-flow-scope quiz-review-shell review-learning-page">
-        <QuizWorldBackground usePhotoBackdrop />
-        <main className="review-page quiz-review-page">
-          <div className="rv-center">
-            <p className="empty-state">No attempt found.</p>
-          </div>
-        </main>
-      </div>
+      <LearningDashboardLayout>
+        <p className="empty-state">No attempt found.</p>
+      </LearningDashboardLayout>
     );
   }
 
   return (
-    <div className="quiz-flow-scope quiz-review-shell review-learning-page">
-      <GameplayHudPortal mode="review">
-        <ReviewArchiveHudStrip
-          attempt={attempt}
-          activeDot={activeDot}
-          onJump={jumpTo}
-          onArchive={() => navigate('/history')}
-        />
-      </GameplayHudPortal>
+    <LearningDashboardLayout
+      headerExtras={(
+        <GameplayHudPortal mode="review">
+          <ReviewArchiveHudStrip
+            attempt={attempt}
+            activeDot={activeDot}
+            onJump={jumpTo}
+            onArchive={() => navigate('/history')}
+          />
+        </GameplayHudPortal>
+      )}
+    >
+      <header>
+        <h1 className="ld-page-title">
+          Learning
+          {' '}
+          <em>Debrief</em>
+        </h1>
+        <p className="ld-page-lead">
+          Each card walks the scenario, your choice, the keyed response, and a scholar note. Wrong items open the
+          note automatically so you can repair understanding first.
+        </p>
+        <p className="ld-meta-line">
+          <strong>Completed</strong>
+          {' '}
+          {new Date(attempt.createdAt).toLocaleString()}
+        </p>
+      </header>
 
-      <QuizWorldBackground usePhotoBackdrop />
+      <section className="hist-attempts review-cards" aria-label="Question debrief">
+        {attempt.review.map((item, index) => (
+          <ReviewQuestionCard key={item.questionId || index} item={item} index={index} />
+        ))}
+      </section>
 
-      <main className="review-page quiz-review-page">
-        <div className="rv-center">
-          <header>
-            <h1 className="ld-page-title">
-              Learning
-              {' '}
-              <em>Debrief</em>
-            </h1>
-            <p className="ld-page-lead">
-              Each card walks the scenario, your choice, the keyed response, and a scholar note. Wrong items open the
-              note automatically so you can repair understanding first.
-            </p>
-            <p className="ld-meta-line">
-              <strong>Completed</strong>
-              {' '}
-              {new Date(attempt.createdAt).toLocaleString()}
-            </p>
-          </header>
-
-          <div className="review-cards">
-            {attempt.review.map((item, index) => (
-              <ReviewQuestionCard key={item.questionId || index} item={item} index={index} />
-            ))}
-          </div>
-
-          <div className="review-footer-actions">
-            <button
-              type="button"
-              className="btn-rv-again ld-footer-btn ld-footer-btn--ghost"
-              onClick={() => navigate('/history')}
-            >
-              ← Archive
-            </button>
-            <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--primary" onClick={startNewRun}>
-              New run
-            </button>
-          </div>
-        </div>
-      </main>
-    </div>
+      <div className="review-footer-actions">
+        <button type="button" className="btn-debrief ld-footer-btn ld-footer-btn--primary" onClick={startNewRun}>
+          New run
+        </button>
+        <button
+          type="button"
+          className="btn-rv-again ld-footer-btn ld-footer-btn--ghost"
+          onClick={() => navigate('/history')}
+        >
+          ← Archive
+        </button>
+      </div>
+    </LearningDashboardLayout>
   );
 }
 

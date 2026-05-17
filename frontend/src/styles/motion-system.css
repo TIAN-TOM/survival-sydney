@@ -43,6 +43,16 @@
   }
 }
 
+/* Photo-backdrop routes: no transform on shell — transform traps position:fixed sky layers */
+@keyframes motion-page-in-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes motion-reveal-in {
   from {
     opacity: 0;
@@ -89,6 +99,12 @@
 @media (prefers-reduced-motion: no-preference) {
   .motion-page-enter {
     animation: motion-page-in var(--motion-duration-page) var(--motion-ease-out) both;
+  }
+
+  .motion-context--history.motion-page-enter,
+  .motion-context--review.motion-page-enter,
+  .motion-context--leaderboard.motion-page-enter {
+    animation: motion-page-in-fade var(--motion-duration-page) var(--motion-ease-out) both;
   }
 }
 

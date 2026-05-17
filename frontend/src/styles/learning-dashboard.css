@@ -3,29 +3,19 @@
  * Magical university parchment; scoped under .quiz-flow-scope.
  */
 
-.quiz-flow-scope.hist-learning-page .review-page,
-.quiz-flow-scope.review-learning-page .review-page {
+.quiz-flow-scope.hist-learning-page .review-page {
   position: relative;
   padding-top: 1.5rem;
   padding-bottom: 3rem;
   background: transparent;
 }
 
-.quiz-flow-scope .quiz-review-page .review-cards {
-  gap: 1.05rem;
-}
-
-.quiz-flow-scope.hist-learning-page .rv-center,
-.quiz-flow-scope .review-learning-page .rv-center {
+.quiz-flow-scope.hist-learning-page .rv-center {
   position: relative;
   z-index: 1;
+  width: 100%;
   max-width: min(960px, 100%);
-}
-
-.quiz-flow-scope.review-learning-page .rv-center {
-  position: relative;
-  z-index: 1;
-  max-width: min(1080px, 100%);
+  margin-inline: auto;
 }
 
 /* ——— Typography: titles ——— */
@@ -57,12 +47,6 @@
   font-size: 1.08rem;
   font-weight: 500;
   line-height: 1.6;
-}
-
-.quiz-flow-scope .quiz-review-page .ld-page-lead {
-  margin: 0 0 1.1rem;
-  max-width: 58ch;
-  line-height: 1.55;
 }
 
 .quiz-flow-scope .ld-meta-line {
@@ -175,14 +159,16 @@ html[data-theme='dark'] .quiz-flow-scope .hist-stat-card {
   line-height: 1.45;
 }
 
-/* ——— History: attempt cards ——— */
-.quiz-flow-scope .hist-attempts {
+/* ——— History + debrief card stacks ——— */
+.quiz-flow-scope .hist-attempts,
+.quiz-flow-scope .review-cards {
   display: flex;
   flex-direction: column;
   gap: 1.35rem;
 }
 
-.quiz-flow-scope .hist-attempt-card {
+.quiz-flow-scope .hist-attempt-card,
+.quiz-flow-scope .review-q-card {
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -199,16 +185,22 @@ html[data-theme='dark'] .quiz-flow-scope .hist-stat-card {
     transform 0.25s ease;
 }
 
-html[data-theme='dark'] .quiz-flow-scope .hist-attempt-card {
+html[data-theme='dark'] .quiz-flow-scope .hist-attempt-card,
+html[data-theme='dark'] .quiz-flow-scope .review-q-card {
   background: linear-gradient(180deg, rgba(40, 34, 58, 0.96) 0%, rgba(22, 18, 34, 0.98) 100%);
   border-color: color-mix(in srgb, var(--gold) 40%, transparent);
 }
 
-.quiz-flow-scope .hist-attempt-card:hover {
+.quiz-flow-scope .hist-attempt-card:hover,
+.quiz-flow-scope .review-q-card:hover {
   transform: translateY(-2px);
   box-shadow:
     0 16px 38px rgba(60, 40, 20, 0.14),
     0 3px 10px rgba(60, 40, 20, 0.1);
+}
+
+.quiz-flow-scope .review-q-card {
+  scroll-margin-top: calc(var(--layout-under-header-h) + 12px);
 }
 
 .quiz-flow-scope .hist-attempt-head {
@@ -282,6 +274,16 @@ html[data-theme='dark'] .quiz-flow-scope .hist-badge {
   border-color: #8a5228;
   color: #fff8ed;
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.quiz-flow-scope .hist-badge--wrong {
+  border-color: color-mix(in srgb, #c95a4a 45%, transparent);
+  background: rgba(201, 90, 74, 0.1);
+  color: color-mix(in srgb, #a33d2f 82%, var(--mut) 18%);
+}
+
+html[data-theme='dark'] .quiz-flow-scope .hist-badge--wrong {
+  color: color-mix(in srgb, #f0a090 75%, var(--mut) 25%);
 }
 
 .quiz-flow-scope .hist-attempt-body {
@@ -518,8 +520,6 @@ html[data-theme='dark'] .quiz-flow-scope .hist-empty {
 }
 
 /* ——— Footer actions (History + Review) ——— */
-.quiz-flow-scope.review-learning-page .review-footer-actions,
-.quiz-flow-scope .review-learning-page .review-footer-actions,
 .quiz-flow-scope.hist-learning-page .review-footer-actions {
   margin-top: 2rem;
 }
@@ -570,39 +570,7 @@ html[data-theme='dark'] .quiz-flow-scope .ld-footer-btn--ghost {
   filter: brightness(1.04);
 }
 
-/* ——— Review question card ——— */
-.quiz-flow-scope .review-q-card {
-  scroll-margin-top: calc(var(--layout-under-header-h) + 12px);
-  overflow: hidden;
-  border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--bd) 80%, var(--gold2, #9c5b2e));
-  background: linear-gradient(180deg, #fff8ed 0%, #f8ebd7 100%);
-  box-shadow:
-    0 12px 30px rgba(60, 40, 20, 0.1),
-    0 2px 8px rgba(60, 40, 20, 0.08);
-  transition:
-    border-color 0.25s ease,
-    background 0.25s ease,
-    box-shadow 0.25s ease,
-    transform 0.25s ease;
-}
-
-.quiz-flow-scope .quiz-review-page .review-q-card {
-  scroll-margin-top: calc(var(--layout-under-header-h) + 12px);
-}
-
-.quiz-flow-scope .review-q-card:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    0 14px 32px rgba(60, 40, 20, 0.11),
-    0 2px 8px rgba(60, 40, 20, 0.08);
-}
-
-html[data-theme='dark'] .quiz-flow-scope .review-q-card {
-  background: linear-gradient(180deg, rgba(44, 38, 62, 0.98) 0%, rgba(24, 20, 36, 0.99) 100%);
-  border-color: color-mix(in srgb, var(--gold) 35%, var(--bd));
-}
-
+/* ——— Review question card (content inside shared archive shell) ——— */
 .quiz-flow-scope .review-q-card--correct {
   border-color: color-mix(in srgb, #3d8b5c 55%, #9c5b2e 20%);
 }
@@ -611,104 +579,8 @@ html[data-theme='dark'] .quiz-flow-scope .review-q-card {
   border-color: color-mix(in srgb, #c95a4a 55%, #9c5b2e 15%);
 }
 
-.quiz-flow-scope .review-q-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.45rem 0.85rem;
-  padding: 0.68rem 1.1rem 0.72rem;
-  border-bottom: 1px dashed color-mix(in srgb, var(--gold2, #9c5b2e) 30%, transparent);
-}
-
-.quiz-flow-scope .review-q-head-main {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.42rem 0.62rem;
-  min-width: 0;
-}
-
-.quiz-flow-scope .review-q-num {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.38rem;
-}
-
-.quiz-flow-scope .review-q-num-label {
-  color: var(--mut);
-  font-family: var(--font-ui) !important;
-  font-size: 0.64rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.quiz-flow-scope .review-q-num-value {
-  color: var(--sq-txt);
-  font-family: var(--font-editorial) !important;
-  font-size: clamp(1.38rem, 2.85vw, 1.62rem);
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1;
-}
-
-html[data-theme='dark'] .quiz-flow-scope .review-q-num-value {
-  color: color-mix(in srgb, var(--sq-txt) 94%, #f5e6c8 6%);
-}
-
-.quiz-flow-scope .review-q-cat {
-  padding: 0.2rem 0.62rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gold2, #9c5b2e) 35%, transparent);
-  background: rgba(255, 248, 237, 0.55);
-  color: var(--gold2, #9c5b2e);
-  font-family: var(--font-ui) !important;
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
-html[data-theme='dark'] .quiz-flow-scope .review-q-cat {
-  background: rgba(201, 139, 71, 0.12);
-  color: var(--gold3, #dfc08a);
-}
-
-.quiz-flow-scope .review-q-verdict {
-  margin-left: auto;
-  padding: 0.16rem 0.58rem;
-  border-radius: 999px;
-  font-family: var(--font-ui) !important;
-  font-size: 0.52rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  opacity: 0.88;
-}
-
-.quiz-flow-scope .review-q-verdict.is-ok {
-  border: 1px solid color-mix(in srgb, #3d8b5c 42%, transparent);
-  background: rgba(61, 139, 92, 0.08);
-  color: color-mix(in srgb, #2d6b48 82%, var(--mut) 18%);
-}
-
-html[data-theme='dark'] .quiz-flow-scope .review-q-verdict.is-ok {
-  color: color-mix(in srgb, #7ecf9f 75%, var(--mut) 25%);
-}
-
-.quiz-flow-scope .review-q-verdict.is-bad {
-  border: 1px solid color-mix(in srgb, #c95a4a 42%, transparent);
-  background: rgba(201, 90, 74, 0.07);
-  color: color-mix(in srgb, #a33d2f 78%, var(--mut) 22%);
-}
-
-html[data-theme='dark'] .quiz-flow-scope .review-q-verdict.is-bad {
-  color: color-mix(in srgb, #f0a090 72%, var(--mut) 28%);
-}
-
 .quiz-flow-scope .review-q-block {
-  padding: 0.72rem 1.12rem 0.78rem;
+  padding: 1rem 1.2rem 1.1rem;
 }
 
 .quiz-flow-scope .review-q-block--question {
@@ -740,7 +612,7 @@ html[data-theme='dark'] .quiz-flow-scope .review-q-verdict.is-bad {
 }
 
 .quiz-flow-scope .review-q-block--choices {
-  padding: 0.52rem 1.05rem 0.48rem;
+  padding: 0.85rem 1.2rem 1rem;
   border-bottom: 1px solid color-mix(in srgb, var(--gold2, #9c5b2e) 18%, transparent);
 }
 

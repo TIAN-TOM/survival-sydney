@@ -3,7 +3,7 @@
  * Premium parchment / magical university polish (scoped under .quiz-screen).
  */
 
-/* ── Full-bleed day/night photos (all /quiz flow except gate + start homepage) ── */
+/* ── Full-bleed day/night photos (quiz play, history, debrief, leaderboard) ── */
 .quiz-flow-scope .sq-world-bg.sq-world-bg--photo {
   background-color: #0e0818;
   background-image:
@@ -41,6 +41,50 @@ html[data-theme='dark'] .quiz-flow-scope .sq-world-bg.sq-world-bg--photo {
   background-repeat: no-repeat, no-repeat;
   background-position: center center, center center;
   background-size: cover, cover;
+}
+
+/*
+ * History / debrief / leaderboard: photo from navbar bottom through viewport —
+ * not only the scroll body (which sits below the portaled review HUD strip).
+ */
+.quiz-flow-scope.hist-learning-page .sq-world-bg.sq-world-bg--photo,
+.quiz-flow-scope.leaderboard-page .sq-world-bg.sq-world-bg--photo {
+  position: fixed;
+  top: var(--navbar-h);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  min-height: unset;
+  height: auto;
+  z-index: 0;
+}
+
+/* Review debrief HUD overlays the photo — keep strip readable, not a solid band */
+html[data-theme='light']
+  body:has(.hist-learning-page > .sq-world-bg--photo)
+  .app-layout__header
+  .gameplay-hud-slot
+  .review-progress-strip {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 245, 0.12) 0%,
+    rgba(247, 241, 227, 0.28) 100%
+  );
+  border-bottom-color: color-mix(in srgb, var(--gold2, #9c5b2e) 28%, transparent);
+}
+
+html[data-theme='dark']
+  body:has(.hist-learning-page > .sq-world-bg--photo)
+  .app-layout__header
+  .gameplay-hud-slot
+  .review-progress-strip {
+  background: linear-gradient(
+    180deg,
+    rgba(12, 10, 20, 0.2) 0%,
+    rgba(22, 18, 32, 0.42) 100%
+  );
+  border-bottom-color: color-mix(in srgb, var(--gold, #c98b47) 22%, transparent);
 }
 
 .quiz-flow-scope .sq-world-bg.sq-world-bg--photo::after {

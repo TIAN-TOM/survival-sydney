@@ -338,18 +338,6 @@ html[data-theme='light'] .quiz-flow-scope .start-wizard__tagline {
   transform: translateY(-1px);
 }
 
-.quiz-flow-scope .review-question-card.q-card.framed {
-  transition:
-    box-shadow 0.28s ease,
-    border-color 0.25s ease;
-}
-
-.quiz-flow-scope .review-question-card.q-card.framed:hover {
-  box-shadow:
-    0 5px 0 rgba(0, 0, 0, 0.36),
-    0 14px 40px rgba(74, 52, 34, 0.08);
-}
-
 /* Explanation panel — reveal on inner content */
 .quiz-flow-scope .rvc-exp-panel.open .rvc-exp-panel-inner {
   animation: rvc-slide-down 0.42s cubic-bezier(0.22, 1, 0.36, 1);
