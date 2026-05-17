@@ -215,7 +215,7 @@ const getAttemptDetail = async (req, res, next) => {
     });
 
     if (!attempt) {
-      return res.status(404).json(fail('Attempt not found'));
+      return res.status(404).json(fail('Attempt not found', 404));
     }
 
     const questionIds = attempt.answers.map(a => a.questionId);
