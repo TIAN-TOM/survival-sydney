@@ -18,12 +18,13 @@ Single-player MERN quiz game with a player quiz flow, Review Mode after completi
 ## Features
 
 - User registration, login, logout, and JWT-based protected routes.
-- Player quiz flow using 10 randomly selected active questions.
+- Player quiz flow: 10 random active questions per attempt; option order shuffled per question.
 - Each question has exactly four options and one correct answer.
-- One answer can be selected per question; submitted answers cannot be changed.
+- One answer per question; selecting locks the choice and auto-advances; answers cannot be changed after submit.
+- Submit requires the signed `attemptToken` from start (user-bound question set and option order; replay-protected).
 - Final score is saved with user ID, score, timestamp, and full answer list.
-- Review Mode shows selected answers, correctness, correct answers, and explanations.
-- Leaderboard shows each user's best attempt, highest score first; ties are broken by the earliest attempt timestamp.
+- Review Mode shows answers and explanations; wrong items expand by default, correct items stay collapsed.
+- Leaderboard shows the top 50 players ranked by each user's best score; when scores tie, the player who first achieved that score on an attempt ranks higher.
 - Past attempts can be viewed from the history page.
 - Admin interface supports question create, edit, delete, active/inactive toggle, and JSON bulk import.
 - Dark mode is persisted in `localStorage`.
