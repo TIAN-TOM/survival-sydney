@@ -24,7 +24,7 @@ Single-player MERN quiz game with a player quiz flow, Review Mode after completi
 - Final score is saved with user ID, score, timestamp, and full answer list.
 - Review Mode shows selected answers, correctness, correct answers, and explanations.
 - Leaderboard shows each user's best attempt, highest score first; ties are broken by the earliest attempt timestamp.
-- Past attempts can be viewed from the history page.
+- Past attempts can be opened from the history page into the same Review Mode interface used after submission.
 - Admin interface supports question create, edit, delete, active/inactive toggle, and JSON bulk import.
 - Dark mode is persisted in `localStorage`.
 - Backend uses response envelope format: `{ success, data?, error? }`.
@@ -58,22 +58,17 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Example backend `.env`:
+Environment variables:
 
-```env
-MONGODB_URI=mongodb://localhost:27017/comp5347_quiz
-JWT_SECRET=replace-with-a-long-secret
-JWT_EXPIRES_IN=2h
-BCRYPT_ROUNDS=10
-CLIENT_ORIGIN=http://localhost:5173
-PORT=5001
-```
-
-Example frontend `.env`:
-
-```env
-VITE_API_BASE_URL=http://localhost:5001/api
-```
+| File | Variable | Required | Default | Purpose |
+|---|---|---:|---|---|
+| `backend/.env` | `MONGODB_URI` | No | `mongodb://localhost:27017/comp5347_quiz` | MongoDB connection string. |
+| `backend/.env` | `JWT_SECRET` | Yes | - | JWT signing secret; backend startup fails outside test mode if missing. |
+| `backend/.env` | `JWT_EXPIRES_IN` | No | `2h` | Login JWT lifetime. |
+| `backend/.env` | `BCRYPT_ROUNDS` | No | `10` | Password hashing strength. |
+| `backend/.env` | `CLIENT_ORIGIN` | No | `http://localhost:5173` | Allowed frontend origin for CORS. |
+| `backend/.env` | `PORT` | No | `5001` | Backend HTTP port. |
+| `frontend/.env` | `VITE_API_BASE_URL` | No | `http://localhost:5001/api` | Frontend Axios API base URL. |
 
 ### 3. Start MongoDB
 
@@ -127,11 +122,70 @@ npm run demo:stop
 
 ```mermaid
 flowchart LR
-  React[React Frontend] --> API[Express REST API]
-  API --> Auth[JWT + Role Middleware]
-  API --> Controllers[Controllers]
-  Controllers --> Models[Mongoose Models]
-  Models --> MongoDB[(MongoDB)]
+  subgraph Clients
+    Guest[Guest<br/>register / login]
+    Player[Player UI<br/>QuizContext + useReducer]
+    Admin[Admin UI<br/>/bosscoming]
+  end
+
+  subgraph Frontend["React + Vite frontend"]
+    AuthCtx[AuthContext<br/>JWT in localStorage]
+    QuizCtx[QuizContext<br/>attempt state]
+    AdminPage[AdminPage<br/>question management]
+  end
+
+  subgraph API["Express API<br/>helmet + cors + mongo-sanitize"]
+    AuthR["/api/auth routes<br/>login / register / me"]
+    QuizR["/api/quiz routes<br/>forbidAdminQuiz + rate limit"]
+    AdminR["/api/admin routes<br/>auth + adminMiddleware"]
+    AuthMw[auth.middleware<br/>Bearer JWT + user lookup]
+    QuizCtl[quiz.controller<br/>start / submit / history / leaderboard]
+    AdminCtl[admin.controller<br/>CRUD / toggle / bulk import]
+  end
+
+  subgraph Data["Mongoose models"]
+    User[(User)]
+    Question[(Question)]
+    Score[(Score)]
+  end
+
+  subgraph Owners["Subsystem ownership"]
+    SubA[Subsystem A<br/>Auth + RBAC]
+    SubB[Subsystem B<br/>Quiz + Review]
+    SubC[Subsystem C<br/>Admin CRUD]
+    SubD[Subsystem D<br/>Integration + docs + tests]
+  end
+
+  Guest --> AuthCtx
+  Player --> AuthCtx
+  Player --> QuizCtx
+  Admin --> AuthCtx
+  Admin --> AdminPage
+
+  AuthCtx --> AuthR
+  QuizCtx --> QuizR
+  AdminPage --> AdminR
+
+  AuthR --> AuthMw
+  QuizR --> AuthMw
+  AdminR --> AuthMw
+  AuthMw --> User
+
+  QuizR -->|start returns signed attemptToken| QuizCtl
+  QuizCtl -->|submit verifies attemptToken + answers| Question
+  QuizCtl --> Score
+  AdminR --> AdminCtl
+  AdminCtl --> Question
+
+  User --> Mongo[(MongoDB)]
+  Question --> Mongo
+  Score --> Mongo
+
+  SubA -.-> AuthR
+  SubA -.-> AuthMw
+  SubB -.-> QuizCtl
+  SubC -.-> AdminCtl
+  SubD -.-> API
 ```
 
 Main backend structure:
@@ -163,6 +217,8 @@ The approved assignment variation is **Review Mode after completion**.
 
 After a quiz is submitted, the backend stores the full answer list in the `Score` model. The user can then review each question, their selected answer, whether it was correct, the correct answer, and the explanation when available.
 
+If an admin later deletes a question, historical attempts still load; the review page shows `[Question deleted]` while preserving the recorded selected answer, correctness, and score.
+
 Because the approved variation is Review Mode, there is no pre-quiz category selection step; topics are surfaced per question and summarised in result/history views.
 
 This project does not implement timed questions, category selection, image-based questions, multiplayer, real-time features, adaptive branching, or alternative scoring schemes.
@@ -171,7 +227,7 @@ This project does not implement timed questions, category selection, image-based
 
 Question order is randomised per attempt through MongoDB `$sample`. Option order is also generated freshly per attempt; the backend signs the per-question option permutation into a short-lived `attemptToken` returned from `GET /api/quiz/start`. The same token must be sent back to `POST /api/quiz/submit` and is rejected if missing, tampered, expired, bound to a different user, or replayed.
 
-The `attemptToken` TTL is 2 hours, aligned with `JWT_EXPIRES_IN`. This is a security expiry only; it is not a timed-quiz mechanic and does not affect scoring. Review Mode persists the option order to `Score.answers[i].optionOrder` so history and review pages render options in the same order the player originally saw them.
+The `attemptToken` TTL is 2 hours, matching the default login JWT lifetime. This is a security expiry only; it is not a timed-quiz mechanic and does not affect scoring. Review Mode persists the option order to `Score.answers[i].optionOrder` so history and review pages render options in the same order the player originally saw them.
 
 ## Beyond the Specification — Bonus Features
 
@@ -204,7 +260,7 @@ The three bonus dimensions from the assessment rubric map to the evidence below.
 
 - **What:** The backend serves Swagger UI at `/api-docs`, and the repository also includes `docs/postman-collection.json`.
 - **Why:** Swagger supports quick browser inspection, while Postman gives markers a ready-to-run request collection.
-- **How it integrates:** `backend/src/docs/swagger.js` is loaded by `backend/src/app.js`, and the Postman collection mirrors the same auth, quiz, and admin endpoints.
+- **How it integrates:** `backend/src/docs/swagger.js` is loaded by `backend/src/app.js`, and the Postman collection mirrors the same auth, quiz, and admin endpoints. After the backend starts, open `http://localhost:5001/api-docs` for the live Swagger UI.
 
 ### Signed attempt replay protection
 
