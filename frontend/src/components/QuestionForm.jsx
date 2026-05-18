@@ -3,17 +3,60 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-const questionFormSchema = z.object({
-  questionText: z.string().trim().min(1, 'Question text is required.'),
-  optionA: z.string().trim().min(1, 'Option A is required.'),
-  optionB: z.string().trim().min(1, 'Option B is required.'),
-  optionC: z.string().trim().min(1, 'Option C is required.'),
-  optionD: z.string().trim().min(1, 'Option D is required.'),
-  correctAnswer: z.coerce.number().int().min(0).max(3),
-  active: z.coerce.boolean().default(true),
-  explanation: z.string().optional(),
-  topic: z.string().optional(),
-});
+const HAS_MEANINGFUL_TEXT = /[\p{L}\p{N}]/u;
+const QUESTION_TEXT_MIN_LENGTH = 8;
+const QUESTION_TEXT_MAX_LENGTH = 300;
+const OPTION_MAX_LENGTH = 120;
+const EXPLANATION_MAX_LENGTH = 800;
+const TOPIC_MAX_LENGTH = 60;
+
+const normalizeTextForCompare = value => value.trim().replace(/\s+/g, ' ').toLowerCase();
+
+const meaningfulText = (label, { min = 1, max } = {}) =>
+  z
+    .string()
+    .trim()
+    .min(1, `${label} is required.`)
+    .min(min, `${label} must be at least ${min} characters.`)
+    .max(max, `${label} must be at most ${max} characters.`)
+    .refine(value => HAS_MEANINGFUL_TEXT.test(value), {
+      message: `${label} must include at least one letter or number.`,
+    });
+
+const questionFormSchema = z
+  .object({
+    questionText: meaningfulText('Question text', {
+      min: QUESTION_TEXT_MIN_LENGTH,
+      max: QUESTION_TEXT_MAX_LENGTH,
+    }),
+    optionA: meaningfulText('Option A', { max: OPTION_MAX_LENGTH }),
+    optionB: meaningfulText('Option B', { max: OPTION_MAX_LENGTH }),
+    optionC: meaningfulText('Option C', { max: OPTION_MAX_LENGTH }),
+    optionD: meaningfulText('Option D', { max: OPTION_MAX_LENGTH }),
+    correctAnswer: z.coerce.number().int().min(0).max(3),
+    active: z.coerce.boolean().default(true),
+    explanation: z.string().max(EXPLANATION_MAX_LENGTH, `Explanation must be at most ${EXPLANATION_MAX_LENGTH} characters.`).optional(),
+    topic: z
+      .string()
+      .trim()
+      .max(TOPIC_MAX_LENGTH, `Topic must be at most ${TOPIC_MAX_LENGTH} characters.`)
+      .refine(value => value === '' || HAS_MEANINGFUL_TEXT.test(value), {
+        message: 'Topic must include at least one letter or number.',
+      })
+      .optional(),
+  })
+  .superRefine((values, ctx) => {
+    const options = [values.optionA, values.optionB, values.optionC, values.optionD]
+      .map(normalizeTextForCompare);
+
+    if (new Set(options).size !== options.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['optionD'],
+        message: 'Answer options must be unique.',
+      });
+    }
+  });
 
 const emptyDefaults = {
   questionText: '',

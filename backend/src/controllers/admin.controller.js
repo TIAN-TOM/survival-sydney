@@ -1,6 +1,37 @@
 const Question = require('../models/Question');
 const { ok, fail } = require('../utils/responseEnvelope');
 
+const HAS_MEANINGFUL_TEXT = /[\p{L}\p{N}]/u;
+const QUESTION_TEXT_MIN_LENGTH = 8;
+const QUESTION_TEXT_MAX_LENGTH = 300;
+const OPTION_MAX_LENGTH = 120;
+const EXPLANATION_MAX_LENGTH = 800;
+const TOPIC_MAX_LENGTH = 60;
+
+const normalizeTextForCompare = value => value.trim().replace(/\s+/g, ' ').toLowerCase();
+
+const getTextQualityError = (label, value, { min = 1, max, allowEmpty = false } = {}) => {
+  const trimmed = value.trim();
+
+  if (trimmed === '') {
+    return allowEmpty ? null : `${label} cannot be empty`;
+  }
+
+  if (trimmed.length < min) {
+    return `${label} must be at least ${min} characters`;
+  }
+
+  if (max && trimmed.length > max) {
+    return `${label} must be at most ${max} characters`;
+  }
+
+  if (!HAS_MEANINGFUL_TEXT.test(trimmed)) {
+    return `${label} must include at least one letter or number`;
+  }
+
+  return null;
+};
+
 const isValidQuestionPayload = question => {
   if (!question || typeof question !== 'object') {
     return 'Question body must be an object';
@@ -8,6 +39,15 @@ const isValidQuestionPayload = question => {
 
   if (!question.questionText || typeof question.questionText !== 'string') {
     return 'questionText is required and must be a string';
+  }
+
+  const questionTextError = getTextQualityError('questionText', question.questionText, {
+    min: QUESTION_TEXT_MIN_LENGTH,
+    max: QUESTION_TEXT_MAX_LENGTH,
+  });
+
+  if (questionTextError) {
+    return questionTextError;
   }
 
   if (!Array.isArray(question.options) || question.options.length !== 4) {
@@ -20,6 +60,21 @@ const isValidQuestionPayload = question => {
 
   if (hasInvalidOption) {
     return 'each option must be a non-empty string';
+  }
+
+  for (let i = 0; i < question.options.length; i++) {
+    const optionError = getTextQualityError(`option ${i + 1}`, question.options[i], {
+      max: OPTION_MAX_LENGTH,
+    });
+
+    if (optionError) {
+      return optionError;
+    }
+  }
+
+  const normalizedOptions = question.options.map(normalizeTextForCompare);
+  if (new Set(normalizedOptions).size !== normalizedOptions.length) {
+    return 'options must be unique';
   }
 
   if (
@@ -39,8 +94,26 @@ const isValidQuestionPayload = question => {
     return 'explanation must be a string if provided';
   }
 
+  if (
+    question.explanation !== undefined &&
+    question.explanation.trim().length > EXPLANATION_MAX_LENGTH
+  ) {
+    return `explanation must be at most ${EXPLANATION_MAX_LENGTH} characters`;
+  }
+
   if (question.topic !== undefined && typeof question.topic !== 'string') {
     return 'topic must be a string if provided';
+  }
+
+  if (question.topic !== undefined) {
+    const topicError = getTextQualityError('topic', question.topic, {
+      max: TOPIC_MAX_LENGTH,
+      allowEmpty: true,
+    });
+
+    if (topicError) {
+      return topicError;
+    }
   }
 
   return null;
@@ -180,20 +253,31 @@ const bulkImportQuestions = async (req, res, next) => {
       return res.status(400).json(fail('questions array cannot be empty', 400));
     }
 
+    const validationErrors = [];
     const normalizedQuestions = [];
 
     for (let i = 0; i < questions.length; i++) {
       const validationError = isValidQuestionPayload(questions[i]);
 
       if (validationError) {
-        return res.status(400).json(
-          fail(`Question ${i + 1}: ${validationError}`, 400, {
-            index: i,
-          })
-        );
+        validationErrors.push({
+          index: i,
+          message: `Question ${i + 1}: ${validationError}`,
+        });
+        continue;
       }
 
       normalizedQuestions.push(normalizeQuestionPayload(questions[i]));
+    }
+
+    if (validationErrors.length > 0) {
+      return res.status(400).json(
+        fail(
+          `Bulk import validation failed: ${validationErrors.map(error => error.message).join('; ')}`,
+          400,
+          { errors: validationErrors }
+        )
+      );
     }
 
     const createdQuestions = await Question.insertMany(normalizedQuestions, {

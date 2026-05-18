@@ -36,4 +36,22 @@ describe('parseImportPayload', () => {
       'Question 1: options must contain exactly 4 items.'
     );
   });
+
+  test('rejects low-quality and duplicate import rows together', () => {
+    const badQuestions = [
+      {
+        ...validQuestion,
+        questionText: '!!!!!!!!',
+      },
+      {
+        ...validQuestion,
+        questionText: 'Duplicate options?',
+        options: ['Same', 'same', 'Different', 'Another'],
+      },
+    ];
+
+    expect(() => parseImportPayload(JSON.stringify(badQuestions))).toThrow(
+      /Question 1: questionText must include.*Question 2: options must be unique/s
+    );
+  });
 });

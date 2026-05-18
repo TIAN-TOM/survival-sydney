@@ -156,9 +156,67 @@ describe('Admin question API', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error).toMatch(/Question 2/i);
-    expect(response.body.details).toMatchObject({
+    expect(response.body.details.errors[0]).toMatchObject({
       index: 1,
+      message: expect.stringMatching(/Question 2/i),
     });
+
+    const count = await Question.countDocuments();
+    expect(count).toBe(0);
+  });
+
+  test('rejects low-quality question payloads before inserting', async () => {
+    const admin = await createUser('admin', 'quality');
+    const token = await login(admin.username);
+
+    const response = await request(app)
+      .post('/api/admin/questions')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validQuestionPayload({
+        questionText: '????????',
+        options: ['Library', 'Library', 'Operating System', 'Browser'],
+      }))
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toMatch(/questionText must include at least one letter or number/i);
+
+    const count = await Question.countDocuments();
+    expect(count).toBe(0);
+  });
+
+  test('returns all indexed bulk import validation errors', async () => {
+    const admin = await createUser('admin', 'bulkallinvalid');
+    const token = await login(admin.username);
+
+    const response = await request(app)
+      .post('/api/admin/questions/bulk-import')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        questions: [
+          validQuestionPayload({
+            questionText: '!!!!!!!!!',
+          }),
+          validQuestionPayload({
+            questionText: 'Duplicate options?',
+            options: ['Same', 'Same', 'Different', 'Another'],
+          }),
+        ],
+      })
+      .expect(400);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toMatch(/Bulk import validation failed/i);
+    expect(response.body.details.errors).toEqual([
+      {
+        index: 0,
+        message: expect.stringMatching(/Question 1: questionText must include/i),
+      },
+      {
+        index: 1,
+        message: expect.stringMatching(/Question 2: options must be unique/i),
+      },
+    ]);
 
     const count = await Question.countDocuments();
     expect(count).toBe(0);
