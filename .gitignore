@@ -1,0 +1,27 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+frontend/dist/
+backend/dist/
+dist/
+build/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.vscode/
+.idea/
+
+# Local-only review notes
+docs/final-rubric-session-review.md
+docs/rubric-assessment.md
+docs/audit-report.md
+
+# LaTeX build artifacts
+*.aux
+*.out
+*.toc
+*.synctex.gz
