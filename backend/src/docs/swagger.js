@@ -82,6 +82,7 @@ const swaggerDefinition = {
           username: { type: 'string' },
           email: { type: 'string' },
           role: { type: 'string', enum: ['user', 'admin'] },
+          createdAt: { type: 'string', format: 'date-time' },
         },
       },
       Question: {
@@ -98,6 +99,7 @@ const swaggerDefinition = {
             example: ['MERN', 'LAMP', 'Django', 'Rails'],
           },
           correctAnswer: { type: 'integer', minimum: 0, maximum: 3, example: 0 },
+          topic: { type: 'string', example: 'general' },
           explanation: { type: 'string', example: 'MongoDB, Express, React, and Node.' },
           active: { type: 'boolean', example: true },
           createdAt: { type: 'string', format: 'date-time' },
@@ -115,6 +117,7 @@ const swaggerDefinition = {
             maxItems: 4,
             items: { type: 'string' },
           },
+          topic: { type: 'string', example: 'general' },
         },
       },
       QuizAnswerInput: {
@@ -145,6 +148,7 @@ const swaggerDefinition = {
                 selectedAnswer: { type: 'integer' },
                 correctAnswer: { type: 'integer', nullable: true },
                 isCorrect: { type: 'boolean' },
+                topic: { type: 'string', example: 'general' },
                 optionOrder: {
                   type: 'array',
                   description: 'Original option indexes in the order shown during the attempt.',
@@ -322,6 +326,11 @@ const swaggerDefinition = {
                 _id: { type: 'string' },
                 score: { type: 'integer' },
                 createdAt: { type: 'string', format: 'date-time' },
+                totalQuestions: { type: 'integer', example: 10 },
+                topics: {
+                  type: 'array',
+                  items: { type: 'string' },
+                },
               },
             },
           }),
@@ -395,6 +404,7 @@ const swaggerDefinition = {
             questionText: 'Which stack is used?',
             options: ['MERN', 'LAMP', 'Django', 'Rails'],
             correctAnswer: 0,
+            topic: 'general',
             explanation: 'The assignment uses MongoDB, Express, React, and Node.',
             active: true,
           }),

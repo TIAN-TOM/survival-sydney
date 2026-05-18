@@ -79,7 +79,7 @@ VITE_API_BASE_URL=http://localhost:5001/api
 ### 3. Start MongoDB
 
 ```bash
-docker run -d -p 27017:27017 --name mongo mongo:7
+docker run -d -p 27017:27017 --name comp5347-quiz-mongo mongo:7
 ```
 
 ### 4. Seed demo data
@@ -141,11 +141,14 @@ Main backend structure:
 backend/src/
   config/
   controllers/
+  docs/
   middleware/
   models/
   routes/
   seeds/
   tests/
+  utils/
+  validators/
 ```
 
 Main frontend structure:
@@ -172,7 +175,7 @@ This project does not implement timed questions, category selection, image-based
 
 Question order is randomised per attempt through MongoDB `$sample`. Option order is also generated freshly per attempt; the backend signs the per-question option permutation into a short-lived `attemptToken` returned from `GET /api/quiz/start`. The same token must be sent back to `POST /api/quiz/submit` and is rejected if missing, tampered, expired, bound to a different user, or replayed.
 
-The `attemptToken` TTL is 2 hours, aligned with `JWT_EXPIRES_IN`. This is a security expiry only; it is not a timed-quiz mechanic and does not affect scoring. Review Mode persists the option order to `Score.answers[i].optionOrder` so history and review pages render options in the same order the player originally saw them.
+The `attemptToken` TTL is fixed at 2 hours in `backend/src/config/quiz.js`, matching the provided `JWT_EXPIRES_IN=2h` example. This is a security expiry only; it is not a timed-quiz mechanic and does not affect scoring. Review Mode persists the option order to `Score.answers[i].optionOrder` so history and review pages render options in the same order the player originally saw them.
 
 ## Beyond the Specification — Bonus Features
 
@@ -185,7 +188,7 @@ The three bonus dimensions from the assessment rubric map to the evidence below.
 | Rubric bonus dimension | Where it is evidenced in this repository |
 |---|---|
 | **Exceptional robustness** | Signed `attemptToken` binds each attempt to the authenticated user, exact question IDs, and the shuffled option order (`backend/src/utils/quizAttemptToken.js`); replay protection via both controller pre-check and a unique `Score.attemptId` index; per-attempt `optionOrder` persistence so Review Mode renders the same order the player originally saw; `helmet`, `express-mongo-sanitize`, and per-user rate-limit `keyGenerator` (`req.user?.id \|\| req.ip`); `ActiveQuizNavigationGuard` confirms before refresh, `popstate`, and in-app link clicks while a quiz is active. |
-| **Especially thoughtful edge case handling** | "Not enough active questions" returns 400 with a clear message instead of crashing; distinct `Token expired` / `Invalid token` / `Attempt token does not belong to current user` messages; duplicate-submission attempts return 409 (controller pre-check + unique index); deleted questions in history render `[Question deleted]` without breaking the review payload; bulk import reports per-row errors as `Question N: <reason>` with the offending index; empty-string explanation guard suppresses empty UI cards; corrupted `localStorage` JSON is caught in `ProtectedRoute`; loading / error / empty triple state on every player page; wildcard 404 route. |
+| **Especially thoughtful edge case handling** | "Not enough active questions" returns 400 with a clear message instead of crashing; distinct `Attempt token expired` / `Invalid attempt token` / `Attempt token does not belong to current user` messages; duplicate-submission attempts return 409 (controller pre-check + unique index); deleted questions in history render `[Question deleted]` without breaking the review payload; bulk import reports per-row errors as `Question N: <reason>` with the offending index; empty-string explanations become `null` and render as a fallback review note; corrupted `localStorage` JSON is caught in `AuthContext`; loading / error / empty triple state on every player page; wildcard 404 route. |
 | **Extremely clear system integration** | Shared `{ success, data?, error? }` response envelope on every route via `backend/src/utils/responseEnvelope.js`; shared `QUIZ_LENGTH` / `OPTIONS_PER_QUESTION` constants consumed by controllers, models, and validators (`backend/src/config/quiz.js`); auth middleware re-fetches the user and attaches `toSafeObject()` so `/me` and `/login` emit the same shape (the Pair 1 contract); single `AuthContext` restores the session on mount via `/api/auth/me`; admin and player route families are mutually exclusive (`admin.middleware` + `forbidAdminQuiz.middleware`) and documented under §Main API Routes; dual API documentation (`/api-docs` Swagger UI + `docs/postman-collection.json`) mirrors the same routes for cross-tool verification. |
 
 ### Robustness highlights
@@ -239,7 +242,7 @@ The three bonus dimensions from the assessment rubric map to the evidence below.
 | Quiz | `GET /api/quiz/start`, `POST /api/quiz/submit`, `GET /api/quiz/history`, `GET /api/quiz/history/:id`, `GET /api/quiz/leaderboard` |
 | Admin | `GET /api/admin/questions`, `POST /api/admin/questions`, `PUT /api/admin/questions/:id`, `DELETE /api/admin/questions/:id`, `PATCH /api/admin/questions/:id/toggle`, `POST /api/admin/questions/bulk-import` |
 
-Admin accounts are intentionally blocked from player quiz routes: `/api/quiz/start`, `/api/quiz/submit`, `/api/quiz/history`, and `/api/quiz/leaderboard`. The admin responsibility is question management, not gameplay, so the backend enforces this boundary with `forbidAdminQuiz` and the frontend mirrors it with `<ProtectedRoute blockAdmin>`.
+Admin accounts are intentionally blocked from player quiz routes: `GET /api/quiz/start`, `POST /api/quiz/submit`, `GET /api/quiz/history`, `GET /api/quiz/history/:id`, and `GET /api/quiz/leaderboard`. The admin responsibility is question management, not gameplay, so the backend enforces this boundary with `forbidAdminQuiz` and the frontend mirrors it with `<ProtectedRoute blockAdmin>`.
 
 Full API documentation is available at:
 
@@ -289,12 +292,12 @@ Representative commits for each subsystem:
 | Allen Ji | Admin question CRUD, active toggle, bulk import | [`2479978`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/2479978f04643eb7fd4cd7705a8fe6e0862cf40e) admin question controller and protected routes; [`df3c0cc`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/df3c0cc1b6b0af0fa415bb05868f26b1411565b6) admin dashboard form and bulk import; [`284fd25`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/284fd25a2882c1eec7b30b5cb0ae68c4ff50898f) admin controller tests |
 | Tom Tian | Integration, response envelope, validation, theme, docs, tests | [`7a61d82`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/7a61d826193c0c4f375b5dc81d967e154051665e) bootstrap layout and project hygiene; [`972fc77`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/972fc7706a4a59432248ece76562b1e994dd63b2) integration QA docs and tests; [`bba8b06`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/bba8b06d27da0633a2bf5de5a2b6a95674b21bb9) shuffled-answer API test alignment; [`d0d07f6`](https://github.sydney.edu.au/wege8390/COMP4347-COMP5347-Assignment-2--Group5/commit/d0d07f6f64aa6d90b45fc7cf07b5a2b875b005ce) quiz route error-response documentation |
 
-Each individual reflection PDF provides the fuller technical explanation and commit evidence for that member.
+Each individual reflection PDF in `docs/individual-reflections/` provides the fuller technical explanation and commit evidence for that member.
 
 ## Test and Build
 
 ```bash
-npm test --prefix backend -- --runInBand
+npm test --prefix backend
 npm test --prefix frontend
 npm run build --prefix frontend
 ```
@@ -303,4 +306,4 @@ npm run build --prefix frontend
 
 - Do not include `node_modules` in the submitted ZIP.
 - The group coversheet is included as `Assignment 2 Group Assignment Coversheet.pdf`.
-- Each student should submit their individual contribution reflection with commit evidence, subsystem explanation, challenge, diagram, and Review Mode design reflection.
+- Individual reflection PDFs are included under `docs/individual-reflections/` with commit evidence, subsystem explanation, challenge, diagram, and Review Mode design reflection.
