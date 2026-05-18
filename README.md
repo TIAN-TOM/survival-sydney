@@ -11,7 +11,7 @@ Single-player MERN quiz game with a player quiz flow, Review Mode after completi
 | Frontend | `http://localhost:5173` |
 | Backend | `http://localhost:5001` |
 | API docs | `http://localhost:5001/api-docs` |
-| Admin login URL | `http://localhost:5173/bosscoming` |
+| Admin login URL | `http://localhost:5173/admin/login` (alias: `/bosscoming`) |
 | Admin account | `admin` / `AdminPass123` |
 | Player accounts | `player1` / `PlayerPass123`, `player2` / `PlayerPass123` |
 
@@ -28,7 +28,7 @@ Single-player MERN quiz game with a player quiz flow, Review Mode after completi
 - Past attempts can be viewed from the history page.
 - Admin interface supports question create, edit, delete, active/inactive toggle, and JSON bulk import.
 - Dark mode is persisted in `localStorage`.
-- Backend uses response envelopes: success `{ success: true, data }`, failure `{ success: false, error }`.
+- Backend uses response envelopes: success `{ success: true, data }`, failure `{ success: false, error }`. The implementation also attaches optional metadata fields (`statusCode`, `code`, `details`, `meta`) on top of the required shape for debugging and pagination — these are extensions, not replacements, so the spec-required keys remain authoritative.
 - Login/register and quiz submission endpoints use rate limiting.
 
 ## Tech Stack
@@ -97,7 +97,7 @@ npm run dev
 Open:
 
 - Player site: `http://localhost:5173`
-- Admin login: `http://localhost:5173/bosscoming`
+- Admin login: `http://localhost:5173/admin/login` (alias: `/bosscoming`)
 - API documentation: `http://localhost:5001/api-docs`
 
 ### Troubleshooting
@@ -133,6 +133,26 @@ flowchart LR
   API --> Controllers[Controllers]
   Controllers --> Models[Mongoose Models]
   Models --> MongoDB[(MongoDB)]
+```
+
+The diagram above shows the static layering. The sequence below shows a typical authenticated request — login then a protected quiz call — so the JWT and middleware hops are explicit:
+
+```mermaid
+sequenceDiagram
+  participant U as Browser (React)
+  participant A as POST /api/auth/login
+  participant M as auth.middleware
+  participant C as quiz.controller
+  participant DB as MongoDB
+  U->>A: { username, password }
+  A->>DB: User.findOne + bcrypt.compare
+  A-->>U: { success, data: { token, user } }
+  Note over U: localStorage.setItem('jwt', token)
+  U->>M: GET /api/quiz/start (Authorization: Bearer <token>)
+  M->>DB: User.findById (re-fetch role)
+  M->>C: req.user attached
+  C->>DB: Question.aggregate($sample)
+  C-->>U: { success, data: { questions, attemptToken } }
 ```
 
 Main backend structure:
@@ -224,9 +244,9 @@ The three bonus dimensions from the assessment rubric map to the evidence below.
 
 ### Immersive admin sign-in entry
 
-- **What:** Admin users sign in through `/bosscoming`, a themed admin entry point that reuses the normal auth form with admin-mode validation.
-- **Why:** It separates the admin workflow visually without creating a second authentication mechanism.
-- **How it integrates:** `frontend/src/App.jsx` routes `/bosscoming` to the shared login component with `adminMode`, and protected admin pages still rely on backend role checks.
+- **What:** Admin users sign in through `/admin/login` (with `/bosscoming` retained as an alias), a themed admin entry point that reuses the normal auth form with admin-mode validation.
+- **Why:** It separates the admin workflow visually without creating a second authentication mechanism; the `/admin/login` path follows the conventional admin URL pattern markers expect, while `/bosscoming` stays as a thematic shortcut.
+- **How it integrates:** `frontend/src/App.jsx` routes both `/admin/login` and `/bosscoming` to the shared login component with `adminMode`, and protected admin pages still rely on backend role checks.
 
 ### Accessibility and feedback polish
 
@@ -267,7 +287,7 @@ docs/postman-collection.json
 
 ## Git Workflow and Commit Evidence
 
-The project was developed on Sydney GitHub Enterprise using feature branches and pull requests. The assessment-ready branch is `final`; `main` is not the delivery branch.
+The project was developed on Sydney GitHub Enterprise using feature branches and pull requests. The assessment-ready branch is `main`; `final` is the development integration branch and now mirrors `main` after the final merge.
 
 Markers can inspect the preserved commit history with:
 
@@ -281,7 +301,7 @@ git log origin/final --author="Tom Tian"
 git log origin/final --author="Tom_Tian"
 ```
 
-Some commits appear under GitHub usernames, including `RachlGew` for Raven Ge and `f1sh11` for Allen Ji. Tom Tian also has four early commits under the personal alias `Tom_Tian`; include both `Tom Tian` and `Tom_Tian` when checking Tom's contribution history.
+Some commits appear under GitHub usernames, including `RachlGew` for Raven Ge and `f1sh11` for Allen Ji. Tom Tian also has four early commits under the personal alias `Tom_Tian`; include both `Tom Tian` and `Tom_Tian` when checking Tom's contribution history. A handful of early commits from Allen Ji (`f1sh11 <jijoinyucheng@gmail.com>`) and Tom Tian (`Tom_Tian <tys1328056247@gmail.com>`) were authored from personal Gmail addresses before the uni email was configured locally; the GitHub username on each commit still matches the same contributor, so `git log --author="f1sh11"` and `git log --author="Tom_Tian"` will surface those entries alongside the uni-email commits.
 
 Representative commits for each subsystem:
 

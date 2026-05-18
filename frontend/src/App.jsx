@@ -119,7 +119,7 @@ function App() {
   const { pathname } = location;
   const { user } = useAuth();
   const isAuthImmersive =
-    pathname === '/login' || pathname === '/register' || pathname === '/bosscoming';
+    pathname === '/login' || pathname === '/register' || pathname === '/bosscoming' || pathname === '/admin/login';
   const isGuestQuizGate = pathname === '/quiz' && !user;
   const hideAppShellHeader = isAuthImmersive || isGuestQuizGate;
 
@@ -148,6 +148,7 @@ function App() {
             <Route path="/" element={<Navigate to="/quiz" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/bosscoming" element={<Login adminMode />} />
+            <Route path="/admin/login" element={<Login adminMode />} />
             <Route path="/register" element={<Register />} />
             <Route path="/quiz" element={<QuizPage />} />
             <Route
