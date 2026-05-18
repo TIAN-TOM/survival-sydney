@@ -177,6 +177,16 @@ The `attemptToken` TTL is 2 hours, aligned with `JWT_EXPIRES_IN`. This is a secu
 
 This project includes several additions beyond the minimum A2 requirements. Each item is documented with what was added, why it was added, and how it integrates with the rest of the system, following Ed Discussion #143.
 
+### Bonus Mark Mapping
+
+The three bonus categories from the assignment specification map to the evidence below.
+
+| Spec bonus category | Where it is evidenced in this repository |
+|---|---|
+| Exceptional UI/UX polish while maintaining clean code | §Theme transition polish, §Active-quiz navigation guard, §Accessibility and feedback polish; backend MVC separation under `backend/src/{routes,controllers,models,middleware,validators,utils}` and frontend `Context + useReducer` state under `frontend/src/contexts/`. |
+| Additional thoughtful features that enhance the approved variation (Review Mode) | §Signed attempt replay protection, §Robustness highlights (per-attempt `optionOrder` persistence), `GET /api/quiz/history/:id` for re-reviewing any past attempt, auto-expand explanation for wrong answers in `ReviewQuestionCard`, server-side `review[]` assembly that reuses the existing question map without an extra database query. |
+| Strong error handling and user feedback throughout the application | Shared `{ success, data?, error? }` envelope on every route; distinct 401/403/404/409/429 messages; per-row bulk-import validation errors with the offending index; loading/error/empty triple state on every player page; `ActiveQuizNavigationGuard` confirmation prompts; centralised `errorHandler` middleware and 404 wildcard route. |
+
 ### Robustness highlights
 
 - Signed attempt tokens bind each quiz attempt to the authenticated user, exact question IDs, and the shuffled option order.
