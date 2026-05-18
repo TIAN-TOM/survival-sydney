@@ -230,8 +230,9 @@ function survivalRankBand(pct) {
 }
 
 /** Guest landing on /quiz — narrative gate; sign-in lives on /login. */
-export function QuizGateScreen() {
+export function QuizGateScreen({ authChecking = false }) {
   const { isDarkMode, theme } = useTheme();
+  const { state } = useQuiz();
 
   return (
     <div className="qf-screen start-screen">
@@ -267,13 +268,22 @@ export function QuizGateScreen() {
               ✦
             </span>
           </p>
-          <Link className="btn-wizard-start" to="/login">
-            <span className="btn-wizard-start__shine" aria-hidden="true" />
-            Sign in
-          </Link>
-          <p className="quiz-gate-register-hint">
-            <Link to="/register">New scholar? Register</Link>
-          </p>
+          {state.error ? <p className="start-error start-error--wizard">{state.error}</p> : null}
+          {authChecking ? (
+            <p className="start-wizard__footer" role="status" aria-live="polite">
+              Verifying access...
+            </p>
+          ) : (
+            <>
+              <Link className="btn-wizard-start" to="/login">
+                <span className="btn-wizard-start__shine" aria-hidden="true" />
+                Sign in
+              </Link>
+              <p className="quiz-gate-register-hint">
+                <Link to="/register">New scholar? Register</Link>
+              </p>
+            </>
+          )}
           <p className="start-wizard__footer">
             <span className="start-wizard__quill" aria-hidden="true">
               🪶

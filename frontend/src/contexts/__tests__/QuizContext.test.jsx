@@ -54,4 +54,24 @@ describe('quizReducer', () => {
     expect(restarted.questions).toEqual([]);
     expect(restarted.answers).toEqual([]);
   });
+
+  test('AUTH_REQUIRED returns to guest gate with a friendly message', () => {
+    const started = quizReducer(initialState, {
+      type: 'START_QUIZ',
+      payload: {
+        attemptToken: 'attempt-token',
+        questions: [{ _id: 'q1' }],
+      },
+    });
+
+    const gated = quizReducer(started, {
+      type: 'AUTH_REQUIRED',
+      payload: 'Please sign in again to start a quiz.',
+    });
+
+    expect(gated.phase).toBe('gate');
+    expect(gated.attemptToken).toBeNull();
+    expect(gated.questions).toEqual([]);
+    expect(gated.error).toBe('Please sign in again to start a quiz.');
+  });
 });
