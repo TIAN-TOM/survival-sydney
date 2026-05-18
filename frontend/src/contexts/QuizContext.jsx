@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useReducer, useRef } from 'react';
 
 import api from '../api/api.js';
+import { useAuth } from './AuthContext.jsx';
 
 const QuizContext = createContext(null);
 const ACTIVE_QUIZ_LEAVE_MESSAGE = 'You have an active quiz. Leave this page and lose current progress?';
@@ -64,6 +65,13 @@ function quizReducer(state, action) {
         phase: 'gate',
       };
 
+    case 'AUTH_REQUIRED':
+      return {
+        ...initialState,
+        phase: 'gate',
+        error: action.payload,
+      };
+
     case 'RESTART':
       return {
         ...initialState,
@@ -88,6 +96,7 @@ function quizReducer(state, action) {
 export function QuizProvider({ children }) {
   const [state, dispatch] = useReducer(quizReducer, initialState);
   const submitOnceRef = useRef(false);
+  const { logout } = useAuth();
   const hasActiveQuiz = state.questions.length > 0 && ['quiz', 'calculating'].includes(state.phase);
 
   const setPhase = useCallback((phase) => {
@@ -104,9 +113,18 @@ export function QuizProvider({ children }) {
       const data = await api.get('/quiz/start');
       dispatch({ type: 'START_QUIZ', payload: data });
     } catch (err) {
+      if (err.status === 401) {
+        logout();
+        dispatch({
+          type: 'AUTH_REQUIRED',
+          payload: 'Please sign in again to start a quiz.',
+        });
+        return;
+      }
+
       dispatch({ type: 'SET_ERROR', payload: err.message || 'Failed to load questions' });
     }
-  }, []);
+  }, [logout]);
 
   const lockAnswer = useCallback(() => {
     dispatch({ type: 'LOCK_ANSWER' });
@@ -147,12 +165,21 @@ export function QuizProvider({ children }) {
       dispatch({ type: 'SUBMIT_COMPLETE', payload: data });
     } catch (err) {
       submitOnceRef.current = false;
+      if (err.status === 401) {
+        logout();
+        dispatch({
+          type: 'AUTH_REQUIRED',
+          payload: 'Please sign in again to submit your quiz.',
+        });
+        return;
+      }
+
       dispatch({
         type: 'QUIZ_ERROR_RESET',
         payload: err.message || 'Failed to submit quiz',
       });
     }
-  }, [state]);
+  }, [logout, state]);
 
   const restart = useCallback(() => {
     submitOnceRef.current = false;

@@ -117,10 +117,10 @@ function ActiveQuizNavigationGuard() {
 function App() {
   const location = useLocation();
   const { pathname } = location;
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const isAuthImmersive =
     pathname === '/login' || pathname === '/register' || pathname === '/bosscoming' || pathname === '/admin/login';
-  const isGuestQuizGate = pathname === '/quiz' && !user;
+  const isGuestQuizGate = pathname === '/quiz' && (loading || !user);
   const hideAppShellHeader = isAuthImmersive || isGuestQuizGate;
 
   const appClass = [

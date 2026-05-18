@@ -12,15 +12,22 @@ import {
 import QuizWorldBackground from './QuizWorldBackground.jsx';
 
 export default function QuizFlow() {
-  const { state, finishQuiz, setPhase } = useQuiz();
+  const { state, finishQuiz, setPhase, resetToGate } = useQuiz();
   const { phase } = state;
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   useLayoutEffect(() => {
+    if (loading) return;
+
     if (user && phase === 'gate') {
       setPhase('start');
+      return;
     }
-  }, [user, phase, setPhase]);
+
+    if (!user && phase !== 'gate') {
+      resetToGate();
+    }
+  }, [loading, user, phase, resetToGate, setPhase]);
 
   useEffect(() => {
     if (phase !== 'calculating') return undefined;
@@ -31,7 +38,7 @@ export default function QuizFlow() {
   }, [phase, finishQuiz]);
 
   const screens = {
-    gate: <QuizGateScreen />,
+    gate: <QuizGateScreen authChecking={loading} />,
     start: <StartScreen />,
     quiz: <QuizScreen />,
     calculating: <CalculatingScreen />,
