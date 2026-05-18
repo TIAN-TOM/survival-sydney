@@ -95,6 +95,7 @@ function parseImportPayload(jsonText) {
   }
 
   const validationErrors = [];
+  const validatedQuestionEntries = [];
 
   questions.forEach((question, index) => {
     const result = questionImportSchema.safeParse(question);
@@ -102,14 +103,36 @@ function parseImportPayload(jsonText) {
     if (!result.success) {
       const firstIssue = result.error.issues[0];
       validationErrors.push(`Question ${index + 1}: ${firstIssue.message}`);
+      return;
     }
+
+    validatedQuestionEntries.push({
+      index,
+      question: result.data,
+    });
+  });
+
+  const firstQuestionIndexByText = new Map();
+
+  validatedQuestionEntries.forEach(({ index, question }) => {
+    const normalizedQuestionText = normalizeTextForCompare(question.questionText);
+    const firstIndex = firstQuestionIndexByText.get(normalizedQuestionText);
+
+    if (firstIndex !== undefined) {
+      validationErrors.push(
+        `Question ${index + 1}: duplicate questionText matches Question ${firstIndex + 1}.`
+      );
+      return;
+    }
+
+    firstQuestionIndexByText.set(normalizedQuestionText, index);
   });
 
   if (validationErrors.length > 0) {
     throw new Error(validationErrors.join('; '));
   }
 
-  return questions.map(question => ({
+  return validatedQuestionEntries.map(({ question }) => ({
     questionText: question.questionText.trim(),
     options: question.options.map(option => option.trim()),
     correctAnswer: question.correctAnswer,
@@ -133,7 +156,7 @@ export default function BulkImport({ onImportSuccess }) {
   } = useForm({
     resolver: zodResolver(bulkImportFormSchema),
     defaultValues: {
-      jsonText: exampleJson,
+      jsonText: '',
     },
   });
 
@@ -150,7 +173,7 @@ export default function BulkImport({ onImportSuccess }) {
         text: `Imported ${result.insertedCount ?? questions.length} question(s).`,
       });
 
-      reset({ jsonText: exampleJson });
+      reset({ jsonText: '' });
       await onImportSuccess?.(result);
     } catch (err) {
       setMessage({
@@ -166,7 +189,12 @@ export default function BulkImport({ onImportSuccess }) {
     <form className="form" onSubmit={handleSubmit(submitImport)}>
       <label>
         Question JSON
-        <textarea rows="12" spellCheck="false" {...register('jsonText')} />
+        <textarea
+          rows="12"
+          spellCheck="false"
+          placeholder={exampleJson}
+          {...register('jsonText')}
+        />
         {errors.jsonText && <span className="form-error">{errors.jsonText.message}</span>}
       </label>
 

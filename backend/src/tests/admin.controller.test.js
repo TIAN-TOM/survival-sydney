@@ -87,6 +87,54 @@ describe('Admin question API', () => {
     expect(savedQuestion).not.toBeNull();
   });
 
+  test('rejects duplicate question creation', async () => {
+    const admin = await createUser('admin', 'createdupe');
+    const token = await login(admin.username);
+    await Question.create(validQuestionPayload({
+      questionText: 'What is React?',
+    }));
+
+    const response = await request(app)
+      .post('/api/admin/questions')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validQuestionPayload({
+        questionText: '  what   is react?  ',
+      }))
+      .expect(409);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toMatch(/questionText already exists/i);
+
+    const count = await Question.countDocuments();
+    expect(count).toBe(1);
+  });
+
+  test('rejects updating a question to duplicate another questionText', async () => {
+    const admin = await createUser('admin', 'updatedupe');
+    const token = await login(admin.username);
+    await Question.create(validQuestionPayload({
+      questionText: 'Existing question?',
+    }));
+    const editableQuestion = await Question.create(validQuestionPayload({
+      questionText: 'Editable question?',
+      correctAnswer: 1,
+    }));
+
+    const response = await request(app)
+      .put(`/api/admin/questions/${editableQuestion._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send(validQuestionPayload({
+        questionText: ' existing   question? ',
+      }))
+      .expect(409);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toMatch(/questionText already exists/i);
+
+    const unchangedQuestion = await Question.findById(editableQuestion._id);
+    expect(unchangedQuestion.questionText).toBe('Editable question?');
+  });
+
   test('rejects question creation for non-admin user', async () => {
     const player = await createUser('user', 'forbidden');
     const token = await login(player.username);
@@ -132,6 +180,58 @@ describe('Admin question API', () => {
 
     const count = await Question.countDocuments();
     expect(count).toBe(2);
+  });
+
+  test('rejects duplicate questionText rows inside one bulk import', async () => {
+    const admin = await createUser('admin', 'bulkdupebatch');
+    const token = await login(admin.username);
+
+    const response = await request(app)
+      .post('/api/admin/questions/bulk-import')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        questions: [
+          validQuestionPayload({
+            questionText: 'Which library builds React user interfaces?',
+          }),
+          validQuestionPayload({
+            questionText: '  which   library builds react user interfaces? ',
+          }),
+        ],
+      })
+      .expect(409);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toMatch(/Question 2: duplicate questionText matches Question 1/i);
+
+    const count = await Question.countDocuments();
+    expect(count).toBe(0);
+  });
+
+  test('rejects bulk import when a questionText already exists', async () => {
+    const admin = await createUser('admin', 'bulkdupedb');
+    const token = await login(admin.username);
+    await Question.create(validQuestionPayload({
+      questionText: 'Which database stores documents?',
+    }));
+
+    const response = await request(app)
+      .post('/api/admin/questions/bulk-import')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        questions: [
+          validQuestionPayload({
+            questionText: '  which database stores documents?  ',
+          }),
+        ],
+      })
+      .expect(409);
+
+    expect(response.body.success).toBe(false);
+    expect(response.body.error).toMatch(/Question 1: questionText already exists/i);
+
+    const count = await Question.countDocuments();
+    expect(count).toBe(1);
   });
 
   test('returns index error when bulk import contains invalid item', async () => {

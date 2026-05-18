@@ -9,6 +9,12 @@ const EXPLANATION_MAX_LENGTH = 800;
 const TOPIC_MAX_LENGTH = 60;
 
 const normalizeTextForCompare = value => value.trim().replace(/\s+/g, ' ').toLowerCase();
+const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const buildQuestionTextRegex = questionText => {
+  const normalizedPattern = escapeRegExp(questionText.trim()).replace(/\s+/g, '\\s+');
+  return new RegExp(`^\\s*${normalizedPattern}\\s*$`, 'i');
+};
 
 const getTextQualityError = (label, value, { min = 1, max, allowEmpty = false } = {}) => {
   const trimmed = value.trim();
@@ -135,6 +141,65 @@ const normalizeQuestionPayload = question => {
   return base;
 };
 
+const findDuplicateQuestionByText = async (questionText, excludeId) => {
+  const query = {
+    questionText: buildQuestionTextRegex(questionText),
+  };
+
+  if (excludeId) {
+    query._id = { $ne: excludeId };
+  }
+
+  return Question.findOne(query).select('_id questionText').lean();
+};
+
+const getBulkDuplicateErrors = async questions => {
+  const validationErrors = [];
+  const firstQuestionIndexByText = new Map();
+  const uniqueQuestionTexts = [];
+
+  questions.forEach((question, index) => {
+    const normalizedText = normalizeTextForCompare(question.questionText);
+    const firstIndex = firstQuestionIndexByText.get(normalizedText);
+
+    if (firstIndex !== undefined) {
+      validationErrors.push({
+        index,
+        message: `Question ${index + 1}: duplicate questionText matches Question ${firstIndex + 1}`,
+      });
+      return;
+    }
+
+    firstQuestionIndexByText.set(normalizedText, index);
+    uniqueQuestionTexts.push(question.questionText);
+  });
+
+  if (uniqueQuestionTexts.length > 0) {
+    const existingQuestions = await Question.find({
+      $or: uniqueQuestionTexts.map(questionText => ({
+        questionText: buildQuestionTextRegex(questionText),
+      })),
+    })
+      .select('questionText')
+      .lean();
+
+    const existingQuestionTexts = new Set(
+      existingQuestions.map(question => normalizeTextForCompare(question.questionText))
+    );
+
+    questions.forEach((question, index) => {
+      if (existingQuestionTexts.has(normalizeTextForCompare(question.questionText))) {
+        validationErrors.push({
+          index,
+          message: `Question ${index + 1}: questionText already exists`,
+        });
+      }
+    });
+  }
+
+  return validationErrors;
+};
+
 /**
  * GET /api/admin/questions
  * Return all questions for admin management.
@@ -160,7 +225,14 @@ const createQuestion = async (req, res, next) => {
       return res.status(400).json(fail(validationError));
     }
 
-    const question = await Question.create(normalizeQuestionPayload(req.body));
+    const normalizedQuestion = normalizeQuestionPayload(req.body);
+    const duplicateQuestion = await findDuplicateQuestionByText(normalizedQuestion.questionText);
+
+    if (duplicateQuestion) {
+      return res.status(409).json(fail('questionText already exists'));
+    }
+
+    const question = await Question.create(normalizedQuestion);
     return res.status(201).json(ok(question));
   } catch (err) {
     return next(err);
@@ -179,9 +251,19 @@ const updateQuestion = async (req, res, next) => {
       return res.status(400).json(fail(validationError));
     }
 
+    const normalizedQuestion = normalizeQuestionPayload(req.body);
+    const duplicateQuestion = await findDuplicateQuestionByText(
+      normalizedQuestion.questionText,
+      req.params.id
+    );
+
+    if (duplicateQuestion) {
+      return res.status(409).json(fail('questionText already exists'));
+    }
+
     const question = await Question.findByIdAndUpdate(
       req.params.id,
-      normalizeQuestionPayload(req.body),
+      normalizedQuestion,
       {
         new: true,
         runValidators: true,
@@ -273,6 +355,15 @@ const bulkImportQuestions = async (req, res, next) => {
     if (validationErrors.length > 0) {
       const errorMessage = validationErrors.map(error => error.message).join('; ');
       return res.status(400).json(
+        fail(`Bulk import validation failed: ${errorMessage}`)
+      );
+    }
+
+    const duplicateErrors = await getBulkDuplicateErrors(normalizedQuestions);
+
+    if (duplicateErrors.length > 0) {
+      const errorMessage = duplicateErrors.map(error => error.message).join('; ');
+      return res.status(409).json(
         fail(`Bulk import validation failed: ${errorMessage}`)
       );
     }

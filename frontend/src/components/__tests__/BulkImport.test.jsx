@@ -1,6 +1,7 @@
+import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import { parseImportPayload } from '../BulkImport.jsx';
+import BulkImport, { parseImportPayload } from '../BulkImport.jsx';
 
 const validQuestion = {
   questionText: 'What is MERN?',
@@ -53,5 +54,28 @@ describe('parseImportPayload', () => {
     expect(() => parseImportPayload(JSON.stringify(badQuestions))).toThrow(
       /Question 1: questionText must include.*Question 2: options must be unique/s
     );
+  });
+
+  test('rejects duplicate question text inside one import payload', () => {
+    const duplicateQuestions = [
+      validQuestion,
+      {
+        ...validQuestion,
+        questionText: '  what   is mern?  ',
+      },
+    ];
+
+    expect(() => parseImportPayload(JSON.stringify(duplicateQuestions))).toThrow(
+      'Question 2: duplicate questionText matches Question 1.'
+    );
+  });
+
+  test('shows the example as placeholder instead of submit-ready input', () => {
+    render(<BulkImport />);
+
+    const textarea = screen.getByLabelText('Question JSON');
+
+    expect(textarea).toHaveValue('');
+    expect(textarea).toHaveAttribute('placeholder', expect.stringContaining('What is React?'));
   });
 });
