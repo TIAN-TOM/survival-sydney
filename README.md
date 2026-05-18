@@ -179,13 +179,13 @@ This project includes several additions beyond the minimum A2 requirements. Each
 
 ### Bonus Mark Mapping
 
-The three bonus categories from the assignment specification map to the evidence below.
+The three bonus dimensions from the assessment rubric map to the evidence below.
 
-| Spec bonus category | Where it is evidenced in this repository |
+| Rubric bonus dimension | Where it is evidenced in this repository |
 |---|---|
-| Exceptional UI/UX polish while maintaining clean code | §Theme transition polish, §Active-quiz navigation guard, §Accessibility and feedback polish; backend MVC separation under `backend/src/{routes,controllers,models,middleware,validators,utils}` and frontend `Context + useReducer` state under `frontend/src/contexts/`. |
-| Additional thoughtful features that enhance the approved variation (Review Mode) | §Signed attempt replay protection, §Robustness highlights (per-attempt `optionOrder` persistence), `GET /api/quiz/history/:id` for re-reviewing any past attempt, auto-expand explanation for wrong answers in `ReviewQuestionCard`, server-side `review[]` assembly that reuses the existing question map without an extra database query. |
-| Strong error handling and user feedback throughout the application | Shared `{ success, data?, error? }` envelope on every route; distinct 401/403/404/409/429 messages; per-row bulk-import validation errors with the offending index; loading/error/empty triple state on every player page; `ActiveQuizNavigationGuard` confirmation prompts; centralised `errorHandler` middleware and 404 wildcard route. |
+| **Exceptional robustness** | Signed `attemptToken` binds each attempt to the authenticated user, exact question IDs, and the shuffled option order (`backend/src/utils/quizAttemptToken.js`); replay protection via both controller pre-check and a unique `Score.attemptId` index; per-attempt `optionOrder` persistence so Review Mode renders the same order the player originally saw; `helmet`, `express-mongo-sanitize`, and per-user rate-limit `keyGenerator` (`req.user?.id \|\| req.ip`); `ActiveQuizNavigationGuard` confirms before refresh, `popstate`, and in-app link clicks while a quiz is active. |
+| **Especially thoughtful edge case handling** | "Not enough active questions" returns 400 with a clear message instead of crashing; distinct `Token expired` / `Invalid token` / `Attempt token does not belong to current user` messages; duplicate-submission attempts return 409 (controller pre-check + unique index); deleted questions in history render `[Question deleted]` without breaking the review payload; bulk import reports per-row errors as `Question N: <reason>` with the offending index; empty-string explanation guard suppresses empty UI cards; corrupted `localStorage` JSON is caught in `ProtectedRoute`; loading / error / empty triple state on every player page; wildcard 404 route. |
+| **Extremely clear system integration** | Shared `{ success, data?, error? }` response envelope on every route via `backend/src/utils/responseEnvelope.js`; shared `QUIZ_LENGTH` / `OPTIONS_PER_QUESTION` constants consumed by controllers, models, and validators (`backend/src/config/quiz.js`); auth middleware re-fetches the user and attaches `toSafeObject()` so `/me` and `/login` emit the same shape (the Pair 1 contract); single `AuthContext` restores the session on mount via `/api/auth/me`; admin and player route families are mutually exclusive (`admin.middleware` + `forbidAdminQuiz.middleware`) and documented under §Main API Routes; dual API documentation (`/api-docs` Swagger UI + `docs/postman-collection.json`) mirrors the same routes for cross-tool verification. |
 
 ### Robustness highlights
 
