@@ -58,21 +58,19 @@ const swaggerDefinition = {
       OkEnvelope: {
         type: 'object',
         required: ['success', 'data'],
+        additionalProperties: false,
         properties: {
           success: { type: 'boolean', example: true },
           data: { nullable: true },
-          meta: { type: 'object', additionalProperties: true },
         },
       },
       FailEnvelope: {
         type: 'object',
         required: ['success', 'error'],
+        additionalProperties: false,
         properties: {
           success: { type: 'boolean', example: false },
           error: { type: 'string', example: 'Request failed' },
-          code: { type: 'string', example: 'VALIDATION_ERROR' },
-          details: { nullable: true },
-          statusCode: { type: 'integer', example: 400 },
         },
       },
       User: {

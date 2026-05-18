@@ -28,7 +28,7 @@ Single-player MERN quiz game with a player quiz flow, Review Mode after completi
 - Past attempts can be viewed from the history page.
 - Admin interface supports question create, edit, delete, active/inactive toggle, and JSON bulk import.
 - Dark mode is persisted in `localStorage`.
-- Backend uses response envelope format: `{ success, data?, error? }`.
+- Backend uses response envelopes: success `{ success: true, data }`, failure `{ success: false, error }`.
 - Login/register and quiz submission endpoints use rate limiting.
 
 ## Tech Stack
@@ -189,7 +189,7 @@ The three bonus dimensions from the assessment rubric map to the evidence below.
 |---|---|
 | **Exceptional robustness** | Signed `attemptToken` binds each attempt to the authenticated user, exact question IDs, and the shuffled option order (`backend/src/utils/quizAttemptToken.js`); replay protection via both controller pre-check and a unique `Score.attemptId` index; per-attempt `optionOrder` persistence so Review Mode renders the same order the player originally saw; `helmet`, `express-mongo-sanitize`, and per-user rate-limit `keyGenerator` (`req.user?.id \|\| req.ip`); `ActiveQuizNavigationGuard` confirms before refresh, `popstate`, and in-app link clicks while a quiz is active. |
 | **Especially thoughtful edge case handling** | "Not enough active questions" returns 400 with a clear message instead of crashing; distinct `Attempt token expired` / `Invalid attempt token` / `Attempt token does not belong to current user` messages; duplicate-submission attempts return 409 (controller pre-check + unique index); deleted questions in history render `[Question deleted]` without breaking the review payload; bulk import reports per-row errors as `Question N: <reason>` with the offending index; empty-string explanations become `null` and render as a fallback review note; corrupted `localStorage` JSON is caught in `AuthContext`; loading / error / empty triple state on every player page; wildcard 404 route. |
-| **Extremely clear system integration** | Shared `{ success, data?, error? }` response envelope on every route via `backend/src/utils/responseEnvelope.js`; shared `QUIZ_LENGTH` / `OPTIONS_PER_QUESTION` constants consumed by controllers, models, and validators (`backend/src/config/quiz.js`); auth middleware re-fetches the user and attaches `toSafeObject()` so `/me` and `/login` emit the same shape (the Pair 1 contract); single `AuthContext` restores the session on mount via `/api/auth/me`; admin and player route families are mutually exclusive (`admin.middleware` + `forbidAdminQuiz.middleware`) and documented under §Main API Routes; dual API documentation (`/api-docs` Swagger UI + `docs/postman-collection.json`) mirrors the same routes for cross-tool verification. |
+| **Extremely clear system integration** | Shared success `{ success: true, data }` and failure `{ success: false, error }` response envelopes on every route via `backend/src/utils/responseEnvelope.js`; shared `QUIZ_LENGTH` / `OPTIONS_PER_QUESTION` constants consumed by controllers, models, and validators (`backend/src/config/quiz.js`); auth middleware re-fetches the user and attaches `toSafeObject()` so `/me` and `/login` emit the same shape (the Pair 1 contract); single `AuthContext` restores the session on mount via `/api/auth/me`; admin and player route families are mutually exclusive (`admin.middleware` + `forbidAdminQuiz.middleware`) and documented under §Main API Routes; dual API documentation (`/api-docs` Swagger UI + `docs/postman-collection.json`) mirrors the same routes for cross-tool verification. |
 
 ### Robustness highlights
 
@@ -232,7 +232,7 @@ The three bonus dimensions from the assessment rubric map to the evidence below.
 
 - **What:** The interface includes ARIA labels, live/status regions, consistent response envelopes, and friendly error states for auth, quiz, and admin actions.
 - **Why:** These details improve usability and make failures easier to understand during marking or live demo.
-- **How it integrates:** Frontend components use `aria-*`/`role` attributes, while backend controllers and middleware return the shared `{ success, data?, error? }` envelope.
+- **How it integrates:** Frontend components use `aria-*`/`role` attributes, while backend controllers and middleware return shared success `{ success: true, data }` and failure `{ success: false, error }` envelopes.
 
 ## Main API Routes
 

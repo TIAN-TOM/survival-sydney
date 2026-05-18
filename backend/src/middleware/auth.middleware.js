@@ -8,7 +8,7 @@ module.exports = async (req, res, next) => {
   const [scheme, token] = header.split(' ');
 
   if (scheme !== 'Bearer' || !token) {
-    return res.status(401).json(fail('Missing or malformed Authorization header', 401));
+    return res.status(401).json(fail('Missing or malformed Authorization header'));
   }
 
   let payload;
@@ -16,13 +16,13 @@ module.exports = async (req, res, next) => {
     payload = jwt.verify(token, getJwtSecret());
   } catch (err) {
     const message = err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token';
-    return res.status(401).json(fail(message, 401));
+    return res.status(401).json(fail(message));
   }
 
   try {
     const user = await User.findById(payload.userId);
     if (!user) {
-      return res.status(401).json(fail('User no longer exists', 401));
+      return res.status(401).json(fail('User no longer exists'));
     }
     req.user = user.toSafeObject();
     return next();

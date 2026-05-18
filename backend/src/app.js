@@ -37,7 +37,7 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.use((req, res) => {
-  res.status(404).json(fail('Route not found', 404));
+  res.status(404).json(fail('Route not found'));
 });
 
 app.use(errorHandler);

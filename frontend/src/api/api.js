@@ -25,15 +25,13 @@ function toEnvelopeError(error, fallbackMessage = 'Request failed') {
   const responseData = error.response?.data;
   const envelopeError = responseData?.error;
   const message =
-    (typeof envelopeError === 'string' ? envelopeError : envelopeError?.message) ||
+    (typeof envelopeError === 'string' ? envelopeError : undefined) ||
     responseData?.message ||
     error.message ||
     fallbackMessage;
 
   const normalized = new Error(message);
-  normalized.status = error.response?.status || responseData?.statusCode;
-  normalized.code = envelopeError?.code || responseData?.code;
-  normalized.details = envelopeError?.details || responseData?.details;
+  normalized.status = error.response?.status;
   normalized.response = error.response;
   normalized.originalError = error;
 
@@ -43,19 +41,17 @@ function toEnvelopeError(error, fallbackMessage = 'Request failed') {
 function unwrapEnvelope(response) {
   const body = response.data;
 
-  if (body && (body.ok === true || body.success === true)) {
+  if (body && body.success === true) {
     return body.data;
   }
 
-  if (body && (body.ok === false || body.success === false)) {
+  if (body && body.success === false) {
     const error = new Error(
-      (typeof body.error === 'string' ? body.error : body.error?.message) ||
+      (typeof body.error === 'string' ? body.error : undefined) ||
         body.message ||
         'Request failed'
     );
-    error.status = response.status || body.statusCode;
-    error.code = body.error?.code || body.code;
-    error.details = body.error?.details || body.details;
+    error.status = response.status;
     error.response = response;
     throw error;
   }

@@ -18,6 +18,6 @@ describe('forbidAdminQuiz middleware', () => {
     forbidAdminQuiz(req, res, next);
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith(fail('Admins cannot take quizzes.', 403));
+    expect(res.json).toHaveBeenCalledWith(fail('Admins cannot take quizzes.'));
   });
 });

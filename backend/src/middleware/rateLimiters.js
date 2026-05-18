@@ -4,7 +4,7 @@ const rateLimit = require('express-rate-limit');
 const { fail } = require('../utils/responseEnvelope');
 
 const limiterResponse = (message) => (req, res) => {
-  res.status(429).json(fail(message, 429));
+  res.status(429).json(fail(message));
 };
 
 const loginLimiter = rateLimit({

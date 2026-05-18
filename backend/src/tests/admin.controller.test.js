@@ -156,10 +156,8 @@ describe('Admin question API', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error).toMatch(/Question 2/i);
-    expect(response.body.details.errors[0]).toMatchObject({
-      index: 1,
-      message: expect.stringMatching(/Question 2/i),
-    });
+    expect(response.body.error).toMatch(/correctAnswer must be an integer from 0 to 3/i);
+    expect(Object.keys(response.body).sort()).toEqual(['error', 'success']);
 
     const count = await Question.countDocuments();
     expect(count).toBe(0);
@@ -207,16 +205,9 @@ describe('Admin question API', () => {
 
     expect(response.body.success).toBe(false);
     expect(response.body.error).toMatch(/Bulk import validation failed/i);
-    expect(response.body.details.errors).toEqual([
-      {
-        index: 0,
-        message: expect.stringMatching(/Question 1: questionText must include/i),
-      },
-      {
-        index: 1,
-        message: expect.stringMatching(/Question 2: options must be unique/i),
-      },
-    ]);
+    expect(response.body.error).toMatch(/Question 1: questionText must include/i);
+    expect(response.body.error).toMatch(/Question 2: options must be unique/i);
+    expect(Object.keys(response.body).sort()).toEqual(['error', 'success']);
 
     const count = await Question.countDocuments();
     expect(count).toBe(0);

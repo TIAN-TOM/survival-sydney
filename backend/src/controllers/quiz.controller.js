@@ -74,7 +74,7 @@ const submitQuiz = async (req, res, next) => {
           : err.code === 'wrong_user'
             ? 'Attempt token does not belong to current user'
             : 'Invalid attempt token';
-      return res.status(401).json(fail(message, 401));
+      return res.status(401).json(fail(message));
     }
 
     // --- input validation ---
@@ -127,7 +127,7 @@ const submitQuiz = async (req, res, next) => {
     }
 
     if (await Score.exists({ attemptId: decoded.attemptId })) {
-      return res.status(409).json(fail('Attempt already submitted', 409));
+      return res.status(409).json(fail('Attempt already submitted'));
     }
 
     // --- fetch all questions in one query ---
@@ -170,7 +170,7 @@ const submitQuiz = async (req, res, next) => {
       });
     } catch (err) {
       if (err && err.code === 11000 && (!err.keyPattern || err.keyPattern.attemptId)) {
-        return res.status(409).json(fail('Attempt already submitted', 409));
+        return res.status(409).json(fail('Attempt already submitted'));
       }
       throw err;
     }
@@ -263,7 +263,7 @@ const getAttemptDetail = async (req, res, next) => {
     });
 
     if (!attempt) {
-      return res.status(404).json(fail('Attempt not found', 404));
+      return res.status(404).json(fail('Attempt not found'));
     }
 
     const review = attempt.answers.map(a => {

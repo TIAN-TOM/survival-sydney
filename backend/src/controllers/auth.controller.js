@@ -23,7 +23,7 @@ exports.register = async (req, res, next) => {
       const message = existing.username === normalizedUsername
         ? 'Username already taken'
         : 'Email already registered';
-      return res.status(409).json(fail(message, 409));
+      return res.status(409).json(fail(message));
     }
 
     const user = new User({
@@ -50,12 +50,12 @@ exports.login = async (req, res, next) => {
     const { username, password } = req.body;
     const user = await User.findOne({ username: username.toLowerCase().trim() });
     if (!user) {
-      return res.status(401).json(fail('Invalid username or password', 401));
+      return res.status(401).json(fail('Invalid username or password'));
     }
 
     const valid = await user.comparePassword(password);
     if (!valid) {
-      return res.status(401).json(fail('Invalid username or password', 401));
+      return res.status(401).json(fail('Invalid username or password'));
     }
 
     const token = signToken(user);

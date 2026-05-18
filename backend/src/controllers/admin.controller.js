@@ -157,7 +157,7 @@ const createQuestion = async (req, res, next) => {
     const validationError = isValidQuestionPayload(req.body);
 
     if (validationError) {
-      return res.status(400).json(fail(validationError, 400));
+      return res.status(400).json(fail(validationError));
     }
 
     const question = await Question.create(normalizeQuestionPayload(req.body));
@@ -176,7 +176,7 @@ const updateQuestion = async (req, res, next) => {
     const validationError = isValidQuestionPayload(req.body);
 
     if (validationError) {
-      return res.status(400).json(fail(validationError, 400));
+      return res.status(400).json(fail(validationError));
     }
 
     const question = await Question.findByIdAndUpdate(
@@ -189,7 +189,7 @@ const updateQuestion = async (req, res, next) => {
     );
 
     if (!question) {
-      return res.status(404).json(fail('Question not found', 404));
+      return res.status(404).json(fail('Question not found'));
     }
 
     return res.json(ok(question));
@@ -207,7 +207,7 @@ const deleteQuestion = async (req, res, next) => {
     const question = await Question.findByIdAndDelete(req.params.id);
 
     if (!question) {
-      return res.status(404).json(fail('Question not found', 404));
+      return res.status(404).json(fail('Question not found'));
     }
 
     return res.json(ok({ deletedId: question._id }));
@@ -225,7 +225,7 @@ const toggleQuestionStatus = async (req, res, next) => {
     const question = await Question.findById(req.params.id);
 
     if (!question) {
-      return res.status(404).json(fail('Question not found', 404));
+      return res.status(404).json(fail('Question not found'));
     }
 
     question.active = !question.active;
@@ -246,11 +246,11 @@ const bulkImportQuestions = async (req, res, next) => {
     const { questions } = req.body;
 
     if (!Array.isArray(questions)) {
-      return res.status(400).json(fail('questions must be an array', 400));
+      return res.status(400).json(fail('questions must be an array'));
     }
 
     if (questions.length === 0) {
-      return res.status(400).json(fail('questions array cannot be empty', 400));
+      return res.status(400).json(fail('questions array cannot be empty'));
     }
 
     const validationErrors = [];
@@ -271,12 +271,9 @@ const bulkImportQuestions = async (req, res, next) => {
     }
 
     if (validationErrors.length > 0) {
+      const errorMessage = validationErrors.map(error => error.message).join('; ');
       return res.status(400).json(
-        fail(
-          `Bulk import validation failed: ${validationErrors.map(error => error.message).join('; ')}`,
-          400,
-          { errors: validationErrors }
-        )
+        fail(`Bulk import validation failed: ${errorMessage}`)
       );
     }
 

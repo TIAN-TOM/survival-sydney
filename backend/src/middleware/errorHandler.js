@@ -29,10 +29,8 @@ function resolveClientMessage(err, statusCode) {
 function errorHandler(err, req, res, next) {
   const statusCode = resolveStatusCode(err, res);
   const message = resolveClientMessage(err, statusCode);
-  const details = statusCode >= 500 ? undefined : err.details;
-  const code = statusCode >= 500 ? undefined : err.code;
 
-  res.status(statusCode).json(fail(message, statusCode, details, code));
+  res.status(statusCode).json(fail(message));
 }
 
 function notFound(req, res, next) {
