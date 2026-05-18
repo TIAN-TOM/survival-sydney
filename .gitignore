@@ -18,6 +18,7 @@ yarn-error.log*
 # Local-only review notes
 docs/final-rubric-session-review.md
 docs/rubric-assessment.md
+docs/audit-report.md
 
 # LaTeX build artifacts
 *.aux
