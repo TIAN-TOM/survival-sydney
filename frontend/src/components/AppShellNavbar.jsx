@@ -1,6 +1,5 @@
 import { useLocation } from 'react-router-dom';
 
-import { useAuth } from '../contexts/AuthContext.jsx';
 import AdminNavbar from './navbars/AdminNavbar.jsx';
 import PlayerNavbar from './navbars/PlayerNavbar.jsx';
 import PublicNavbar from './navbars/PublicNavbar.jsx';
@@ -11,7 +10,6 @@ import PublicNavbar from './navbars/PublicNavbar.jsx';
  */
 export default function AppShellNavbar() {
   const { pathname } = useLocation();
-  const { user } = useAuth();
 
   if (pathname === '/admin') {
     return <AdminNavbar />;
