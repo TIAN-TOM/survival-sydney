@@ -1,5 +1,5 @@
 {
-  "name": "comp5347-a2-quiz-game",
+  "name": "comp5347-a2",
   "private": true,
   "scripts": {
     "demo": "bash scripts/demo.sh",

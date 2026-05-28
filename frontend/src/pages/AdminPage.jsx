@@ -7,6 +7,58 @@ import QuestionForm from '../components/QuestionForm.jsx';
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
+const getQuestionSearchText = question => {
+  const correctIndex = Number(question.correctAnswer);
+  const correctOption = Number.isInteger(correctIndex) ? question.options?.[correctIndex] : null;
+
+  return [
+    question.questionText,
+    ...(question.options || []),
+    correctOption,
+    question.explanation,
+    question.topic,
+    question.active ? 'active' : 'inactive',
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+};
+
+const renderHighlightedText = (value, query) => {
+  const text = String(value ?? '');
+
+  if (!query) {
+    return text;
+  }
+
+  const lowerText = text.toLowerCase();
+  const parts = [];
+  let cursor = 0;
+  let matchIndex = lowerText.indexOf(query);
+
+  while (matchIndex !== -1) {
+    if (matchIndex > cursor) {
+      parts.push(text.slice(cursor, matchIndex));
+    }
+
+    const matchEnd = matchIndex + query.length;
+    parts.push(
+      <mark className="admin-search-highlight" key={`${matchIndex}-${matchEnd}`}>
+        {text.slice(matchIndex, matchEnd)}
+      </mark>
+    );
+
+    cursor = matchEnd;
+    matchIndex = lowerText.indexOf(query, cursor);
+  }
+
+  if (cursor < text.length) {
+    parts.push(text.slice(cursor));
+  }
+
+  return parts;
+};
+
 export default function AdminPage() {
   const { hash } = useLocation();
   const [questions, setQuestions] = useState([]);
@@ -18,6 +70,7 @@ export default function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const showMessage = (type, text) => {
     setMessage({ type, text });
@@ -49,13 +102,35 @@ export default function AdminPage() {
   }, [hash]);
 
   const activeCount = useMemo(() => questions.filter((q) => q.active).length, [questions]);
-  const totalPages = Math.max(1, Math.ceil(questions.length / pageSize));
+  const questionBankIndexById = useMemo(() => {
+    const indexById = new Map();
+    questions.forEach((question, index) => {
+      indexById.set(question._id, index + 1);
+    });
+    return indexById;
+  }, [questions]);
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredQuestions = useMemo(() => {
+    if (!normalizedSearchQuery) {
+      return questions;
+    }
+
+    return questions.filter(question => getQuestionSearchText(question).includes(normalizedSearchQuery));
+  }, [normalizedSearchQuery, questions]);
+  const hasSearchQuery = normalizedSearchQuery.length > 0;
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / pageSize));
   const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, questions.length);
+  const endIndex = Math.min(startIndex + pageSize, filteredQuestions.length);
+  const displayStartIndex = filteredQuestions.length === 0 ? 0 : startIndex + 1;
   const visibleQuestions = useMemo(
-    () => questions.slice(startIndex, endIndex),
-    [endIndex, questions, startIndex]
+    () => filteredQuestions.slice(startIndex, endIndex),
+    [endIndex, filteredQuestions, startIndex]
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+    setPendingDeleteId(null);
+  }, [normalizedSearchQuery]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -70,6 +145,10 @@ export default function AdminPage() {
   const handlePageSizeChange = event => {
     setPageSize(Number(event.target.value));
     setCurrentPage(1);
+  };
+
+  const handleSearchChange = event => {
+    setSearchQuery(event.target.value);
   };
 
   const handleCreateClick = () => {
@@ -231,8 +310,20 @@ export default function AdminPage() {
             <div className="admin-question-list admin-table admin-data-table">
               <div className="admin-question-list__toolbar" aria-label="Question bank list controls">
                 <p aria-live="polite">
-                  Showing {startIndex + 1}-{endIndex} of {questions.length} questions
+                  {hasSearchQuery
+                    ? `Showing ${displayStartIndex}-${endIndex} of ${filteredQuestions.length} matching questions (${questions.length} total)`
+                    : `Showing ${displayStartIndex}-${endIndex} of ${questions.length} questions`}
                 </p>
+                <label className="admin-question-list__search">
+                  Search questions
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    placeholder="Question, option, explanation, status"
+                    aria-label="Search question bank"
+                  />
+                </label>
                 <label>
                   Questions per page
                   <select value={pageSize} onChange={handlePageSizeChange}>
@@ -245,19 +336,32 @@ export default function AdminPage() {
                 </label>
               </div>
 
+              {filteredQuestions.length === 0 ? (
+                <p className="review-attempt-hint admin-question-list__empty">
+                  No questions match your search. Clear the search box to return to the full bank.
+                </p>
+              ) : null}
+
               <div className="admin-qbank admin-qbank--cards" role="list" aria-label="Question list">
                 <div className="admin-qbank__body">
-                  {visibleQuestions.map((question, index) => (
+                  {visibleQuestions.map((question) => (
                     <article key={question._id} className="admin-qbank-card" role="listitem">
                       <div className="admin-qbank-card__top">
-                        <div className="admin-qbank-card__number" aria-label={`Question number ${startIndex + index + 1}`}>
-                          No. {startIndex + index + 1}
+                        <div
+                          className="admin-qbank-card__number"
+                          aria-label={`Bank question number ${questionBankIndexById.get(question._id)}`}
+                        >
+                          Bank No. {questionBankIndexById.get(question._id)}
                         </div>
                         <div className="admin-qbank-card__content">
-                          <h3 className="admin-q-title">{question.questionText}</h3>
+                          <h3 className="admin-q-title">
+                            {renderHighlightedText(question.questionText, normalizedSearchQuery)}
+                          </h3>
                           <ol className="admin-q-opts" type="A">
                             {question.options.map((option, index) => (
-                              <li key={`${question._id}-${index}`}>{option}</li>
+                              <li key={`${question._id}-${index}`}>
+                                {renderHighlightedText(option, normalizedSearchQuery)}
+                              </li>
                             ))}
                           </ol>
                         </div>
@@ -331,7 +435,7 @@ export default function AdminPage() {
                                   : 'admin-status-pill admin-status-pill--inactive'
                               }
                             >
-                              {question.active ? 'Active' : 'Inactive'}
+                              {renderHighlightedText(question.active ? 'Active' : 'Inactive', normalizedSearchQuery)}
                             </span>
                           </span>
                         </div>
@@ -346,7 +450,9 @@ export default function AdminPage() {
                                 : undefined
                             }
                           >
-                            {question.explanation || '—'}
+                            {question.explanation
+                              ? renderHighlightedText(question.explanation, normalizedSearchQuery)
+                              : '—'}
                           </span>
                         </div>
                       </footer>
