@@ -33,6 +33,7 @@ function ActiveQuizNavigationGuard() {
   useEffect(() => {
     if (!hasActiveQuiz) return undefined;
 
+    // Browser refresh/close is the only exit path React Router cannot intercept directly.
     const handleBeforeUnload = (event) => {
       event.preventDefault();
       event.returnValue = '';
@@ -45,6 +46,7 @@ function ActiveQuizNavigationGuard() {
   useEffect(() => {
     if (!hasActiveQuiz) return undefined;
 
+    // Push a guard history entry so the browser Back button can ask for confirmation first.
     if (!pushedPopGuardRef.current) {
       window.history.pushState(
         { ...(window.history.state || {}), activeQuizGuard: true },
@@ -75,6 +77,7 @@ function ActiveQuizNavigationGuard() {
       );
     };
 
+    // Capture internal links before React Router navigates away from an active attempt.
     const handleDocumentClick = (event) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;

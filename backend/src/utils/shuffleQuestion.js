@@ -18,6 +18,7 @@ function isValidPermutation(arr) {
 }
 
 function generateOptionOrder(randomFn = Math.random) {
+  // Fisher-Yates style shuffle: produces one visible option order for this attempt only.
   const order = Array.from({ length: OPTIONS_PER_QUESTION }, (_, index) => index);
   for (let i = order.length - 1; i > 0; i -= 1) {
     const j = Math.floor(randomFn() * (i + 1));
@@ -45,6 +46,7 @@ function applyOptionOrder(question, order) {
     _id: question._id,
     questionText: question.questionText,
     options: order.map(index => opts[index]),
+    // correctAnswer is converted into the visible shuffled index for review display.
     correctAnswer: order.indexOf(correctIdx),
     topic: question.topic || 'general',
     explanation: question.explanation,

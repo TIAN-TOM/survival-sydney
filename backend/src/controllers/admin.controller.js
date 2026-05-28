@@ -8,11 +8,13 @@ const OPTION_MAX_LENGTH = 120;
 const EXPLANATION_MAX_LENGTH = 800;
 const TOPIC_MAX_LENGTH = 60;
 
+// Normalisation makes duplicate detection robust to case changes and repeated whitespace.
 const normalizeTextForCompare = value => value.trim().replace(/\s+/g, ' ').toLowerCase();
 const escapeRegExp = value => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const buildQuestionTextRegex = questionText => {
   const normalizedPattern = escapeRegExp(questionText.trim()).replace(/\s+/g, '\\s+');
+  // Regex lookup lets "same text with different spacing/case" count as a duplicate question.
   return new RegExp(`^\\s*${normalizedPattern}\\s*$`, 'i');
 };
 
@@ -158,6 +160,7 @@ const getBulkDuplicateErrors = async questions => {
   const firstQuestionIndexByText = new Map();
   const uniqueQuestionTexts = [];
 
+  // First reject duplicates within the uploaded batch, before checking existing database rows.
   questions.forEach((question, index) => {
     const normalizedText = normalizeTextForCompare(question.questionText);
     const firstIndex = firstQuestionIndexByText.get(normalizedText);
@@ -175,6 +178,7 @@ const getBulkDuplicateErrors = async questions => {
   });
 
   if (uniqueQuestionTexts.length > 0) {
+    // Then reject rows that already exist in MongoDB, using the same normalised text comparison.
     const existingQuestions = await Question.find({
       $or: uniqueQuestionTexts.map(questionText => ({
         questionText: buildQuestionTextRegex(questionText),
@@ -338,6 +342,7 @@ const bulkImportQuestions = async (req, res, next) => {
     const validationErrors = [];
     const normalizedQuestions = [];
 
+    // Validate and normalise the full batch before insertMany so imports are all-or-nothing.
     for (let i = 0; i < questions.length; i++) {
       const validationError = isValidQuestionPayload(questions[i]);
 

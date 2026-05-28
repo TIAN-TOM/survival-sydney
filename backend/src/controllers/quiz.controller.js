@@ -16,6 +16,7 @@ const mongoose = require('mongoose');
  */
 const startQuiz = async (req, res, next) => {
   try {
+    // Random selection is server-side: filter active questions first, then let MongoDB sample the quiz set.
     const raw = await Question.aggregate([
       { $match: { active: true } },
       { $sample: { size: QUIZ_LENGTH } },
@@ -29,12 +30,14 @@ const startQuiz = async (req, res, next) => {
       },
     ]);
 
+    // Reject start rather than creating a partial quiz when the active bank is too small.
     if (raw.length < QUIZ_LENGTH) {
       return res
         .status(400)
         .json(fail(`Not enough active questions in database (need at least ${QUIZ_LENGTH})`));
     }
 
+    // Every attempt gets fresh option permutations; the same order is signed and later used for scoring.
     const withOrder = raw.map(q => ({
       ...q,
       optionOrder: generateOptionOrder(),
@@ -43,6 +46,8 @@ const startQuiz = async (req, res, next) => {
       userId: req.user.id,
       questions: withOrder.map(q => ({ _id: q._id, optionOrder: q.optionOrder })),
     });
+
+    // The browser receives only public quiz data; answer keys and explanations stay server-side at start.
     const questions = withOrder.map(q => toStartQuizPayload(applyOptionOrder(q, q.optionOrder)));
 
     return res.json(ok({ attemptToken: token, questions }));
@@ -66,6 +71,7 @@ const submitQuiz = async (req, res, next) => {
 
     let decoded;
     try {
+      // attemptToken is the signed contract for this quiz attempt; expired/tampered/wrong-user tokens stop here.
       decoded = verifyAttemptToken(attemptToken, req.user.id);
     } catch (err) {
       const message =
@@ -118,6 +124,7 @@ const submitQuiz = async (req, res, next) => {
     const submittedQids = answers.map(a => String(a.questionId));
     const submittedQidSet = new Set(submittedQids);
 
+    // Prevent question swapping: the submitted IDs must match the token's signed question set exactly.
     if (
       submittedQids.length !== tokenQids.length ||
       submittedQidSet.size !== tokenQidSet.size ||
@@ -126,11 +133,13 @@ const submitQuiz = async (req, res, next) => {
       return res.status(400).json(fail('Submitted question IDs do not match attempt token'));
     }
 
+    // Reject replay before scoring; the unique database index is the final backstop against races.
     if (await Score.exists({ attemptId: decoded.attemptId })) {
       return res.status(409).json(fail('Attempt already submitted'));
     }
 
     // --- fetch all questions in one query ---
+    // Correct answers come from MongoDB; the frontend never supplies correctness or score.
     const questions = await Question.find({ _id: { $in: tokenQids } });
 
     if (questions.length !== QUIZ_LENGTH) {
@@ -162,6 +171,7 @@ const submitQuiz = async (req, res, next) => {
     // --- save to database ---
     let scoreRecord;
     try {
+      // Persist optionOrder with each answer so Review Mode can recreate the exact shuffled attempt.
       scoreRecord = await Score.create({
         userId: req.user.id,
         attemptId: decoded.attemptId,
@@ -169,6 +179,7 @@ const submitQuiz = async (req, res, next) => {
         answers: detailedAnswers,
       });
     } catch (err) {
+      // Handles a double-submit race if two requests pass the pre-check at nearly the same time.
       if (err && err.code === 11000 && (!err.keyPattern || err.keyPattern.attemptId)) {
         return res.status(409).json(fail('Attempt already submitted'));
       }

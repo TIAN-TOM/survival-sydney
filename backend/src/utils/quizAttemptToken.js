@@ -15,6 +15,7 @@ function tokenError(code) {
 }
 
 function signAttemptToken({ userId, questions }) {
+  // The attempt token binds this user to one exact question set and option order.
   if (!userId) {
     throw new Error('signAttemptToken: userId is required');
   }
@@ -43,6 +44,7 @@ function signAttemptToken({ userId, questions }) {
   }
 
   const attemptId = crypto.randomUUID();
+  // purpose separates quiz-attempt tokens from normal login JWTs that use the same signing library.
   const payload = {
     purpose: 'quiz_attempt',
     userId: String(userId),
@@ -63,6 +65,7 @@ function verifyAttemptToken(token, expectedUserId) {
   try {
     decoded = jwt.verify(token, getJwtSecret());
   } catch (err) {
+    // Expired attempts are reported separately so submit can show the right user-facing message.
     throw tokenError(err.name === 'TokenExpiredError' ? 'expired' : 'invalid');
   }
 
@@ -93,6 +96,7 @@ function verifyAttemptToken(token, expectedUserId) {
   }
 
   const qids = decoded.items.map(item => item.qid);
+  // Duplicate IDs would make scoring ambiguous, so the signed contract must contain exactly 10 unique questions.
   if (new Set(qids).size !== QUIZ_LENGTH) {
     throw tokenError('invalid');
   }

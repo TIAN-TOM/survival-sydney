@@ -95,8 +95,10 @@ function quizReducer(state, action) {
 
 export function QuizProvider({ children }) {
   const [state, dispatch] = useReducer(quizReducer, initialState);
+  // Prevents accidental double-submit while the result screen is calculating.
   const submitOnceRef = useRef(false);
   const { logout } = useAuth();
+  // Only in-progress attempts need navigation protection; completed or gated screens can be left freely.
   const hasActiveQuiz = state.questions.length > 0 && ['quiz', 'calculating'].includes(state.phase);
 
   const setPhase = useCallback((phase) => {
@@ -113,6 +115,7 @@ export function QuizProvider({ children }) {
       const data = await api.get('/quiz/start');
       dispatch({ type: 'START_QUIZ', payload: data });
     } catch (err) {
+      // A 401 here usually means the login JWT expired before the player started.
       if (err.status === 401) {
         logout();
         dispatch({
@@ -165,6 +168,7 @@ export function QuizProvider({ children }) {
       dispatch({ type: 'SUBMIT_COMPLETE', payload: data });
     } catch (err) {
       submitOnceRef.current = false;
+      // Covers both expired login JWT and expired/invalid attemptToken returned as 401 by the backend.
       if (err.status === 401) {
         logout();
         dispatch({

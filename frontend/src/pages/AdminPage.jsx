@@ -11,6 +11,7 @@ const getQuestionSearchText = question => {
   const correctIndex = Number(question.correctAnswer);
   const correctOption = Number.isInteger(correctIndex) ? question.options?.[correctIndex] : null;
 
+  // Search covers visible question content plus metadata, so admins can find by text, answer, topic, or status.
   return [
     question.questionText,
     ...(question.options || []),
@@ -36,6 +37,7 @@ const renderHighlightedText = (value, query) => {
   let cursor = 0;
   let matchIndex = lowerText.indexOf(query);
 
+  // Split text around case-insensitive matches so the UI can highlight exactly what the search found.
   while (matchIndex !== -1) {
     if (matchIndex > cursor) {
       parts.push(text.slice(cursor, matchIndex));
@@ -118,6 +120,7 @@ export default function AdminPage() {
     return questions.filter(question => getQuestionSearchText(question).includes(normalizedSearchQuery));
   }, [normalizedSearchQuery, questions]);
   const hasSearchQuery = normalizedSearchQuery.length > 0;
+  // Pagination is applied after filtering, so page counts always match the visible result set.
   const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / pageSize));
   const startIndex = (currentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, filteredQuestions.length);

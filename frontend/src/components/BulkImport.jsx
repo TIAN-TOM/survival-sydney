@@ -13,6 +13,7 @@ const TOPIC_MAX_LENGTH = 60;
 
 const normalizeTextForCompare = value => value.trim().replace(/\s+/g, ' ').toLowerCase();
 
+// Shared normalisation keeps duplicate checks stable across case and repeated whitespace.
 const meaningfulText = (label, { min = 1, max } = {}) =>
   z
     .string()
@@ -52,6 +53,7 @@ const questionImportSchema = z
   .superRefine((question, ctx) => {
     if (!Array.isArray(question.options) || question.options.length !== 4) return;
 
+    // Option duplicates make multiple-choice questions ambiguous, so they are rejected client-side first.
     const options = question.options.map(normalizeTextForCompare);
     if (new Set(options).size !== options.length) {
       ctx.addIssue({
@@ -97,6 +99,7 @@ function parseImportPayload(jsonText) {
   const validationErrors = [];
   const validatedQuestionEntries = [];
 
+  // Validate every row before sending anything to the backend; the backend still repeats these checks.
   questions.forEach((question, index) => {
     const result = questionImportSchema.safeParse(question);
 
@@ -114,6 +117,7 @@ function parseImportPayload(jsonText) {
 
   const firstQuestionIndexByText = new Map();
 
+  // Catch duplicate questionText rows inside the same import payload before the server insert.
   validatedQuestionEntries.forEach(({ index, question }) => {
     const normalizedQuestionText = normalizeTextForCompare(question.questionText);
     const firstIndex = firstQuestionIndexByText.get(normalizedQuestionText);

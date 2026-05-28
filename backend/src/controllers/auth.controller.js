@@ -3,6 +3,7 @@ const User = require('../models/User');
 const { getJwtSecret } = require('../config/auth');
 const { ok, fail } = require('../utils/responseEnvelope');
 
+// JWT carries identity claims only; password safety is handled by bcrypt before this point.
 const signToken = (user) =>
   jwt.sign(
     { userId: user._id.toString(), role: user.role },
@@ -49,6 +50,8 @@ exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const user = await User.findOne({ username: username.toLowerCase().trim() });
+
+    // Keep username/password failures identical so login does not reveal which field was wrong.
     if (!user) {
       return res.status(401).json(fail('Invalid username or password'));
     }
