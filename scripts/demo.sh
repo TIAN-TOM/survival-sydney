@@ -39,8 +39,15 @@ ensure_env_files() {
   log "Preparing local environment files"
 
   if [ ! -f "$ROOT_DIR/backend/.env" ]; then
-    cp "$ROOT_DIR/backend/.env.example" "$ROOT_DIR/backend/.env"
-    printf 'Created backend/.env from backend/.env.example\n'
+    # Generate a fresh JWT secret instead of copying the placeholder, which the app now rejects.
+    local secret
+    if command -v openssl >/dev/null 2>&1; then
+      secret="$(openssl rand -hex 32)"
+    else
+      secret="$(node -e 'process.stdout.write(require("crypto").randomBytes(32).toString("hex"))')"
+    fi
+    sed "s|^JWT_SECRET=.*|JWT_SECRET=${secret}|" "$ROOT_DIR/backend/.env.example" > "$ROOT_DIR/backend/.env"
+    printf 'Created backend/.env from backend/.env.example with a generated JWT secret\n'
   else
     printf 'Using existing backend/.env\n'
   fi
@@ -118,7 +125,13 @@ ensure_mongodb() {
 }
 
 seed_demo_data() {
+  if [ "${SKIP_SEED:-0}" = "1" ]; then
+    log "Skipping demo seed (SKIP_SEED=1)"
+    return
+  fi
   log "Seeding demo data"
+  printf 'Note: this resets questions to the seed bank and clears ALL quiz scores.\n'
+  printf 'Set SKIP_SEED=1 to keep existing data (e.g. after testing admin CRUD).\n'
   npm run seed --prefix "$ROOT_DIR/backend"
 }
 

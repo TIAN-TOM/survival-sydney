@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { getJwtSecret } = require('../config/auth');
+const { getJwtSecret, JWT_ALGORITHM } = require('../config/auth');
 const { fail } = require('../utils/responseEnvelope');
 
 module.exports = async (req, res, next) => {
@@ -14,11 +14,18 @@ module.exports = async (req, res, next) => {
 
   let payload;
   try {
-    payload = jwt.verify(token, getJwtSecret());
+    // Pin the algorithm so a token cannot be forged with "alg: none" or a swapped algorithm.
+    payload = jwt.verify(token, getJwtSecret(), { algorithms: [JWT_ALGORITHM] });
   } catch (err) {
     // The expiry message is distinct so the frontend can ask the user to sign in again.
     const message = err.name === 'TokenExpiredError' ? 'Token expired' : 'Invalid token';
     return res.status(401).json(fail(message));
+  }
+
+  // Quiz-attempt tokens are signed with the same key but are not session credentials.
+  // Rejecting the `purpose` claim here stops token-type confusion (using an attempt token as a login).
+  if (payload.purpose) {
+    return res.status(401).json(fail('Invalid token'));
   }
 
   try {

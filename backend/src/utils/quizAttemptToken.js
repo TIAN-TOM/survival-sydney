@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 
-const { getJwtSecret } = require('../config/auth');
+const { getJwtSecret, JWT_ALGORITHM } = require('../config/auth');
 const { ATTEMPT_TOKEN_TTL_SECONDS, QUIZ_LENGTH } = require('../config/quiz');
 const { isValidPermutation } = require('./shuffleQuestion');
 
@@ -54,6 +54,7 @@ function signAttemptToken({ userId, questions }) {
 
   const token = jwt.sign(payload, getJwtSecret(), {
     expiresIn: ATTEMPT_TOKEN_TTL_SECONDS,
+    algorithm: JWT_ALGORITHM,
   });
 
   return { attemptId, token };
@@ -63,7 +64,7 @@ function verifyAttemptToken(token, expectedUserId) {
   let decoded;
 
   try {
-    decoded = jwt.verify(token, getJwtSecret());
+    decoded = jwt.verify(token, getJwtSecret(), { algorithms: [JWT_ALGORITHM] });
   } catch (err) {
     // Expired attempts are reported separately so submit can show the right user-facing message.
     throw tokenError(err.name === 'TokenExpiredError' ? 'expired' : 'invalid');
