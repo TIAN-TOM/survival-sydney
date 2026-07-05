@@ -1,12 +1,17 @@
 {
   "name": "comp5347-a2",
   "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "demo": "bash scripts/demo.sh",
     "demo:stop": "bash scripts/demo-stop.sh",
     "install:all": "npm install --prefix backend && npm install --prefix frontend",
     "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "test": "npm test --prefix backend",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "npm test --prefix backend",
+    "test:frontend": "npm test --prefix frontend",
     "build": "npm run build --prefix frontend"
   },
   "devDependencies": {
