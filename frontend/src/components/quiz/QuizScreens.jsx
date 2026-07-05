@@ -352,9 +352,14 @@ export function StartScreen() {
               </Link>
             </>
           ) : (
-            <button type="button" className="btn-wizard-start" onClick={startQuiz}>
+            <button
+              type="button"
+              className="btn-wizard-start"
+              onClick={startQuiz}
+              disabled={state.starting}
+            >
               <span className="btn-wizard-start__shine" aria-hidden="true" />
-              Start Quiz
+              {state.starting ? 'Starting…' : 'Start Quiz'}
             </button>
           )}
           <p className="start-wizard__footer">
@@ -643,10 +648,14 @@ export function ResultScreen() {
                       type="button"
                       className="btn-again btn-again--outline result-actions__cta-secondary"
                       onClick={handlePlayAgain}
+                      disabled={state.starting}
                     >
-                      Try again
+                      {state.starting ? 'Starting…' : 'Try again'}
                     </button>
                   </div>
+                  {state.error ? (
+                    <p className="start-error start-error--wizard">{state.error}</p>
+                  ) : null}
                   <div className="result-actions__tertiary-row">
                     <Link className="result-actions__tertiary-link" to="/leaderboard">
                       Leaderboard →

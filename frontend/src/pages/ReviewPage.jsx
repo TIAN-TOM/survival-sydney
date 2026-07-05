@@ -66,8 +66,14 @@ function ReviewPage() {
   }, []);
 
   const startNewRun = useCallback(async () => {
-    await startQuiz();
-    navigate('/quiz');
+    // Navigate only on a successful start so a failed request doesn't drop the user on a
+    // gate screen with the error already cleared.
+    const started = await startQuiz();
+    if (started) {
+      navigate('/quiz');
+    } else {
+      setError('Could not start a new quiz. Please try again.');
+    }
   }, [navigate, startQuiz]);
 
   useEffect(() => {

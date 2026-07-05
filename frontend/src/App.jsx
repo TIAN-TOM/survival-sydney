@@ -1,20 +1,23 @@
 // Subsystem D - Integration, Robustness & Documentation (Tom Tian):
 // application shell, route wiring, navigation, and cross-subsystem layout.
-import { useEffect, useRef } from 'react';
+import { Suspense, lazy, useEffect, useRef } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import AppShellNavbar from './components/AppShellNavbar.jsx';
 import Login from './components/Login.jsx';
-import Leaderboard from './components/Leaderboard.jsx';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Register from './components/Register.jsx';
 import { useAuth } from './contexts/AuthContext.jsx';
 import { useQuiz } from './contexts/QuizContext.jsx';
-import AdminPage from './pages/AdminPage.jsx';
-import HistoryPage from './pages/HistoryPage.jsx';
 import QuizPage from './pages/QuizPage.jsx';
 import ReviewRouteRedirect from './components/ReviewRouteRedirect.jsx';
-import ReviewPage from './pages/ReviewPage.jsx';
+
+// Split non-landing routes out of the initial bundle. The admin console in particular
+// (plus react-hook-form/zod forms) no longer ships to every player on first load.
+const AdminPage = lazy(() => import('./pages/AdminPage.jsx'));
+const HistoryPage = lazy(() => import('./pages/HistoryPage.jsx'));
+const ReviewPage = lazy(() => import('./pages/ReviewPage.jsx'));
+const Leaderboard = lazy(() => import('./components/Leaderboard.jsx'));
 
 function motionShellClass(pathname) {
   if (pathname.startsWith('/admin') || pathname === '/bosscoming') return 'motion-context--admin';
@@ -147,6 +150,7 @@ function App() {
 
       <main className="app-layout__body">
         <div key={pathname} className={`motion-route-shell ${motionShellClass(pathname)}`}>
+          <Suspense fallback={null}>
           <Routes location={location}>
             <Route path="/" element={<Navigate to="/quiz" replace />} />
             <Route path="/login" element={<Login />} />
@@ -187,6 +191,7 @@ function App() {
             </Route>
             <Route path="*" element={<Navigate to="/quiz" replace />} />
           </Routes>
+          </Suspense>
         </div>
       </main>
     </div>

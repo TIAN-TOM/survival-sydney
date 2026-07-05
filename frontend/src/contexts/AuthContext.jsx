@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import api from '../api/api.js';
+import api, { SESSION_EXPIRED_EVENT } from '../api/api.js';
 
 const AuthContext = createContext(null);
 const TOKEN_KEY = 'jwt';
@@ -56,6 +56,20 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     clearStoredAuth();
     setUser(null);
+  }, []);
+
+  // Any API 401 (expired/invalid token) broadcasts SESSION_EXPIRED_EVENT; clear auth here so
+  // ProtectedRoute redirects to login instead of leaving a signed-in-looking zombie session.
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      if (hasStoredToken()) {
+        clearStoredAuth();
+      }
+      setUser(null);
+    };
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
   }, []);
 
   useEffect(() => {

@@ -72,6 +72,7 @@ export default function AdminPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const [rowBusyId, setRowBusyId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   const showMessage = (type, text) => {
@@ -194,6 +195,9 @@ export default function AdminPage() {
   };
 
   const handleDeleteQuestion = async (questionId) => {
+    // Guard against a double-click firing a second DELETE, whose 404 would look like a failure.
+    if (rowBusyId) return;
+    setRowBusyId(questionId);
     try {
       await api.delete(`/admin/questions/${questionId}`);
       showMessage('success', 'Question deleted successfully.');
@@ -201,16 +205,22 @@ export default function AdminPage() {
       await fetchQuestions();
     } catch (err) {
       showMessage('error', err.message || 'Failed to delete question.');
+    } finally {
+      setRowBusyId(null);
     }
   };
 
   const handleToggleQuestion = async (questionId) => {
+    if (rowBusyId) return;
+    setRowBusyId(questionId);
     try {
       await api.patch(`/admin/questions/${questionId}/toggle`);
       showMessage('success', 'Question status updated successfully.');
       await fetchQuestions();
     } catch (err) {
       showMessage('error', err.message || 'Failed to update question status.');
+    } finally {
+      setRowBusyId(null);
     }
   };
 
@@ -377,8 +387,9 @@ export default function AdminPage() {
                                   type="button"
                                   className="admin-row-btn admin-row-btn--confirm-delete"
                                   onClick={() => handleDeleteQuestion(question._id)}
+                                  disabled={rowBusyId === question._id}
                                 >
-                                  Confirm delete
+                                  {rowBusyId === question._id ? 'Deleting…' : 'Confirm delete'}
                                 </button>
 
                                 <button
@@ -403,6 +414,7 @@ export default function AdminPage() {
                                   type="button"
                                   className="admin-row-btn admin-row-btn--toggle"
                                   onClick={() => handleToggleQuestion(question._id)}
+                                  disabled={rowBusyId === question._id}
                                 >
                                   {question.active ? 'Deactivate' : 'Activate'}
                                 </button>

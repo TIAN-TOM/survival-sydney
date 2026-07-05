@@ -31,10 +31,10 @@ export default function QuizFlow() {
 
   useEffect(() => {
     if (phase !== 'calculating') return undefined;
-    const t = setTimeout(() => {
-      finishQuiz();
-    }, 2300);
-    return () => clearTimeout(t);
+    // Submit immediately so the attempt is saved the moment the last answer is in.
+    // The calculating animation's minimum duration is handled inside finishQuiz, after the save.
+    finishQuiz();
+    return undefined;
   }, [phase, finishQuiz]);
 
   const screens = {

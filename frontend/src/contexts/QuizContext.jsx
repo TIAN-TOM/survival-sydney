@@ -1,10 +1,13 @@
-import { createContext, useCallback, useContext, useReducer, useRef } from 'react';
+import { createContext, useCallback, useContext, useMemo, useReducer, useRef } from 'react';
 
 import api from '../api/api.js';
 import { useAuth } from './AuthContext.jsx';
 
 const QuizContext = createContext(null);
 const ACTIVE_QUIZ_LEAVE_MESSAGE = 'You have an active quiz. Leave this page and lose current progress?';
+// Minimum time the "calculating" screen stays up AFTER the score is already saved server-side,
+// purely so the reveal feels smooth. Persistence no longer waits on this timer.
+const MIN_CALCULATING_MS = 1400;
 
 const initialState = {
   phase: 'gate',
@@ -13,6 +16,7 @@ const initialState = {
   currentQ: 0,
   answers: [],
   answered: false,
+  starting: false,
   error: null,
   attemptScore: null,
   attemptTotal: null,
@@ -22,6 +26,9 @@ const initialState = {
 
 function quizReducer(state, action) {
   switch (action.type) {
+    case 'START_PENDING':
+      return { ...state, starting: true, error: null };
+
     case 'START_QUIZ':
       return {
         ...initialState,
@@ -86,7 +93,7 @@ function quizReducer(state, action) {
       };
 
     case 'SET_ERROR':
-      return { ...state, error: action.payload };
+      return { ...state, starting: false, error: action.payload };
 
     default:
       return state;
@@ -97,6 +104,8 @@ export function QuizProvider({ children }) {
   const [state, dispatch] = useReducer(quizReducer, initialState);
   // Prevents accidental double-submit while the result screen is calculating.
   const submitOnceRef = useRef(false);
+  // Prevents a second /quiz/start from racing/resetting an in-flight start.
+  const startingRef = useRef(false);
   const { logout } = useAuth();
   // Only in-progress attempts need navigation protection; completed or gated screens can be left freely.
   const hasActiveQuiz = state.questions.length > 0 && ['quiz', 'calculating'].includes(state.phase);
@@ -109,11 +118,18 @@ export function QuizProvider({ children }) {
     dispatch({ type: 'RESET_GATE' });
   }, []);
 
+  // Returns true only if a quiz actually started, so callers can avoid navigating on failure.
   const startQuiz = useCallback(async () => {
+    // Ignore repeat clicks while a start request is already in flight, so a double-click
+    // cannot discard a freshly started quiz and replace it with a new question set.
+    if (startingRef.current) return false;
+    startingRef.current = true;
     submitOnceRef.current = false;
+    dispatch({ type: 'START_PENDING' });
     try {
       const data = await api.get('/quiz/start');
       dispatch({ type: 'START_QUIZ', payload: data });
+      return true;
     } catch (err) {
       // A 401 here usually means the login JWT expired before the player started.
       if (err.status === 401) {
@@ -122,10 +138,13 @@ export function QuizProvider({ children }) {
           type: 'AUTH_REQUIRED',
           payload: 'Please sign in again to start a quiz.',
         });
-        return;
+        return false;
       }
 
       dispatch({ type: 'SET_ERROR', payload: err.message || 'Failed to load questions' });
+      return false;
+    } finally {
+      startingRef.current = false;
     }
   }, [logout]);
 
@@ -154,6 +173,7 @@ export function QuizProvider({ children }) {
     if (submitOnceRef.current) return;
     submitOnceRef.current = true;
 
+    const startedAt = Date.now();
     try {
       const answersPayload = state.answers.map((a) => ({
         questionId: a.questionId,
@@ -164,6 +184,13 @@ export function QuizProvider({ children }) {
         attemptToken: state.attemptToken,
         answers: answersPayload,
       });
+
+      // The attempt is now persisted server-side. Hold the calculating animation for a
+      // minimum beat purely for polish — leaving during this hold no longer loses the score.
+      const remaining = MIN_CALCULATING_MS - (Date.now() - startedAt);
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining));
+      }
 
       dispatch({ type: 'SUBMIT_COMPLETE', payload: data });
     } catch (err) {
@@ -195,25 +222,37 @@ export function QuizProvider({ children }) {
     return window.confirm(ACTIVE_QUIZ_LEAVE_MESSAGE);
   }, [hasActiveQuiz]);
 
-  return (
-    <QuizContext.Provider
-      value={{
-        state,
-        hasActiveQuiz,
-        activeQuizLeaveMessage: ACTIVE_QUIZ_LEAVE_MESSAGE,
-        confirmActiveQuizExit,
-        setPhase,
-        resetToGate,
-        startQuiz,
-        lockAnswer,
-        submitAnswer,
-        finishQuiz,
-        restart,
-      }}
-    >
-      {children}
-    </QuizContext.Provider>
+  // Memoise so re-renders driven by the parent Auth/Theme providers don't hand every quiz
+  // consumer a brand-new value object and force needless re-renders.
+  const value = useMemo(
+    () => ({
+      state,
+      hasActiveQuiz,
+      activeQuizLeaveMessage: ACTIVE_QUIZ_LEAVE_MESSAGE,
+      confirmActiveQuizExit,
+      setPhase,
+      resetToGate,
+      startQuiz,
+      lockAnswer,
+      submitAnswer,
+      finishQuiz,
+      restart,
+    }),
+    [
+      state,
+      hasActiveQuiz,
+      confirmActiveQuizExit,
+      setPhase,
+      resetToGate,
+      startQuiz,
+      lockAnswer,
+      submitAnswer,
+      finishQuiz,
+      restart,
+    ],
   );
+
+  return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>;
 }
 
 export function useQuiz() {

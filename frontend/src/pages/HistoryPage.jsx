@@ -99,8 +99,14 @@ function HistoryPage() {
   };
 
   const startNewRun = async () => {
-    await startQuiz();
-    navigate('/quiz');
+    // Only leave this page if the quiz actually started; otherwise surface the failure here
+    // instead of navigating to a gate screen that immediately clears the error.
+    const started = await startQuiz();
+    if (started) {
+      navigate('/quiz');
+    } else {
+      setError('Could not start a new quiz. Please try again.');
+    }
   };
 
   useEffect(() => {

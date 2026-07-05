@@ -21,12 +21,31 @@ function getStoredToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+// Session-expiry is broadcast so AuthContext can log the user out globally, instead of
+// every page having to detect a 401 itself. Login/register 401s are credential errors, not
+// expiry, so they are excluded.
+export const SESSION_EXPIRED_EVENT = 'auth:session-expired';
+
+function isCredentialEndpoint(url = '') {
+  return url.includes('/auth/login') || url.includes('/auth/register');
+}
+
 function toEnvelopeError(error, fallbackMessage = 'Request failed') {
   const responseData = error.response?.data;
   const envelopeError = responseData?.error;
+
+  // No response means a transport failure; give the user something actionable instead of
+  // leaking axios internals like "timeout of 10000ms exceeded".
+  const transportMessage = !error.response
+    ? error.code === 'ECONNABORTED'
+      ? 'The request timed out. Please try again.'
+      : 'Network error. Please check your connection and try again.'
+    : undefined;
+
   const message =
     (typeof envelopeError === 'string' ? envelopeError : undefined) ||
     responseData?.message ||
+    transportMessage ||
     error.message ||
     fallbackMessage;
 
@@ -71,7 +90,18 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => unwrapEnvelope(response),
-  (error) => Promise.reject(toEnvelopeError(error)),
+  (error) => {
+    const status = error.response?.status;
+    const requestUrl = error.config?.url || '';
+
+    // A 401 on any non-credential request means the stored token is no longer valid;
+    // notify the app once so it can log out and redirect, rather than leaving a zombie session.
+    if (status === 401 && !isCredentialEndpoint(requestUrl) && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+    }
+
+    return Promise.reject(toEnvelopeError(error));
+  },
 );
 
 export { api, unwrapEnvelope, toEnvelopeError };

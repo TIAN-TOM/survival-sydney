@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom';
 
 import { useAuth } from '../contexts/AuthContext.jsx';
 import api from '../api/api.js';
+import { QUIZ_LENGTH } from '../config/quizConfig.js';
 import QuizFramedPanel from './quiz/QuizFramedPanel.jsx';
 import QuizWorldBackground from './quiz/QuizWorldBackground.jsx';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
-/** Board denominator for display (quiz length). */
-const SCORE_DENOM = 10;
+/** Board denominator for display (fixed quiz length, shared with the backend). */
+const SCORE_DENOM = QUIZ_LENGTH;
 
 function RankCell({ place }) {
   if (place <= 3) {
