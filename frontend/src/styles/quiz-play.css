@@ -13,7 +13,7 @@
       rgba(28, 18, 48, 0.38) 45%,
       rgba(16, 10, 28, 0.48) 100%
     ),
-    url('/nightmode-bg.png');
+    url('/nightmode-bg.jpg');
   background-repeat: no-repeat, no-repeat;
   background-position: center center, center center;
   background-size: cover, cover;
@@ -21,7 +21,7 @@
 
 html[data-theme='light'] .quiz-flow-scope .sq-world-bg.sq-world-bg--photo {
   background-color: #efe6d4;
-  background-image: url('/daymode-bg.png');
+  background-image: url('/daymode-bg.jpg');
   background-repeat: no-repeat;
   background-position: center center;
   background-size: cover;
@@ -37,7 +37,7 @@ html[data-theme='dark'] .quiz-flow-scope .sq-world-bg.sq-world-bg--photo {
       rgba(22, 14, 42, 0.5) 68%,
       rgba(14, 10, 26, 0.55) 100%
     ),
-    url('/nightmode-bg.png');
+    url('/nightmode-bg.jpg');
   background-repeat: no-repeat, no-repeat;
   background-position: center center, center center;
   background-size: cover, cover;
