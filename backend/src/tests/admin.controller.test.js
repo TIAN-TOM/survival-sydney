@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const request = require('supertest');
 
-process.env.JWT_SECRET = 'test-only-jwt-secret';
+process.env.JWT_SECRET = 'test-only-jwt-secret-value-at-least-32-chars';
 process.env.JWT_EXPIRES_IN = '2h';
 process.env.BCRYPT_ROUNDS = '4';
 process.env.MONGODB_URI = 'mongodb://localhost:27017/comp5347_admin_test';
@@ -329,5 +329,65 @@ describe('Admin question API', () => {
 
     const updatedQuestion = await Question.findById(question._id);
     expect(updatedQuestion.active).toBe(false);
+  });
+
+  test('deletes a question and 404s on a missing id', async () => {
+    const admin = await createUser('admin', 'delete');
+    const token = await login(admin.username);
+    const question = await Question.create(validQuestionPayload());
+
+    await request(app)
+      .delete(`/api/admin/questions/${question._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(await Question.findById(question._id)).toBeNull();
+
+    await request(app)
+      .delete(`/api/admin/questions/${new mongoose.Types.ObjectId()}`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(404);
+  });
+
+  test('returns 400 for a malformed :id instead of a 500 CastError', async () => {
+    const admin = await createUser('admin', 'badid');
+    const token = await login(admin.username);
+
+    await request(app)
+      .put('/api/admin/questions/not-a-valid-id')
+      .set('Authorization', `Bearer ${token}`)
+      .send(validQuestionPayload())
+      .expect(400);
+
+    await request(app)
+      .delete('/api/admin/questions/not-a-valid-id')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(400);
+
+    await request(app)
+      .patch('/api/admin/questions/not-a-valid-id/toggle')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(400);
+  });
+
+  test('preserves active/explanation when a PUT omits them', async () => {
+    const admin = await createUser('admin', 'partialupdate');
+    const token = await login(admin.username);
+    const question = await Question.create(
+      validQuestionPayload({ active: false, explanation: 'Keep me' })
+    );
+
+    const response = await request(app)
+      .put(`/api/admin/questions/${question._id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        questionText: 'Updated question text here',
+        options: ['One', 'Two', 'Three', 'Four'],
+        correctAnswer: 1,
+      })
+      .expect(200);
+
+    expect(response.body.data.active).toBe(false);
+    expect(response.body.data.explanation).toBe('Keep me');
   });
 });

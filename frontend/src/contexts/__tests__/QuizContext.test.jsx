@@ -55,6 +55,22 @@ describe('quizReducer', () => {
     expect(restarted.answers).toEqual([]);
   });
 
+  test('START_PENDING flags starting and clears any prior error', () => {
+    const withError = quizReducer(initialState, { type: 'SET_ERROR', payload: 'boom' });
+    const pending = quizReducer(withError, { type: 'START_PENDING' });
+
+    expect(pending.starting).toBe(true);
+    expect(pending.error).toBeNull();
+  });
+
+  test('SET_ERROR clears the starting flag so the start button re-enables', () => {
+    const pending = quizReducer(initialState, { type: 'START_PENDING' });
+    const errored = quizReducer(pending, { type: 'SET_ERROR', payload: 'Failed to load questions' });
+
+    expect(errored.starting).toBe(false);
+    expect(errored.error).toBe('Failed to load questions');
+  });
+
   test('AUTH_REQUIRED returns to guest gate with a friendly message', () => {
     const started = quizReducer(initialState, {
       type: 'START_QUIZ',

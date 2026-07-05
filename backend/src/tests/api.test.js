@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const request = require('supertest');
 
-process.env.JWT_SECRET = 'test-only-jwt-secret';
+process.env.JWT_SECRET = 'test-only-jwt-secret-value-at-least-32-chars';
 process.env.JWT_EXPIRES_IN = '2h';
 process.env.BCRYPT_ROUNDS = '4';
 process.env.MONGODB_URI = 'mongodb://localhost:27017/comp5347_quiz_api_test';
@@ -68,7 +68,10 @@ function wrongAnswer(question) {
 }
 
 async function createCompletedAttempt(user, score = QUIZ_LENGTH) {
-  const questions = await seedQuestions();
+  // Reuse the seeded bank if it already exists so repeated attempts in one test don't
+  // collide on the unique questionText index.
+  const existing = await Question.find().sort({ _id: 1 });
+  const questions = existing.length >= QUIZ_LENGTH ? existing : await seedQuestions();
   const answers = questions.map((question, index) => ({
     questionId: question._id,
     selectedAnswer:
@@ -588,5 +591,81 @@ describe('quiz option order utilities', () => {
       options: ['Gamma', 'Alpha', 'Delta', 'Beta'],
       correctAnswer: 2,
     });
+  });
+});
+
+describe('quiz authorization boundaries', () => {
+  test('does not let another user read an attempt detail (IDOR)', async () => {
+    const owner = await createUser('user', 'idorowner');
+    const attacker = await createUser('user', 'idorattacker');
+    const attackerToken = await login(attacker.username);
+    const attempt = await createCompletedAttempt(owner, 7);
+
+    await request(app)
+      .get(`/api/quiz/history/${attempt._id}`)
+      .set('Authorization', `Bearer ${attackerToken}`)
+      .expect(404);
+  });
+
+  test("history only returns the caller's own attempts", async () => {
+    const owner = await createUser('user', 'histowner');
+    const other = await createUser('user', 'histother');
+    await createCompletedAttempt(owner, 5);
+    const otherToken = await login(other.username);
+
+    const response = await request(app)
+      .get('/api/quiz/history')
+      .set('Authorization', `Bearer ${otherToken}`)
+      .expect(200);
+
+    expect(response.body.data).toEqual([]);
+  });
+
+  test('rejects a quiz-attempt token used as a session bearer token', async () => {
+    const user = await createUser('user', 'purposeconfusion');
+    const questions = await seedQuestions();
+    const { token } = signAttemptToken({
+      userId: user._id.toString(),
+      questions: questions.map((q) => ({ _id: q._id, optionOrder: IDENTITY_ORDER })),
+    });
+
+    await request(app)
+      .get('/api/quiz/history')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+  });
+
+  test('rejects requests with no Authorization header', async () => {
+    await request(app).get('/api/quiz/history').expect(401);
+  });
+
+  test('rejects an expired attempt token on submit', async () => {
+    const jwt = require('jsonwebtoken');
+    const { getJwtSecret, JWT_ALGORITHM } = require('../config/auth');
+    const user = await createUser('user', 'expiredattempt');
+    const token = await login(user.username);
+    const questions = await seedQuestions();
+
+    const expiredAttempt = jwt.sign(
+      {
+        purpose: 'quiz_attempt',
+        userId: user._id.toString(),
+        attemptId: crypto.randomUUID(),
+        items: questions.map((q) => ({ qid: q._id.toString(), order: IDENTITY_ORDER })),
+      },
+      getJwtSecret(),
+      { algorithm: JWT_ALGORITHM, expiresIn: -10 }
+    );
+
+    const response = await request(app)
+      .post('/api/quiz/submit')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        attemptToken: expiredAttempt,
+        answers: questions.map((q) => ({ questionId: q._id, selectedAnswer: 0 })),
+      })
+      .expect(401);
+
+    expect(response.body.error).toMatch(/expired/i);
   });
 });
