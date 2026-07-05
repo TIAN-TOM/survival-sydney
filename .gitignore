@@ -20,8 +20,14 @@ docs/final-rubric-session-review.md
 docs/rubric-assessment.md
 docs/audit-report.md
 
+# Local-only working files (previously in .git/info/exclude, which doesn't travel with clones)
+AGENTS.md
+.tools/
+docs/assignment/
+
 # LaTeX build artifacts
 *.aux
 *.out
 *.toc
 *.synctex.gz
+texput.log

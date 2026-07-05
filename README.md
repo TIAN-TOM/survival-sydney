@@ -45,6 +45,11 @@ Single-player MERN quiz game with a player quiz flow, Review Mode after completi
 
 ## Setup
 
+### Prerequisites
+
+- Node.js 20+ and npm 10+ (see `.nvmrc`; run `nvm use` if you use nvm)
+- Docker (optional, for the bundled MongoDB container)
+
 ### 1. Install dependencies
 
 ```bash
@@ -59,15 +64,22 @@ cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
+Then set a real `JWT_SECRET` in `backend/.env`. The app refuses to start on the placeholder or any secret shorter than 32 characters, so generate one:
+
+```bash
+openssl rand -hex 32
+```
+
 Example backend `.env`:
 
 ```env
 MONGODB_URI=mongodb://localhost:27017/comp5347_quiz
-JWT_SECRET=replace-with-a-long-secret
+JWT_SECRET=<paste output of: openssl rand -hex 32>
 JWT_EXPIRES_IN=2h
 BCRYPT_ROUNDS=10
 CLIENT_ORIGIN=http://localhost:5173
 PORT=5001
+TRUST_PROXY=false
 ```
 
 Example frontend `.env`:
@@ -88,6 +100,8 @@ docker run -d -p 27017:27017 --name comp5347-quiz-mongo mongo:7
 npm run seed --prefix backend
 ```
 
+> Warning: seeding resets questions to the seed bank and clears **all** quiz scores. It refuses to run with `NODE_ENV=production` unless `FORCE_SEED=1` is set.
+
 ### 5. Run the app
 
 ```bash
@@ -104,8 +118,8 @@ Open:
 
 - If port `5001` or `5173` is already in use, stop the old backend/frontend process and rerun `npm run dev`.
 - If MongoDB is unavailable, start the Docker container from step 3 or update `MONGODB_URI` to a running local MongoDB instance.
-- If login fails after editing env files, confirm `JWT_SECRET` is set in `backend/.env` and restart the backend.
-- If the quiz has no questions, rerun `npm run seed --prefix backend`.
+- If login fails after editing env files, confirm `JWT_SECRET` is set in `backend/.env`, is at least 32 characters, and is not the placeholder, then restart the backend.
+- If the quiz has no questions, rerun `npm run seed --prefix backend` (note: this also clears all scores; run `SKIP_SEED=1 npm run demo` to keep existing data).
 - If the frontend cannot reach the API, confirm `VITE_API_BASE_URL=http://localhost:5001/api` and restart Vite.
 - If a browser was already open with an old token, the quiz gate now waits for `/api/auth/me`; if access is rejected, sign in again at the same frontend origin (`localhost` and network IP sessions are separate).
 
@@ -318,13 +332,18 @@ Each individual reflection PDF in `docs/individual-reflections/` provides the fu
 ## Test and Build
 
 ```bash
-npm test --prefix backend
-npm test --prefix frontend
-npm run build --prefix frontend
+npm test              # runs backend (jest) and frontend (vitest) suites
+npm run test:backend  # backend only
+npm run test:frontend # frontend only
+npm run lint --prefix backend
+npm run lint --prefix frontend
+npm run build         # frontend production build
 ```
+
+CI runs the same lint, test, and build steps on every push and pull request (`.github/workflows/ci.yml`), with a MongoDB service container for the backend integration tests.
 
 ## Submission Notes
 
-- Do not include `node_modules` in the submitted ZIP.
+- Do not include `node_modules` in the submitted ZIP. Prefer `git archive -o submission.zip HEAD` so only tracked files are included.
 - The group coversheet is included as `Assignment 2 Group Assignment Coversheet.pdf`.
 - Individual reflection PDFs are included under `docs/individual-reflections/` with commit evidence, subsystem explanation, challenge, diagram, and Review Mode design reflection.
