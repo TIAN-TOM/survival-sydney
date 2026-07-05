@@ -26,9 +26,16 @@ function resolveClientMessage(err, statusCode) {
   return err.message || 'Request failed';
 }
 
+// eslint-disable-next-line no-unused-vars -- Express identifies error middleware by its 4-arg arity.
 function errorHandler(err, req, res, next) {
   const statusCode = resolveStatusCode(err, res);
   const message = resolveClientMessage(err, statusCode);
+
+  // Client sees a generic 5xx message, but the real error must be logged for diagnosis.
+  // Stay quiet during tests to keep the suite output clean.
+  if (statusCode >= 500 && process.env.NODE_ENV !== 'test') {
+    console.error(`[error] ${req.method} ${req.originalUrl || req.url}`, err);
+  }
 
   res.status(statusCode).json(fail(message));
 }

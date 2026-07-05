@@ -1,5 +1,13 @@
+const mongoose = require('mongoose');
 const Question = require('../models/Question');
 const { ok, fail } = require('../utils/responseEnvelope');
+
+// A malformed :id would otherwise reach Mongoose and throw a CastError surfaced as a 500;
+// validating up front lets these routes answer with a clean 400.
+const isValidObjectId = id => mongoose.Types.ObjectId.isValid(id);
+
+// The unique index on questionText is the race-safe backstop behind the pre-check lookups.
+const isDuplicateKeyError = err => err && err.code === 11000;
 
 const HAS_MEANINGFUL_TEXT = /[\p{L}\p{N}]/u;
 const QUESTION_TEXT_MIN_LENGTH = 8;
@@ -127,14 +135,22 @@ const isValidQuestionPayload = question => {
   return null;
 };
 
-const normalizeQuestionPayload = question => {
+const normalizeQuestionPayload = (question, { partial = false } = {}) => {
   const base = {
     questionText: question.questionText.trim(),
     options: question.options.map(option => option.trim()),
     correctAnswer: question.correctAnswer,
-    active: question.active !== undefined ? question.active : true,
-    explanation: question.explanation ? question.explanation.trim() : '',
   };
+
+  // On update, omitted optional fields are preserved (like topic) instead of being reset,
+  // so a PUT that only edits the text does not silently clear `active` or `explanation`.
+  if (!partial || question.active !== undefined) {
+    base.active = question.active !== undefined ? question.active : true;
+  }
+
+  if (!partial || question.explanation !== undefined) {
+    base.explanation = question.explanation ? question.explanation.trim() : '';
+  }
 
   if (question.topic !== undefined) {
     base.topic = question.topic.trim() || 'general';
@@ -210,7 +226,8 @@ const getBulkDuplicateErrors = async questions => {
  */
 const getQuestions = async (req, res, next) => {
   try {
-    const questions = await Question.find().sort({ createdAt: -1 });
+    // .lean() skips Mongoose document hydration for this read-only admin list.
+    const questions = await Question.find().sort({ createdAt: -1 }).lean();
     return res.json(ok(questions));
   } catch (err) {
     return next(err);
@@ -239,6 +256,9 @@ const createQuestion = async (req, res, next) => {
     const question = await Question.create(normalizedQuestion);
     return res.status(201).json(ok(question));
   } catch (err) {
+    if (isDuplicateKeyError(err)) {
+      return res.status(409).json(fail('questionText already exists'));
+    }
     return next(err);
   }
 };
@@ -249,13 +269,17 @@ const createQuestion = async (req, res, next) => {
  */
 const updateQuestion = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json(fail('Invalid question id'));
+    }
+
     const validationError = isValidQuestionPayload(req.body);
 
     if (validationError) {
       return res.status(400).json(fail(validationError));
     }
 
-    const normalizedQuestion = normalizeQuestionPayload(req.body);
+    const normalizedQuestion = normalizeQuestionPayload(req.body, { partial: true });
     const duplicateQuestion = await findDuplicateQuestionByText(
       normalizedQuestion.questionText,
       req.params.id
@@ -280,6 +304,9 @@ const updateQuestion = async (req, res, next) => {
 
     return res.json(ok(question));
   } catch (err) {
+    if (isDuplicateKeyError(err)) {
+      return res.status(409).json(fail('questionText already exists'));
+    }
     return next(err);
   }
 };
@@ -290,6 +317,10 @@ const updateQuestion = async (req, res, next) => {
  */
 const deleteQuestion = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json(fail('Invalid question id'));
+    }
+
     const question = await Question.findByIdAndDelete(req.params.id);
 
     if (!question) {
@@ -308,6 +339,10 @@ const deleteQuestion = async (req, res, next) => {
  */
 const toggleQuestionStatus = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json(fail('Invalid question id'));
+    }
+
     const question = await Question.findById(req.params.id);
 
     if (!question) {
@@ -384,6 +419,10 @@ const bulkImportQuestions = async (req, res, next) => {
       })
     );
   } catch (err) {
+    // A concurrent import can still collide on the unique questionText index after the pre-check.
+    if (isDuplicateKeyError(err)) {
+      return res.status(409).json(fail('Bulk import failed: one or more questions already exist'));
+    }
     return next(err);
   }
 };

@@ -5,6 +5,12 @@ const mongoose = require('mongoose');
 const DEFAULT_MONGODB_URI = 'mongodb://localhost:27017/comp5347_quiz';
 
 async function connectDB(uri = process.env.MONGODB_URI || DEFAULT_MONGODB_URI) {
+  if (!process.env.MONGODB_URI) {
+    console.warn(
+      `MONGODB_URI is not set; falling back to ${DEFAULT_MONGODB_URI}. Set it explicitly in production.`
+    );
+  }
+
   mongoose.set('strictQuery', true);
 
   try {

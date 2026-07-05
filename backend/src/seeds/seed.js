@@ -99,6 +99,14 @@ async function seedUser({ username, email, role, password }) {
 }
 
 async function seed() {
+  // This script clears all Scores and non-seed Questions, so refuse to run against a
+  // production database unless explicitly forced.
+  if (process.env.NODE_ENV === 'production' && process.env.FORCE_SEED !== '1') {
+    throw new Error(
+      'Refusing to seed with NODE_ENV=production. Set FORCE_SEED=1 to override (this wipes all scores).'
+    );
+  }
+
   await connectDb();
 
   const syntheticUserIds = await User.find(

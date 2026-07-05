@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { getJwtSecret } = require('../config/auth');
+const { getJwtSecret, JWT_ALGORITHM } = require('../config/auth');
 const { ok, fail } = require('../utils/responseEnvelope');
 
 // JWT carries identity claims only; password safety is handled by bcrypt before this point.
@@ -8,7 +8,7 @@ const signToken = (user) =>
   jwt.sign(
     { userId: user._id.toString(), role: user.role },
     getJwtSecret(),
-    { expiresIn: process.env.JWT_EXPIRES_IN || '2h' }
+    { expiresIn: process.env.JWT_EXPIRES_IN || '2h', algorithm: JWT_ALGORITHM }
   );
 
 exports.register = async (req, res, next) => {
@@ -42,6 +42,13 @@ exports.register = async (req, res, next) => {
       })
     );
   } catch (err) {
+    // Two concurrent registrations can pass the pre-check and collide on the unique index;
+    // surface that as a 409 conflict rather than a generic 500.
+    if (err && err.code === 11000) {
+      const field = err.keyPattern && err.keyPattern.email ? 'Email' : 'Username';
+      const message = field === 'Email' ? 'Email already registered' : 'Username already taken';
+      return res.status(409).json(fail(message));
+    }
     return next(err);
   }
 };

@@ -8,6 +8,16 @@ const connectDb = require('./config/db');
 
 const port = process.env.PORT || 5001;
 
+// Surface otherwise-silent async failures instead of leaving the process in a bad state.
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled promise rejection:', reason);
+});
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+  process.exit(1);
+});
+
+// Fail fast at startup if the signing secret is missing/weak, before accepting traffic.
 getJwtSecret();
 
 connectDb()

@@ -21,4 +21,9 @@ const questionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Race-safe backstop for the controller's duplicate-text pre-check.
+questionSchema.index({ questionText: 1 }, { unique: true });
+// Supports the quiz-start aggregation's `{ $match: { active: true } }` stage.
+questionSchema.index({ active: 1 });
+
 module.exports = mongoose.model('Question', questionSchema);

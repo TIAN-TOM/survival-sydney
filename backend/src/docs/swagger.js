@@ -505,7 +505,7 @@ function buildSwaggerSpec() {
 
   try {
     swaggerJsdoc = require('swagger-jsdoc');
-  } catch (error) {
+  } catch {
     return { ...swaggerDefinition };
   }
 
@@ -520,7 +520,7 @@ function setupSwagger(app) {
 
   try {
     swaggerUi = require('swagger-ui-express');
-  } catch (error) {
+  } catch {
     throw new Error('Swagger setup requires the swagger-ui-express package.');
   }
 

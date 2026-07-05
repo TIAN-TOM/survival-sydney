@@ -79,4 +79,10 @@ scoreSchema.index(
   }
 );
 
+// Covers the leaderboard aggregation's leading $sort {userId, score, createdAt};
+// the userId prefix also serves the per-user history filter.
+scoreSchema.index({ userId: 1, score: -1, createdAt: 1 });
+// Index-backed sort for GET /quiz/history (newest first per user).
+scoreSchema.index({ userId: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Score', scoreSchema);

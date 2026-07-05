@@ -140,7 +140,8 @@ const submitQuiz = async (req, res, next) => {
 
     // --- fetch all questions in one query ---
     // Correct answers come from MongoDB; the frontend never supplies correctness or score.
-    const questions = await Question.find({ _id: { $in: tokenQids } });
+    // .lean() is safe here: below we only read fields and pass plain objects to applyOptionOrder.
+    const questions = await Question.find({ _id: { $in: tokenQids } }).lean();
 
     if (questions.length !== QUIZ_LENGTH) {
       return res.status(400).json(fail('Some question IDs are invalid'));
@@ -189,7 +190,7 @@ const submitQuiz = async (req, res, next) => {
     // --- build review data for Review Mode ---
     const review = detailedAnswers.map(da => {
       const q = questionMap[da.questionId.toString()];
-      const shuffled = applyOptionOrder(q.toObject(), da.optionOrder);
+      const shuffled = applyOptionOrder(q, da.optionOrder);
 
       return {
         questionId: da.questionId,
