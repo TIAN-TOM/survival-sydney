@@ -99,7 +99,7 @@ services:
       MONGODB_URI: mongodb://mongo:27017/openassess
       # Not used by the seed script itself, but keeps config loading happy.
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required. Generate one with openssl rand -hex 32}"
-    command: ["node", "src/seeds/seed.js"]
+    command: ["node", "dist/seeds/seed.js"]
     depends_on:
       mongo:
         condition: service_healthy
