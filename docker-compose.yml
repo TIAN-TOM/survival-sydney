@@ -1,0 +1,109 @@
+####################################################################
+# One-command self-host for the Assess platform (formerly the
+# "Sydney Survival Quiz"). Brings up MongoDB, the Express API, and the
+# Vite-built frontend served by nginx (which also proxies /api).
+#
+# Quick start:
+#   1. cp .env.example .env   # then edit values below
+#   2. Set a strong JWT_SECRET  ->  openssl rand -hex 32
+#      (The backend REFUSES to boot on a weak/placeholder secret or
+#       anything shorter than 32 characters.)
+#   3. docker compose up -d --build
+#   4. Seed demo questions once Mongo + backend are healthy:
+#        docker compose run --rm seed
+#   5. Open http://localhost:8080
+#
+# The frontend is built with VITE_API_BASE_URL=/api and nginx proxies
+# /api to the backend, so you do NOT need to expose the backend port
+# publicly or hard-code a hostname. Set CLIENT_ORIGIN to the URL users
+# actually visit (default http://localhost:8080).
+####################################################################
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - mongo_data:/data/db
+    # Not published to the host by default; only the backend needs it.
+    # Uncomment to inspect from the host:
+    # ports:
+    #   - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "5001"
+      MONGODB_URI: mongodb://mongo:27017/openassess
+      # REQUIRED. Generate with: openssl rand -hex 32
+      # The app fails fast at startup if this is missing, a known
+      # placeholder, or shorter than 32 characters.
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required. Generate one with openssl rand -hex 32}"
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-2h}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
+      # The public URL users hit (used for the CORS allow-list). With the
+      # bundled nginx frontend this is the frontend origin.
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:8080}
+      # The backend sits behind the nginx reverse proxy, so honour
+      # X-Forwarded-For for per-IP rate limiting.
+      TRUST_PROXY: "true"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    # Not published to the host: the frontend nginx proxies /api to it
+    # over the internal network. Uncomment to call the API directly.
+    # ports:
+    #   - "5001:5001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:5001/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Baked into the bundle at build time. "/api" keeps the frontend
+        # host-agnostic; nginx proxies it to the backend service.
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # One-shot helper to load the demo question bank. Run explicitly:
+  #   docker compose run --rm seed
+  # It shares the backend image and reuses the same MONGODB_URI.
+  seed:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    profiles: ["seed"]
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://mongo:27017/openassess
+      # Not used by the seed script itself, but keeps config loading happy.
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required. Generate one with openssl rand -hex 32}"
+    command: ["node", "src/seeds/seed.js"]
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+
+volumes:
+  mongo_data:
