@@ -1,0 +1,58 @@
+# Render Blueprint — one-click-ish deploy of the OpenAssess API + SPA.
+#
+# What this provisions:
+#   * openassess-api  — Node web service (Express, compiled TypeScript)
+#   * openassess-web  — static site (Vite build) with SPA history rewrite
+#
+# MongoDB is NOT provisioned here (Render has no managed MongoDB). Create a free
+# MongoDB Atlas cluster and paste its connection string into MONGODB_URI.
+#
+# After the first deploy you must fill the three `sync: false` values in the
+# Render dashboard (they depend on the generated service URLs). See DEPLOY.md.
+
+services:
+  # ---- Backend API ------------------------------------------------------
+  - type: web
+    name: openassess-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # The API runs behind Render's proxy, so honour X-Forwarded-For for
+      # per-IP rate limiting.
+      - key: TRUST_PROXY
+        value: "true"
+      # Render auto-generates a long, high-entropy value (passes the app's
+      # >=32-char secret guard). Never share or reuse it.
+      - key: JWT_SECRET
+        generateValue: true
+      # Paste your MongoDB Atlas connection string (includes user:pass + db name).
+      - key: MONGODB_URI
+        sync: false
+      # The public URL of the static site below (e.g. https://openassess-web.onrender.com).
+      # Required for the CORS allow-list. Fill after the web service gets its URL.
+      - key: CLIENT_ORIGIN
+        sync: false
+
+  # ---- Frontend static site --------------------------------------------
+  - type: web
+    name: openassess-web
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      # Baked into the bundle at BUILD time (Vite inlines import.meta.env).
+      # Set to the API service URL + /api, e.g. https://openassess-api.onrender.com/api
+      - key: VITE_API_BASE_URL
+        sync: false
+    routes:
+      # SPA history fallback so deep links / refreshes resolve to index.html.
+      - type: rewrite
+        source: /*
+        destination: /index.html

@@ -2,9 +2,19 @@
 
 > Open-source, self-hostable quiz and assessment platform with built-in exam-integrity controls.
 
-OpenAssess is a MERN application for running quizzes and knowledge checks where the **result has to be trustworthy**. Scoring is server-side, each attempt is bound to a signed, replay-protected token, and answer keys never reach the browser before submission. It ships as a self-hostable app you can run with a single `docker compose up`.
+![CI](https://github.com/TIAN-TOM/openassess/actions/workflows/ci.yml/badge.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
+![Tests](https://img.shields.io/badge/tests-72%20passing-brightgreen)
+![License](https://img.shields.io/badge/license-MIT-blue)
 
-> **Status:** early, pre-1.0, and evolving from a coursework project into a product. License is currently **MIT**; an **AGPLv3** relicensing is planned (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+OpenAssess is a full-stack **TypeScript** application for running quizzes and knowledge checks where the **result has to be trustworthy** even against a hostile client. Scoring is server-side, each answer is locked on the server one question at a time, attempts are bound to a signed replay-protected token, and answer keys never reach the browser before submission. It runs with a single `docker compose up`.
+
+**→ How the integrity model works: [ARCHITECTURE.md](ARCHITECTURE.md)**  ·  **Deploy your own: [DEPLOY.md](DEPLOY.md)**
+
+<!-- Add once deployed: 🔗 **Live demo:** https://openassess-web.onrender.com  (demo login: player1 / PlayerPass123) -->
+<!-- Add a screenshot or short GIF of the quiz flow here — it is the single biggest "not a toy" signal. -->
+
+> **Status:** pre-1.0 and actively evolving. Independently extended from an original group coursework project into a standalone platform. License: **MIT**.
 
 ## Features
 
@@ -20,11 +30,12 @@ OpenAssess is a MERN application for running quizzes and knowledge checks where 
 
 | Layer | Tools |
 |---|---|
+| Language | TypeScript (strict, front and back) |
 | Frontend | React 18, Vite 6, React Router 6, React Hook Form + Zod |
 | Backend | Node.js 20, Express 4, Mongoose 8 |
 | Database | MongoDB |
 | Auth | bcrypt, JWT (HS256) |
-| Docs / tests | Swagger, Jest, Supertest, Vitest, Testing Library, ESLint |
+| Tooling | Swagger, Jest, Supertest, Vitest, Testing Library, ESLint, Docker, GitHub Actions |
 
 ## Quick start (local dev)
 
