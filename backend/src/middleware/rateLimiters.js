@@ -33,4 +33,15 @@ const quizSubmitLimiter = rateLimit({
   handler: limiterResponse('Too many quiz submissions. Please wait and try again.')
 });
 
-module.exports = { loginLimiter, registerLimiter, quizSubmitLimiter };
+// Per-question answers arrive ten per attempt; the limit leaves headroom for
+// retries while still stopping scripted hammering.
+const quizAnswerLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: process.env.NODE_ENV === 'test' ? 1000 : 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.user?.id || req.ip,
+  handler: limiterResponse('Too many answers. Please wait and try again.')
+});
+
+module.exports = { loginLimiter, registerLimiter, quizSubmitLimiter, quizAnswerLimiter };

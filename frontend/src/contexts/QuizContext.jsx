@@ -49,9 +49,14 @@ function quizReducer(state, action) {
         answers: newAnswers,
         currentQ: nextQ,
         answered: false,
+        error: null,
         phase: isDone ? 'calculating' : 'quiz',
       };
     }
+
+    // The per-question save failed: unlock the question so the player can pick again.
+    case 'ANSWER_FAILED':
+      return { ...state, answered: false, error: action.payload };
 
     case 'SUBMIT_COMPLETE':
       return {
@@ -153,20 +158,51 @@ export function QuizProvider({ children }) {
   }, []);
 
   const submitAnswer = useCallback(
-    (selectedIndex) => {
-      const { questions, currentQ } = state;
+    async (selectedIndex) => {
+      const { questions, currentQ, attemptToken } = state;
       const q = questions[currentQ];
       if (!q) return;
 
-      dispatch({
-        type: 'SUBMIT_ANSWER',
-        payload: {
+      const advance = () =>
+        dispatch({
+          type: 'SUBMIT_ANSWER',
+          payload: {
+            questionId: q._id,
+            sel: selectedIndex,
+          },
+        });
+
+      try {
+        // Lock this answer server-side before advancing; once locked it cannot change.
+        await api.post('/quiz/answer', {
+          attemptToken,
           questionId: q._id,
-          sel: selectedIndex,
-        },
-      });
+          selectedAnswer: selectedIndex,
+        });
+        advance();
+      } catch (err) {
+        if (err.status === 401) {
+          logout();
+          dispatch({
+            type: 'AUTH_REQUIRED',
+            payload: 'Please sign in again to continue your quiz.',
+          });
+          return;
+        }
+
+        // A retried request may find the answer already locked — that still counts as saved.
+        if (err.status === 409 && /already answered/i.test(err.message || '')) {
+          advance();
+          return;
+        }
+
+        dispatch({
+          type: 'ANSWER_FAILED',
+          payload: 'Could not save your answer. Please select again.',
+        });
+      }
     },
-    [state],
+    [logout, state],
   );
 
   const finishQuiz = useCallback(async () => {
@@ -175,14 +211,9 @@ export function QuizProvider({ children }) {
 
     const startedAt = Date.now();
     try {
-      const answersPayload = state.answers.map((a) => ({
-        questionId: a.questionId,
-        selectedAnswer: a.sel,
-      }));
-
+      // Answers were already locked server-side one at a time; submit only finalises.
       const data = await api.post('/quiz/submit', {
         attemptToken: state.attemptToken,
-        answers: answersPayload,
       });
 
       // The attempt is now persisted server-side. Hold the calculating animation for a

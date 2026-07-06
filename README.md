@@ -10,7 +10,7 @@ OpenAssess is a MERN application for running quizzes and knowledge checks where 
 
 - **Accounts and roles.** Registration, login, logout, JWT-protected routes; separate player and admin roles.
 - **Quiz flow.** Ten random active questions per attempt, options shuffled per question, one locked answer each.
-- **Integrity by design.** Submitting requires the signed `attemptToken` issued at start — bound to the user, the exact question set, and the option order, and rejected if tampered, expired, replayed, or from another user. Scoring happens on the server.
+- **Integrity by design.** Each answer is locked on the server one question at a time and can never be changed once set; the final submit scores only those server-locked answers. Attempts are bound to a signed `attemptToken` (user + question set + option order) and rejected if tampered, expired, replayed, or from another user. Scoring happens on the server.
 - **Review mode.** After submitting, players review each question, their answer, the correct answer, and any explanation.
 - **History and leaderboard.** Per-user attempt history and a top-50 best-score leaderboard.
 - **Admin console.** Create, edit, delete, activate/deactivate, and JSON bulk-import questions.
@@ -97,7 +97,7 @@ frontend/src/
 | Area | Routes |
 |---|---|
 | Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` |
-| Quiz | `GET /api/quiz/start`, `POST /api/quiz/submit`, `GET /api/quiz/history`, `GET /api/quiz/history/:id`, `GET /api/quiz/leaderboard` |
+| Quiz | `GET /api/quiz/start`, `POST /api/quiz/answer`, `POST /api/quiz/submit`, `GET /api/quiz/history`, `GET /api/quiz/history/:id`, `GET /api/quiz/leaderboard` |
 | Admin | `GET/POST /api/admin/questions`, `PUT/DELETE /api/admin/questions/:id`, `PATCH /api/admin/questions/:id/toggle`, `POST /api/admin/questions/bulk-import` |
 
 Admin accounts are blocked from player quiz routes (enforced server-side by `forbidAdminQuiz` and mirrored on the client). Full schema at `/api-docs` in development.

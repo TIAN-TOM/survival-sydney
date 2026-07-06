@@ -1,6 +1,7 @@
+const Attempt = require('../models/Attempt');
 const Question = require('../models/Question');
 const Score = require('../models/Score');
-const { QUIZ_LENGTH, OPTIONS_PER_QUESTION } = require('../config/quiz');
+const { QUIZ_LENGTH, OPTIONS_PER_QUESTION, ATTEMPT_TOKEN_TTL_SECONDS } = require('../config/quiz');
 const { ok, fail } = require('../utils/responseEnvelope');
 const {
   applyOptionOrder,
@@ -42,9 +43,20 @@ const startQuiz = async (req, res, next) => {
       ...q,
       optionOrder: generateOptionOrder(),
     }));
-    const { token } = signAttemptToken({
+    const { attemptId, token } = signAttemptToken({
       userId: req.user.id,
       questions: withOrder.map(q => ({ _id: q._id, optionOrder: q.optionOrder })),
+    });
+
+    // Server-side attempt record: each answer is locked into this document one
+    // question at a time (POST /quiz/answer), so answers cannot be revised or
+    // batch-submitted from the client.
+    await Attempt.create({
+      attemptId,
+      userId: req.user.id,
+      status: 'active',
+      expiresAt: new Date(Date.now() + ATTEMPT_TOKEN_TTL_SECONDS * 1000),
+      items: withOrder.map(q => ({ questionId: q._id, optionOrder: q.optionOrder })),
     });
 
     // The browser receives only public quiz data; answer keys and explanations stay server-side at start.
@@ -56,91 +68,157 @@ const startQuiz = async (req, res, next) => {
   }
 };
 
+// Shared attempt-token verification with consistent client messages.
+const verifyAttemptOr401 = (req, res) => {
+  const { attemptToken } = req.body;
+
+  if (!attemptToken) {
+    res.status(400).json(fail('Missing attemptToken'));
+    return null;
+  }
+
+  try {
+    return verifyAttemptToken(attemptToken, req.user.id);
+  } catch (err) {
+    const message =
+      err.code === 'expired'
+        ? 'Attempt token expired'
+        : err.code === 'wrong_user'
+          ? 'Attempt token does not belong to current user'
+          : 'Invalid attempt token';
+    res.status(401).json(fail(message));
+    return null;
+  }
+};
+
+/**
+ * POST /api/quiz/answer
+ * Body: { attemptToken, questionId, selectedAnswer }
+ * Locks one answer server-side. Once locked it can never be changed —
+ * the update below only matches while selectedAnswer is still null.
+ */
+const answerQuestion = async (req, res, next) => {
+  try {
+    const decoded = verifyAttemptOr401(req, res);
+    if (!decoded) return undefined;
+
+    const { questionId, selectedAnswer } = req.body;
+
+    if (!questionId || !mongoose.Types.ObjectId.isValid(questionId)) {
+      return res.status(400).json(fail('Invalid questionId'));
+    }
+
+    if (
+      typeof selectedAnswer !== 'number' ||
+      !Number.isInteger(selectedAnswer) ||
+      selectedAnswer < 0 ||
+      selectedAnswer >= OPTIONS_PER_QUESTION
+    ) {
+      return res.status(400).json(fail('selectedAnswer must be an integer 0-3'));
+    }
+
+    const qid = String(questionId);
+    if (!decoded.items.some(item => item.qid === qid)) {
+      return res.status(400).json(fail('Question is not part of this attempt'));
+    }
+
+    const attempt = await Attempt.findOne({
+      attemptId: decoded.attemptId,
+      userId: req.user.id,
+    }).lean();
+
+    if (!attempt) {
+      return res.status(404).json(fail('Attempt not found or expired'));
+    }
+
+    if (attempt.status !== 'active') {
+      return res.status(409).json(fail('Attempt already submitted'));
+    }
+
+    const target = attempt.items.find(item => String(item.questionId) === qid);
+    if (target && target.selectedAnswer !== null) {
+      return res.status(409).json(fail('Question already answered'));
+    }
+
+    // Questions are presented sequentially; answers must arrive in the same order.
+    const nextUnanswered = attempt.items.find(item => item.selectedAnswer === null);
+    if (nextUnanswered && String(nextUnanswered.questionId) !== qid) {
+      return res.status(409).json(fail('Questions must be answered in order'));
+    }
+
+    // Atomic per-question lock: only matches while this answer is still null, so a
+    // concurrent or repeated request for the same question cannot overwrite it.
+    const updated = await Attempt.findOneAndUpdate(
+      {
+        attemptId: decoded.attemptId,
+        userId: req.user.id,
+        status: 'active',
+        items: { $elemMatch: { questionId: qid, selectedAnswer: null } },
+      },
+      {
+        $set: {
+          'items.$.selectedAnswer': selectedAnswer,
+          'items.$.answeredAt': new Date(),
+        },
+      },
+      { new: true }
+    ).lean();
+
+    if (!updated) {
+      // Raced with another request that locked it first.
+      return res.status(409).json(fail('Question already answered'));
+    }
+
+    const answeredCount = updated.items.filter(item => item.selectedAnswer !== null).length;
+    return res.json(ok({ locked: true, answered: answeredCount, total: QUIZ_LENGTH }));
+  } catch (err) {
+    next(err);
+  }
+};
+
 /**
  * POST /api/quiz/submit
- * Body: { answers: [{ questionId, selectedAnswer }] }
- * Returns score + full review data for Review Mode
+ * Body: { attemptToken }
+ * Finalises the attempt: scores the answers already locked server-side via
+ * POST /quiz/answer and returns score + full review data for Review Mode.
  */
 const submitQuiz = async (req, res, next) => {
   try {
-    const { attemptToken, answers } = req.body;
-
-    if (!attemptToken) {
-      return res.status(400).json(fail('Missing attemptToken'));
-    }
-
-    let decoded;
-    try {
-      // attemptToken is the signed contract for this quiz attempt; expired/tampered/wrong-user tokens stop here.
-      decoded = verifyAttemptToken(attemptToken, req.user.id);
-    } catch (err) {
-      const message =
-        err.code === 'expired'
-          ? 'Attempt token expired'
-          : err.code === 'wrong_user'
-            ? 'Attempt token does not belong to current user'
-            : 'Invalid attempt token';
-      return res.status(401).json(fail(message));
-    }
-
-    // --- input validation ---
-    if (!answers || !Array.isArray(answers)) {
-      return res.status(400).json(fail('Invalid answers format'));
-    }
-
-    if (answers.length !== QUIZ_LENGTH) {
-      return res.status(400).json(fail(`Must submit exactly ${QUIZ_LENGTH} answers`));
-    }
-
-    // check for duplicate questionIds
-    const idSet = new Set(answers.map(a => a.questionId));
-    if (idSet.size !== answers.length) {
-      return res.status(400).json(fail('Duplicate question IDs detected'));
-    }
-
-    // validate each answer object
-    for (const ans of answers) {
-      if (!ans.questionId) {
-        return res.status(400).json(fail('Missing questionId'));
-      }
-
-      if (!mongoose.Types.ObjectId.isValid(ans.questionId)) {
-        return res.status(400).json(fail('Invalid questionId'));
-      }
-
-      if (
-        typeof ans.selectedAnswer !== 'number' ||
-        !Number.isInteger(ans.selectedAnswer) ||
-        ans.selectedAnswer < 0 ||
-        ans.selectedAnswer >= OPTIONS_PER_QUESTION
-      ) {
-        return res.status(400).json(fail('selectedAnswer must be an integer 0-3'));
-      }
-    }
-
-    const answerByQid = Object.fromEntries(answers.map(a => [String(a.questionId), a]));
-    const tokenQids = decoded.items.map(item => item.qid);
-    const tokenQidSet = new Set(tokenQids);
-    const submittedQids = answers.map(a => String(a.questionId));
-    const submittedQidSet = new Set(submittedQids);
-
-    // Prevent question swapping: the submitted IDs must match the token's signed question set exactly.
-    if (
-      submittedQids.length !== tokenQids.length ||
-      submittedQidSet.size !== tokenQidSet.size ||
-      !tokenQids.every(qid => submittedQidSet.has(qid))
-    ) {
-      return res.status(400).json(fail('Submitted question IDs do not match attempt token'));
-    }
+    // attemptToken is the signed contract for this quiz attempt; expired/tampered/wrong-user tokens stop here.
+    const decoded = verifyAttemptOr401(req, res);
+    if (!decoded) return undefined;
 
     // Reject replay before scoring; the unique database index is the final backstop against races.
     if (await Score.exists({ attemptId: decoded.attemptId })) {
       return res.status(409).json(fail('Attempt already submitted'));
     }
 
+    // Answers were locked server-side one question at a time via POST /quiz/answer.
+    // The client sends no answers here — the attempt record is the only source of truth.
+    const attempt = await Attempt.findOne({
+      attemptId: decoded.attemptId,
+      userId: req.user.id,
+    }).lean();
+
+    if (!attempt) {
+      return res.status(404).json(fail('Attempt not found or expired'));
+    }
+
+    if (attempt.status !== 'active') {
+      return res.status(409).json(fail('Attempt already submitted'));
+    }
+
+    const answeredCount = attempt.items.filter(item => item.selectedAnswer !== null).length;
+    if (answeredCount !== QUIZ_LENGTH) {
+      return res
+        .status(400)
+        .json(fail(`All questions must be answered before submitting (${answeredCount} of ${QUIZ_LENGTH} answered)`));
+    }
+
     // --- fetch all questions in one query ---
     // Correct answers come from MongoDB; the frontend never supplies correctness or score.
     // .lean() is safe here: below we only read fields and pass plain objects to applyOptionOrder.
+    const tokenQids = decoded.items.map(item => item.qid);
     const questions = await Question.find({ _id: { $in: tokenQids } }).lean();
 
     if (questions.length !== QUIZ_LENGTH) {
@@ -152,19 +230,18 @@ const submitQuiz = async (req, res, next) => {
       questionMap[q._id.toString()] = q;
     });
 
-    // --- score calculation ---
-    const detailedAnswers = decoded.items.map(item => {
-      const question = questionMap[item.qid];
-      const ans = answerByQid[item.qid];
+    // --- score calculation, from the server-locked answers only ---
+    const detailedAnswers = attempt.items.map(item => {
+      const question = questionMap[String(item.questionId)];
       // selectedAnswer is the visible shuffled index; optionOrder maps it back to the stored correctAnswer index.
-      const originalIndex = item.order[ans.selectedAnswer];
+      const originalIndex = item.optionOrder[item.selectedAnswer];
       const isCorrect = originalIndex === question.correctAnswer;
 
       return {
         questionId: question._id,
-        selectedAnswer: ans.selectedAnswer,
+        selectedAnswer: item.selectedAnswer,
         isCorrect,
-        optionOrder: item.order,
+        optionOrder: item.optionOrder,
       };
     });
     const score = detailedAnswers.filter(answer => answer.isCorrect).length;
@@ -186,6 +263,12 @@ const submitQuiz = async (req, res, next) => {
       }
       throw err;
     }
+
+    // Close out the server-side attempt record; the Score document is the durable result.
+    await Attempt.updateOne(
+      { attemptId: decoded.attemptId },
+      { $set: { status: 'submitted' } }
+    );
 
     // --- build review data for Review Mode ---
     const review = detailedAnswers.map(da => {
@@ -370,6 +453,7 @@ const getLeaderboard = async (req, res, next) => {
 
 module.exports = {
   startQuiz,
+  answerQuestion,
   submitQuiz,
   getHistory,
   getAttemptDetail,

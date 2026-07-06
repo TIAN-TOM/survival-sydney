@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const mongoose = require('mongoose');
 const connectDb = require('../config/db');
+const Attempt = require('../models/Attempt');
 const Question = require('../models/Question');
 const Score = require('../models/Score');
 const User = require('../models/User');
@@ -125,6 +126,7 @@ async function seed() {
 
   // Clear previous quiz attempts so demo data stays consistent with the current seeded questions.
   await Score.deleteMany({});
+  await Attempt.deleteMany({});
 
   await Question.bulkWrite(
     questions.map((question) => ({

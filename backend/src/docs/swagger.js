@@ -255,9 +255,11 @@ const swaggerDefinition = {
         }
       }
     },
-    '/quiz/submit': {
+    '/quiz/answer': {
       post: {
-        summary: 'Submit quiz answers and persist a score attempt',
+        summary: 'Lock one answer server-side (per-question lock)',
+        description:
+          'Locks the selected answer for a single question. Questions must be answered in order, and a locked answer can never be changed.',
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
@@ -265,37 +267,69 @@ const swaggerDefinition = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['attemptToken', 'answers'],
+                required: ['attemptToken', 'questionId', 'selectedAnswer'],
                 properties: {
                   attemptToken: {
                     type: 'string',
                     description: 'Token returned by GET /quiz/start.',
                   },
-                  answers: {
-                    type: 'array',
-                    minItems: 10,
-                    maxItems: 10,
-                    items: { $ref: '#/components/schemas/QuizAnswerInput' },
+                  questionId: { type: 'string' },
+                  selectedAnswer: {
+                    type: 'integer',
+                    minimum: 0,
+                    maximum: 3,
+                    description: 'Displayed (shuffled) option index the player chose.',
                   },
                 },
               },
               example: {
                 attemptToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-                answers: [
-                  { questionId: '507f1f77bcf86cd799439011', selectedAnswer: 0 },
-                  { questionId: '507f1f77bcf86cd799439012', selectedAnswer: 1 },
-                  { questionId: '507f1f77bcf86cd799439013', selectedAnswer: 2 },
-                  { questionId: '507f1f77bcf86cd799439014', selectedAnswer: 3 },
-                  { questionId: '507f1f77bcf86cd799439015', selectedAnswer: 0 },
-                  { questionId: '507f1f77bcf86cd799439016', selectedAnswer: 1 },
-                  { questionId: '507f1f77bcf86cd799439017', selectedAnswer: 2 },
-                  { questionId: '507f1f77bcf86cd799439018', selectedAnswer: 3 },
-                  { questionId: '507f1f77bcf86cd799439019', selectedAnswer: 0 },
-                  { questionId: '507f1f77bcf86cd799439020', selectedAnswer: 1 },
-                ]
-              }
-            }
-          }
+                questionId: '507f1f77bcf86cd799439011',
+                selectedAnswer: 2,
+              },
+            },
+          },
+        },
+        responses: {
+          200: okResponse('Answer locked', {
+            locked: { type: 'boolean', example: true },
+            answered: { type: 'integer', example: 1 },
+            total: { type: 'integer', example: 10 },
+          }),
+          400: failResponse('Invalid answer, or question not part of this attempt'),
+          401: failResponse('Authentication required or attempt token invalid/expired/wrong user'),
+          404: failResponse('Attempt not found or expired'),
+          409: failResponse('Question already answered, out of order, or attempt already submitted'),
+          403: failResponse('Admins cannot take quizzes.'),
+          429: failResponse('Too many answers. Please wait and try again.'),
+        },
+      },
+    },
+    '/quiz/submit': {
+      post: {
+        summary: 'Finalise the attempt and score the server-locked answers',
+        description:
+          'Scores the answers already locked one at a time via POST /quiz/answer. The client sends no answers here.',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['attemptToken'],
+                properties: {
+                  attemptToken: {
+                    type: 'string',
+                    description: 'Token returned by GET /quiz/start.',
+                  },
+                },
+              },
+              example: {
+                attemptToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+              },
+            },
+          },
         },
         responses: {
           200: okResponse('Saved attempt with Review Mode data', {
@@ -304,8 +338,9 @@ const swaggerDefinition = {
             total: { type: 'integer', example: 10 },
             review: { $ref: '#/components/schemas/Attempt/properties/review' },
           }),
-          400: failResponse('Invalid answers'),
+          400: failResponse('Not all questions answered'),
           401: failResponse('Authentication required or attempt token invalid/expired/wrong user'),
+          404: failResponse('Attempt not found or expired'),
           409: failResponse('Attempt already submitted'),
           403: failResponse('Admins cannot take quizzes.'),
           429: failResponse('Too many quiz submissions. Please wait and try again.')

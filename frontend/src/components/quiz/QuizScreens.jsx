@@ -414,6 +414,12 @@ export function QuizScreen() {
                       })}
                     </div>
 
+                    {state.error ? (
+                      <p className="start-error" role="alert">
+                        {state.error}
+                      </p>
+                    ) : null}
+
                     <p className="q-hint q-hint--card-foot q-hint--atmosphere" role="note">
                       <span className="q-hint-feather" aria-hidden="true">
                         🪶

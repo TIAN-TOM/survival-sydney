@@ -10,6 +10,7 @@ process.env.BCRYPT_ROUNDS = '4';
 process.env.MONGODB_URI = 'mongodb://localhost:27017/comp5347_quiz_api_test';
 
 const app = require('../app');
+const Attempt = require('../models/Attempt');
 const Question = require('../models/Question');
 const Score = require('../models/Score');
 const User = require('../models/User');
@@ -97,8 +98,22 @@ beforeEach(async () => {
     Question.deleteMany({}),
     Score.deleteMany({}),
     User.deleteMany({}),
+    Attempt.deleteMany({}),
   ]);
 });
+
+// Drive the per-question lock flow: POST /quiz/answer for each question in order.
+// `chooseIndex(question, order)` returns the displayed (shuffled) index to lock.
+async function answerAll(token, attemptToken, startedQuestions, orderByQid, chooseIndex) {
+  for (const question of startedQuestions) {
+    const qid = question._id.toString();
+    await request(app)
+      .post('/api/quiz/answer')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken, questionId: qid, selectedAnswer: chooseIndex(question, orderByQid[qid]) })
+      .expect(200);
+  }
+}
 
 afterAll(async () => {
   await mongoose.connection.dropDatabase();
@@ -254,7 +269,7 @@ describe('quiz API', () => {
   test('scores displayed answer indexes against the original question-bank correct answer', async () => {
     const user = await createUser('user', 'shuffledmapping');
     const token = await login(user.username);
-    const questions = await Question.insertMany(
+    const source = await Question.insertMany(
       Array.from({ length: QUIZ_LENGTH }, (_, index) =>
         questionPayload(index + 1, {
           options: [`A${index}`, `B${index}`, `C${index}`, `D${index}`],
@@ -262,36 +277,34 @@ describe('quiz API', () => {
         })
       )
     );
-    const forcedOrder = [2, 0, 3, 1];
-    const { token: attemptToken } = signAttemptToken({
-      userId: user._id,
-      questions: questions.map(question => ({
-        _id: question._id,
-        optionOrder: forcedOrder,
-      })),
-    });
-    const answers = questions.map(question => ({
-      questionId: question._id.toString(),
-      selectedAnswer: forcedOrder.indexOf(question.correctAnswer),
-    }));
+    const correctById = Object.fromEntries(source.map(q => [q._id.toString(), q.correctAnswer]));
+
+    const startResponse = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const { attemptToken, questions: started } = startResponse.body.data;
+    const decoded = verifyAttemptToken(attemptToken, user._id);
+    const orderByQid = Object.fromEntries(decoded.items.map(item => [item.qid, item.order]));
+
+    // Lock the displayed index that maps back to each question's stored correct answer.
+    await answerAll(token, attemptToken, started, orderByQid, (question, order) =>
+      order.indexOf(correctById[question._id])
+    );
 
     const response = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${token}`)
-      .send({ attemptToken, answers })
+      .send({ attemptToken })
       .expect(200);
 
     expect(response.body.data.score).toBe(QUIZ_LENGTH);
     for (const reviewRow of response.body.data.review) {
-      const sourceQuestion = questions.find(
-        question => question._id.toString() === reviewRow.questionId
+      const displayedCorrectIndex = orderByQid[reviewRow.questionId].indexOf(
+        correctById[reviewRow.questionId]
       );
-      const displayedCorrectIndex = forcedOrder.indexOf(sourceQuestion.correctAnswer);
       expect(reviewRow.correctAnswer).toBe(displayedCorrectIndex);
       expect(reviewRow.selectedAnswer).toBe(displayedCorrectIndex);
-      expect(reviewRow.options[reviewRow.correctAnswer]).toBe(
-        sourceQuestion.options[sourceQuestion.correctAnswer]
-      );
       expect(reviewRow.isCorrect).toBe(true);
     }
   });
@@ -309,16 +322,23 @@ describe('quiz API', () => {
       .get('/api/quiz/start')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    const answers = startResponse.body.data.questions.map((question) => ({
-      questionId: question._id.toString(),
-      selectedAnswer: question.options.indexOf(correctTextById[question._id.toString()]),
-    }));
-    expect(answers.every((answer) => answer.selectedAnswer >= 0)).toBe(true);
+    const { attemptToken, questions: started } = startResponse.body.data;
+
+    // Lock each answer server-side in order (per-question lock), then finalise.
+    for (const question of started) {
+      const selectedAnswer = question.options.indexOf(correctTextById[question._id.toString()]);
+      expect(selectedAnswer).toBeGreaterThanOrEqual(0);
+      await request(app)
+        .post('/api/quiz/answer')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ attemptToken, questionId: question._id.toString(), selectedAnswer })
+        .expect(200);
+    }
 
     const submitResponse = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${token}`)
-      .send({ attemptToken: startResponse.body.data.attemptToken, answers })
+      .send({ attemptToken })
       .expect(200);
 
     expect(submitResponse.body).toMatchObject({
@@ -354,40 +374,100 @@ describe('quiz API', () => {
     expect(isValidPermutation(persisted.answers[0].optionOrder)).toBe(true);
   });
 
-  test('rejects malformed submissions', async () => {
-    const user = await createUser('user', 'badsubmit');
+  test('locks each answer server-side and rejects changing a locked answer', async () => {
+    const user = await createUser('user', 'perqlock');
     const token = await login(user.username);
     await seedQuestions();
     const startResponse = await request(app)
       .get('/api/quiz/start')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    const answers = startResponse.body.data.questions.map((question) => ({
-      questionId: question._id.toString(),
-      selectedAnswer: 0,
-    }));
+    const { attemptToken, questions: started } = startResponse.body.data;
+    const firstQid = started[0]._id.toString();
 
-    const duplicateResponse = await request(app)
+    // Invalid index is rejected at the per-question endpoint.
+    const badIndex = await request(app)
+      .post('/api/quiz/answer')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken, questionId: firstQid, selectedAnswer: 4 })
+      .expect(400);
+    expect(badIndex.body.error).toBe('selectedAnswer must be an integer 0-3');
+
+    // Lock the first answer, and confirm the DB now holds it.
+    const locked = await request(app)
+      .post('/api/quiz/answer')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken, questionId: firstQid, selectedAnswer: 1 })
+      .expect(200);
+    expect(locked.body.data).toMatchObject({ locked: true, answered: 1, total: QUIZ_LENGTH });
+
+    const decoded = verifyAttemptToken(attemptToken, user._id);
+    const stored = await Attempt.findOne({ attemptId: decoded.attemptId }).lean();
+    expect(stored.items[0].selectedAnswer).toBe(1);
+
+    // Re-answering the same (already locked) question is refused.
+    const relock = await request(app)
+      .post('/api/quiz/answer')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken, questionId: firstQid, selectedAnswer: 2 })
+      .expect(409);
+    expect(relock.body.error).toBe('Question already answered');
+    const unchanged = await Attempt.findOne({ attemptId: decoded.attemptId }).lean();
+    expect(unchanged.items[0].selectedAnswer).toBe(1);
+  });
+
+  test('enforces sequential answering and rejects questions outside the attempt', async () => {
+    const user = await createUser('user', 'seqlock');
+    const token = await login(user.username);
+    const seeded = await seedQuestions(QUIZ_LENGTH + 1);
+    const startResponse = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const { attemptToken, questions: started } = startResponse.body.data;
+
+    // Answering the second question before the first is rejected.
+    const outOfOrder = await request(app)
+      .post('/api/quiz/answer')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken, questionId: started[1]._id.toString(), selectedAnswer: 0 })
+      .expect(409);
+    expect(outOfOrder.body.error).toBe('Questions must be answered in order');
+
+    // A question that is not part of this attempt is rejected.
+    const startIds = new Set(started.map(q => q._id.toString()));
+    const extra = seeded.find(q => !startIds.has(q._id.toString()));
+    const notInAttempt = await request(app)
+      .post('/api/quiz/answer')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken, questionId: extra._id.toString(), selectedAnswer: 0 })
+      .expect(400);
+    expect(notInAttempt.body.error).toBe('Question is not part of this attempt');
+  });
+
+  test('refuses to finalise an attempt before every question is answered', async () => {
+    const user = await createUser('user', 'incomplete');
+    const token = await login(user.username);
+    await seedQuestions();
+    const startResponse = await request(app)
+      .get('/api/quiz/start')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+    const { attemptToken, questions: started } = startResponse.body.data;
+
+    // Answer only the first question, then try to submit.
+    await request(app)
+      .post('/api/quiz/answer')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ attemptToken, questionId: started[0]._id.toString(), selectedAnswer: 0 })
+      .expect(200);
+
+    const response = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${token}`)
-      .send({
-        attemptToken: startResponse.body.data.attemptToken,
-        answers: answers.map((answer, index) => (index === 9 ? answers[0] : answer)),
-      })
+      .send({ attemptToken })
       .expect(400);
-    expect(duplicateResponse.body.error).toBe('Duplicate question IDs detected');
-
-    const invalidAnswerResponse = await request(app)
-      .post('/api/quiz/submit')
-      .set('Authorization', `Bearer ${token}`)
-      .send({
-        attemptToken: startResponse.body.data.attemptToken,
-        answers: answers.map((answer, index) =>
-          index === 0 ? { ...answer, selectedAnswer: 4 } : answer
-        ),
-      })
-      .expect(400);
-    expect(invalidAnswerResponse.body.error).toBe('selectedAnswer must be an integer 0-3');
+    expect(response.body.error).toMatch(/All questions must be answered/);
   });
 
   test('rejects missing, tampered, replayed, and wrong-user attempt tokens', async () => {
@@ -401,77 +481,50 @@ describe('quiz API', () => {
       .get('/api/quiz/start')
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
-    const answers = startResponse.body.data.questions.map(question => ({
-      questionId: question._id.toString(),
-      selectedAnswer: 0,
-    }));
-    const attemptToken = startResponse.body.data.attemptToken;
+    const { attemptToken, questions: started } = startResponse.body.data;
 
     const missingResponse = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${ownerToken}`)
-      .send({ answers })
+      .send({})
       .expect(400);
     expect(missingResponse.body.error).toBe('Missing attemptToken');
 
     const tamperedResponse = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${ownerToken}`)
-      .send({
-        attemptToken: attemptToken.replace(/\.[^.]+$/, '.invalidsignature'),
-        answers,
-      })
+      .send({ attemptToken: attemptToken.replace(/\.[^.]+$/, '.invalidsignature') })
       .expect(401);
     expect(tamperedResponse.body.error).toBe('Invalid attempt token');
 
     const wrongUserResponse = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${otherToken}`)
-      .send({ attemptToken, answers })
+      .send({ attemptToken })
       .expect(401);
     expect(wrongUserResponse.body.error).toBe('Attempt token does not belong to current user');
+
+    // Lock every answer, submit once, then confirm replay is refused.
+    for (const question of started) {
+      await request(app)
+        .post('/api/quiz/answer')
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ attemptToken, questionId: question._id.toString(), selectedAnswer: 0 })
+        .expect(200);
+    }
 
     await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${ownerToken}`)
-      .send({ attemptToken, answers })
+      .send({ attemptToken })
       .expect(200);
 
     const replayResponse = await request(app)
       .post('/api/quiz/submit')
       .set('Authorization', `Bearer ${ownerToken}`)
-      .send({ attemptToken, answers })
+      .send({ attemptToken })
       .expect(409);
     expect(replayResponse.body.error).toBe('Attempt already submitted');
-  });
-
-  test('rejects submitted question IDs that do not match the attempt token', async () => {
-    const user = await createUser('user', 'qidmismatch');
-    const token = await login(user.username);
-    const seeded = await seedQuestions(QUIZ_LENGTH + 1);
-
-    const startResponse = await request(app)
-      .get('/api/quiz/start')
-      .set('Authorization', `Bearer ${token}`)
-      .expect(200);
-    const startIds = new Set(startResponse.body.data.questions.map(question => question._id.toString()));
-    const extraQuestion = seeded.find(question => !startIds.has(question._id.toString()));
-    const answers = startResponse.body.data.questions.map(question => ({
-      questionId: question._id.toString(),
-      selectedAnswer: 0,
-    }));
-    answers[0] = {
-      questionId: extraQuestion._id.toString(),
-      selectedAnswer: 0,
-    };
-
-    const response = await request(app)
-      .post('/api/quiz/submit')
-      .set('Authorization', `Bearer ${token}`)
-      .send({ attemptToken: startResponse.body.data.attemptToken, answers })
-      .expect(400);
-
-    expect(response.body.error).toBe('Submitted question IDs do not match attempt token');
   });
 
   test('returns best-score leaderboard rows for authenticated callers', async () => {

@@ -4,6 +4,7 @@ const router = express.Router();
 
 const {
   startQuiz,
+  answerQuestion,
   submitQuiz,
   getHistory,
   getAttemptDetail,
@@ -12,7 +13,7 @@ const {
 
 const authMiddleware = require('../middleware/auth.middleware');
 const forbidAdminQuiz = require('../middleware/forbidAdminQuiz.middleware');
-const { quizSubmitLimiter } = require('../middleware/rateLimiters');
+const { quizSubmitLimiter, quizAnswerLimiter } = require('../middleware/rateLimiters');
 
 /**
  * GET /api/quiz/start
@@ -21,8 +22,14 @@ const { quizSubmitLimiter } = require('../middleware/rateLimiters');
 router.get('/start', authMiddleware, forbidAdminQuiz, startQuiz);
 
 /**
+ * POST /api/quiz/answer
+ * Lock one answer server-side (per-question lock)
+ */
+router.post('/answer', authMiddleware, forbidAdminQuiz, quizAnswerLimiter, answerQuestion);
+
+/**
  * POST /api/quiz/submit
- * Submit quiz answers
+ * Finalise the attempt and score the server-locked answers
  */
 router.post('/submit', authMiddleware, forbidAdminQuiz, quizSubmitLimiter, submitQuiz);
 
