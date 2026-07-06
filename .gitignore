@@ -31,3 +31,6 @@ docs/assignment/
 *.toc
 *.synctex.gz
 texput.log
+
+# TypeScript incremental build info
+*.tsbuildinfo
