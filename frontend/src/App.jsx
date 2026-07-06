@@ -20,7 +20,7 @@ const ReviewPage = lazy(() => import('./pages/ReviewPage.jsx'));
 const Leaderboard = lazy(() => import('./components/Leaderboard.jsx'));
 
 function motionShellClass(pathname) {
-  if (pathname.startsWith('/admin') || pathname === '/bosscoming') return 'motion-context--admin';
+  if (pathname.startsWith('/admin')) return 'motion-context--admin';
   if (pathname === '/quiz') return 'motion-context--quiz';
   if (pathname === '/leaderboard') return 'motion-page-enter motion-context--leaderboard';
   if (pathname === '/history') return 'motion-page-enter motion-context--history';
@@ -125,7 +125,7 @@ function App() {
   const { pathname } = location;
   const { user, loading } = useAuth();
   const isAuthImmersive =
-    pathname === '/login' || pathname === '/register' || pathname === '/bosscoming' || pathname === '/admin/login';
+    pathname === '/login' || pathname === '/register' || pathname === '/admin/login';
   const isGuestQuizGate = pathname === '/quiz' && (loading || !user);
   const hideAppShellHeader = isAuthImmersive || isGuestQuizGate;
 
@@ -154,7 +154,6 @@ function App() {
           <Routes location={location}>
             <Route path="/" element={<Navigate to="/quiz" replace />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/bosscoming" element={<Login adminMode />} />
             <Route path="/admin/login" element={<Login adminMode />} />
             <Route path="/register" element={<Register />} />
             <Route path="/quiz" element={<QuizPage />} />

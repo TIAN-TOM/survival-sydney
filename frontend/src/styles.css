@@ -2282,7 +2282,7 @@ html[data-theme='light'] .leaderboard {
 
 /* ════════════════════════════════════
    Leaderboard — full page (/leaderboard) · Hall of Merit
-   Scoped to Sydney Survival (.quiz-flow-scope tokens).
+   Scoped to the quiz flow (.quiz-flow-scope tokens).
 ════════════════════════════════════ */
 
 .quiz-flow-scope.leaderboard-page {

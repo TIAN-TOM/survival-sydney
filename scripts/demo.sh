@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-MONGO_CONTAINER_NAME="${MONGO_CONTAINER_NAME:-comp5347-quiz-mongo}"
+MONGO_CONTAINER_NAME="${MONGO_CONTAINER_NAME:-openassess-mongo}"
 MONGO_IMAGE="${MONGO_IMAGE:-mongo:7}"
 MONGO_HOST="${MONGO_HOST:-127.0.0.1}"
 MONGO_PORT="${MONGO_PORT:-27017}"

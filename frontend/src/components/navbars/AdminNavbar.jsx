@@ -10,7 +10,7 @@ function AdminNavLogout() {
 
   const handleLogout = () => {
     logout();
-    navigate('/bosscoming', { replace: true });
+    navigate('/admin/login', { replace: true });
   };
 
   return (

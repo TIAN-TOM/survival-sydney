@@ -1,5 +1,6 @@
-// Subsystem D - Integration, Robustness & Documentation (Tom Tian):
 // OpenAPI document construction and Swagger UI mounting helper.
+const { API_TITLE, API_DESCRIPTION } = require('../config/brand');
+
 const jsonContent = (schema, example) => ({
   'application/json': {
     schema,
@@ -36,9 +37,9 @@ const failResponse = (description) => ({
 const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
-    title: 'COMP5347 Quiz API',
+    title: API_TITLE,
     version: '1.0.0',
-    description: 'API documentation for the full-stack quiz application.',
+    description: API_DESCRIPTION,
   },
   servers: [
     {

@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
+import { BRAND } from '../../config/brand.js';
 import { quizSealLogoSrc } from '../../quizBrandAssets.js';
 
 function PlayerNavLogout() {
@@ -68,7 +69,7 @@ export default function PlayerNavbar() {
             alt=""
           />
         </span>
-        Sydney Survival
+        {BRAND.name}
       </Link>
       <nav className="quiz-top-links" aria-label="Player">
         <NavLink

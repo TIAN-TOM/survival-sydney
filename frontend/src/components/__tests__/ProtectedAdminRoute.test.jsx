@@ -24,7 +24,7 @@ function renderProtectedAdminRoute({ user = null, token = null } = {}) {
         <Route path="/admin" element={<ProtectedAdminRoute />}>
           <Route index element={<div>Admin child</div>} />
         </Route>
-        <Route path="/bosscoming" element={<div>Admin login</div>} />
+        <Route path="/admin/login" element={<div>Admin login</div>} />
         <Route path="/quiz" element={<div>Quiz page</div>} />
       </Routes>
     </MemoryRouter>

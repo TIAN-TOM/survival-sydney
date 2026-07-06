@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { BRAND } from '../../config/brand.js';
 import { formatReviewCategory } from './reviewFormatUtils.js';
 
 const LETTERS = ['A', 'B', 'C', 'D'];
@@ -33,7 +34,7 @@ export default function ReviewQuestionCard({ item, index }) {
 
   const sel = item.selectedAnswer;
 
-  const categoryLabel = formatReviewCategory(item.category || item.topic || '') || 'Sydney survival';
+  const categoryLabel = formatReviewCategory(item.category || item.topic || '') || BRAND.defaultTopicLabel;
 
   const learningLine = isCorrect
     ? 'Well judged — carry this instinct into real decisions on the ground.'

@@ -109,10 +109,11 @@ describe('backend service metadata', () => {
   test('describes the API at the root route', async () => {
     const response = await request(app).get('/').expect(200);
 
+    const { API_TITLE } = require('../config/brand');
     expect(response.body).toEqual({
       success: true,
       data: {
-        message: 'COMP5347 Quiz API',
+        message: API_TITLE,
         docs: '/api-docs',
         health: '/api/health',
       },

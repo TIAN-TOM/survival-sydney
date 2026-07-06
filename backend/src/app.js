@@ -11,6 +11,7 @@ const adminRoutes = require('./routes/admin.routes');
 const errorHandler = require('./middleware/errorHandler');
 const { fail, ok } = require('./utils/responseEnvelope');
 const { setupSwagger } = require('./docs/swagger');
+const { API_TITLE } = require('./config/brand');
 
 const app = express();
 
@@ -27,7 +28,7 @@ app.use(mongoSanitize());
 
 app.get('/', (req, res) => {
   res.json(ok({
-    message: 'COMP5347 Quiz API',
+    message: API_TITLE,
     docs: '/api-docs',
     health: '/api/health',
   }));

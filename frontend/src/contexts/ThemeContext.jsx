@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 const ThemeContext = createContext(null);
-const STORAGE_KEY = 'comp5347-theme';
+const STORAGE_KEY = 'openassess-theme';
 
 function getInitialTheme() {
   if (typeof localStorage === 'undefined') {

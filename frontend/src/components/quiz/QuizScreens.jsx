@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import { useQuiz } from '../../contexts/QuizContext.jsx';
 import { useTheme } from '../../contexts/ThemeContext.jsx';
+import { BRAND, resultRankBand } from '../../config/brand.js';
 import ThemeFloatingToggle from '../ThemeFloatingToggle.jsx';
 import { quizStartHeroImageSrc } from '../../quizBrandAssets.js';
 import QuizFramedPanel from './QuizFramedPanel.jsx';
@@ -14,10 +15,7 @@ const QUIZ_ADVANCE_DELAY_MS = 860;
 
 const LETTERS = ['A', 'B', 'C', 'D'];
 
-const QUIZ_HINT_PHRASES = [
-  'Choose wisely — only one path is correct.',
-  'One answer will guide your survival.',
-];
+const QUIZ_HINT_PHRASES = BRAND.hintPhrases;
 
 const TOPIC_MAP = {
   Geography: { cls: 'tp-geo', label: 'Geography' },
@@ -177,58 +175,6 @@ function buildTopicMap(review, totalQuestions, correctFallback) {
   return { Overall: { t: totalQuestions, c: correctFallback } };
 }
 
-/** Decorative survival title + low-key atmosphere copy for the result hero. */
-function survivalRankBand(pct) {
-  if (pct >= 85) {
-    return {
-      title: 'Sydney Veteran',
-      tagline: 'The harbour bends to your instincts.',
-      lines: [
-        'You read the city like an old map folded in your pocket.',
-        'Carry this clarity into the archive — then come back sharper.',
-      ],
-    };
-  }
-  if (pct >= 65) {
-    return {
-      title: 'Streetwise Apprentice',
-      tagline: 'Wrong turns taught you where the light is.',
-      lines: [
-        'Every miss becomes compass ink on the next crossing.',
-        'The debrief will finish what the trial started.',
-      ],
-    };
-  }
-  if (pct >= 45) {
-    return {
-      title: 'Harbour Cadet',
-      tagline: 'Survival is repetition — you are circling the right habits.',
-      lines: [
-        'Open the debrief while the trial is still warm in memory.',
-        'Sydney rewards the scholar who returns with questions.',
-      ],
-    };
-  }
-  if (pct >= 25) {
-    return {
-      title: 'Rookie Abroad',
-      tagline: 'First crossings are supposed to sting.',
-      lines: [
-        'Let the explanations settle like dust after rain.',
-        'Speed returns after clarity — walk the cards slowly once.',
-      ],
-    };
-  }
-  return {
-    title: 'Lost First-Year',
-    tagline: 'Even founders failed chapters they never reread.',
-    lines: [
-      'The archive holds every correction you need.',
-      'When you are ready, the board forgives and resets.',
-    ],
-  };
-}
-
 /** Guest landing on /quiz — narrative gate; sign-in lives on /login. */
 export function QuizGateScreen({ authChecking = false }) {
   const { isDarkMode, theme } = useTheme();
@@ -253,16 +199,16 @@ export function QuizGateScreen({ authChecking = false }) {
               key={theme}
               className="start-wizard__brand-img"
               src={quizStartHeroImageSrc(isDarkMode)}
-              alt="Sydney Survival Quiz"
+              alt={BRAND.name}
             />
           </div>
-          <h1 className="start-wizard__title start-logo">Sydney Survival</h1>
+          <h1 className="start-wizard__title start-logo">{BRAND.name}</h1>
           <p className="start-wizard__tagline">
             <span className="start-wizard__star" aria-hidden="true">
               ✦
             </span>
             <span className="start-wizard__tagline-text">
-              Can you survive student life in magical Sydney?
+              {BRAND.gateTagline}
             </span>
             <span className="start-wizard__star" aria-hidden="true">
               ✦
@@ -280,7 +226,7 @@ export function QuizGateScreen({ authChecking = false }) {
                 Sign in
               </Link>
               <p className="quiz-gate-register-hint">
-                <Link to="/register">New scholar? Register</Link>
+                <Link to="/register">{BRAND.registerHint}</Link>
               </p>
             </>
           )}
@@ -288,7 +234,7 @@ export function QuizGateScreen({ authChecking = false }) {
             <span className="start-wizard__quill" aria-hidden="true">
               🪶
             </span>
-            Test your knowledge. Earn your survival badge.
+            {BRAND.gateFooter}
           </p>
         </div>
       </div>
@@ -316,16 +262,16 @@ export function StartScreen() {
               key={theme}
               className="start-wizard__brand-img"
               src={quizStartHeroImageSrc(isDarkMode)}
-              alt="Sydney Survival Quiz"
+              alt={BRAND.name}
             />
           </div>
-          <h1 className="start-wizard__title start-logo">Sydney Survival</h1>
+          <h1 className="start-wizard__title start-logo">{BRAND.name}</h1>
           <p className="start-wizard__tagline">
             <span className="start-wizard__star" aria-hidden="true">
               ✦
             </span>
             <span className="start-wizard__tagline-text">
-              Ready to survive? Step in when you are—the city does not go easy on newcomers.
+              {BRAND.startTagline}
             </span>
             <span className="start-wizard__star" aria-hidden="true">
               ✦
@@ -366,7 +312,7 @@ export function StartScreen() {
             <span className="start-wizard__quill" aria-hidden="true">
               🪶
             </span>
-            Ten trials, one run—choose wisely, learn from every miss, and claim your survival badge.
+            {BRAND.startFooter}
           </p>
         </div>
       </div>
@@ -404,7 +350,7 @@ export function QuizScreen() {
   const n = questions.length;
   const currentQuestion = questions[currentQ];
   const currentTopic =
-    formatReviewCategory(currentQuestion?.category || currentQuestion?.topic || '') || 'Sydney Survival';
+    formatReviewCategory(currentQuestion?.category || currentQuestion?.topic || '') || BRAND.defaultTopicLabel;
   const hintPhrase = QUIZ_HINT_PHRASES[currentQ % QUIZ_HINT_PHRASES.length];
 
   return (
@@ -429,7 +375,7 @@ export function QuizScreen() {
                       <div className="quiz-question-header__row">
                         <div className="quiz-question-header__cluster">
                           <span className="q-num">Q{currentQ + 1}</span>
-                          <span className="q-trial-lbl">Safety trial</span>
+                          <span className="q-trial-lbl">{BRAND.questionLabel}</span>
                         </div>
                         <TopicPill topic={currentTopic} />
                       </div>
@@ -516,7 +462,7 @@ export function ResultScreen() {
   const RING_R = 14;
   const CIRC = 2 * Math.PI * RING_R;
 
-  const rankBand = useMemo(() => survivalRankBand(pct), [pct]);
+  const rankBand = useMemo(() => resultRankBand(pct), [pct]);
 
   useEffect(() => {
     const color = pct >= 80 ? '#6b8f7d' : pct >= 50 ? '#7d8a78' : '#b87a6a';
@@ -596,7 +542,7 @@ export function ResultScreen() {
 
               <div className="result-topics-wrap motion-result-reveal motion-result-reveal--topics">
                 <p className="result-topics-subline">
-                  Where your instincts held — and where Sydney caught you off guard.
+                  {BRAND.resultTopicsSubline}
                 </p>
                 <p className="result-topics-section-label">Topic performance</p>
                 <div

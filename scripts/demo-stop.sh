@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-MONGO_CONTAINER_NAME="${MONGO_CONTAINER_NAME:-comp5347-quiz-mongo}"
+MONGO_CONTAINER_NAME="${MONGO_CONTAINER_NAME:-openassess-mongo}"
 
 if ! command -v docker >/dev/null 2>&1; then
   printf 'Docker is not installed or not on PATH.\n' >&2
