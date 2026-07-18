@@ -2,7 +2,7 @@
 
 > Could you survive real life in Sydney? A full-stack quiz that tests international students on the things nobody warns them about — with server-side exam-integrity controls so the score actually means something.
 
-![CI](https://github.com/TIAN-TOM/openassess/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/TIAN-TOM/survival-sydney/actions/workflows/ci.yml/badge.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![Tests](https://img.shields.io/badge/tests-72%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
