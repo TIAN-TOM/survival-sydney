@@ -1,8 +1,8 @@
-# Render Blueprint — one-click-ish deploy of the OpenAssess API + SPA.
+# Render Blueprint — one-click-ish deploy of the Survival Sydney API + SPA.
 #
 # What this provisions:
-#   * openassess-api  — Node web service (Express, compiled TypeScript)
-#   * openassess-web  — static site (Vite build) with SPA history rewrite
+#   * survival-sydney-api  — Node web service (Express, compiled TypeScript)
+#   * survival-sydney-web  — static site (Vite build) with SPA history rewrite
 #
 # MongoDB is NOT provisioned here (Render has no managed MongoDB). Create a free
 # MongoDB Atlas cluster and paste its connection string into MONGODB_URI.
@@ -13,7 +13,7 @@
 services:
   # ---- Backend API ------------------------------------------------------
   - type: web
-    name: openassess-api
+    name: survival-sydney-api
     runtime: node
     plan: free
     rootDir: backend
@@ -34,21 +34,21 @@ services:
       # Paste your MongoDB Atlas connection string (includes user:pass + db name).
       - key: MONGODB_URI
         sync: false
-      # The public URL of the static site below (e.g. https://openassess-web.onrender.com).
+      # The public URL of the static site below (e.g. https://survival-sydney-web.onrender.com).
       # Required for the CORS allow-list. Fill after the web service gets its URL.
       - key: CLIENT_ORIGIN
         sync: false
 
   # ---- Frontend static site --------------------------------------------
   - type: web
-    name: openassess-web
+    name: survival-sydney-web
     runtime: static
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
       # Baked into the bundle at BUILD time (Vite inlines import.meta.env).
-      # Set to the API service URL + /api, e.g. https://openassess-api.onrender.com/api
+      # Set to the API service URL + /api, e.g. https://survival-sydney-api.onrender.com/api
       - key: VITE_API_BASE_URL
         sync: false
     routes:

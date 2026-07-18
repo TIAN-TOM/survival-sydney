@@ -2,7 +2,7 @@
 // MongoDB connection setup used by the server startup path.
 import mongoose from 'mongoose';
 
-const DEFAULT_MONGODB_URI = 'mongodb://localhost:27017/openassess';
+const DEFAULT_MONGODB_URI = 'mongodb://localhost:27017/survival_sydney';
 
 async function connectDB(
   uri: string = process.env.MONGODB_URI || DEFAULT_MONGODB_URI

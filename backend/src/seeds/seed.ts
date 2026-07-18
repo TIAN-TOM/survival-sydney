@@ -8,12 +8,12 @@ import Attempt from '../models/Attempt';
 import Question from '../models/Question';
 import Score from '../models/Score';
 import User from '../models/User';
-import wizardBank from './data/wizard_sydney_questions.json';
+import survivalBank from './data/survival_sydney_questions.json';
 
 const syntheticUsernamePattern = /^(smoke-?\d+|browser\d+|bonus\d+|edcheck-\d+)$/;
 
-/** Raw JSON row shape guaranteed by validateWizardQuestion; loose fields stay unknown. */
-interface WizardQuestionRow {
+/** Raw JSON row shape guaranteed by validateSurvivalQuestion; loose fields stay unknown. */
+interface SurvivalQuestionRow {
   questionText: string;
   options: unknown[];
   correctAnswer: number;
@@ -31,8 +31,8 @@ interface SeedQuestion {
   explanation: string;
 }
 
-function validateWizardQuestion(row: unknown, index: number): asserts row is WizardQuestionRow {
-  const label = `wizard question ${index + 1}`;
+function validateSurvivalQuestion(row: unknown, index: number): asserts row is SurvivalQuestionRow {
+  const label = `survival question ${index + 1}`;
   if (!row || typeof row !== 'object') {
     throw new Error(`Invalid ${label}`);
   }
@@ -57,8 +57,8 @@ function validateWizardQuestion(row: unknown, index: number): asserts row is Wiz
   }
 }
 
-function normalizeWizardQuestion(row: unknown, index: number): SeedQuestion {
-  validateWizardQuestion(row, index);
+function normalizeSurvivalQuestion(row: unknown, index: number): SeedQuestion {
+  validateSurvivalQuestion(row, index);
   const options = row.options.map((o) => String(o).trim());
   const topic = row.topic ? String(row.topic).trim() : '';
   return {
@@ -71,11 +71,11 @@ function normalizeWizardQuestion(row: unknown, index: number): SeedQuestion {
   };
 }
 
-if (!Array.isArray(wizardBank.questions) || wizardBank.questions.length < 10) {
-  throw new Error('wizard_sydney_questions.json must include at least 10 questions');
+if (!Array.isArray(survivalBank.questions) || survivalBank.questions.length < 10) {
+  throw new Error('survival_sydney_questions.json must include at least 10 questions');
 }
 
-const questions = wizardBank.questions.map(normalizeWizardQuestion);
+const questions = survivalBank.questions.map(normalizeSurvivalQuestion);
 const sourceQuestionTexts = questions.map((question) => question.questionText);
 
 if (new Set(sourceQuestionTexts).size !== sourceQuestionTexts.length) {
@@ -169,7 +169,7 @@ async function seed(): Promise<void> {
   await Promise.all(demoUsers.map(seedUser));
 
   console.log(
-    `Seeded ${questions.length} active questions (wizard_sydney_questions.json), admin/AdminPass123, and player1/player2/PlayerPass123`
+    `Seeded ${questions.length} active questions (survival_sydney_questions.json), admin/AdminPass123, and player1/player2/PlayerPass123`
   );
 
   await mongoose.disconnect();

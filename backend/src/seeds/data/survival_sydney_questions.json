@@ -1,0 +1,747 @@
+{
+  "title": "Survival Sydney question bank",
+  "description": "Sydney/NSW life-survival questions for international students, merged and de-duplicated from two source banks. correctAnswer is a 0-based index into options; options are shuffled again at quiz time.",
+  "questions": [
+    {
+      "questionText": "When you arrive in Australia with food, plant material, or animal products, what should you do?",
+      "options": [
+        "Declare them on arrival",
+        "Hide them in checked luggage",
+        "Only declare them if they are fresh",
+        "Give them to a friend before customs"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Australia has strict biosecurity rules, so declare any food, plant or animal products on arrival. Not declaring them can mean fines.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "After your Australian residential address changes, who should you normally notify within 7 days as a student visa holder?",
+      "options": [
+        "Your airline",
+        "Your education provider",
+        "Your mobile provider",
+        "Your supermarket loyalty programme"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Student visa holders must keep their provider informed; tell your education provider within 7 days of an address change.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "Which option is usually a practical first mobile phone setup after arriving in Sydney with an unlocked phone?",
+      "options": [
+        "Using only campus Wi-Fi for the whole semester",
+        "Applying for a driver licence first",
+        "A prepaid SIM or SIM-only plan",
+        "Buying a new phone is mandatory"
+      ],
+      "correctAnswer": 2,
+      "explanation": "With an unlocked phone, a prepaid or SIM-only plan is the quickest and cheapest way to get connected.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "Which set of items is commonly useful when opening an Australian bank account as a new international student?",
+      "options": [
+        "A beach towel, Opal card, and grocery receipt",
+        "Only a local gym membership",
+        "A printed social media profile",
+        "Passport, visa details, and Australian contact details"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Banks must verify your identity, so bring your passport, visa details and an Australian contact address.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "What is OSHC mainly for?",
+      "options": [
+        "Health cover for international students during their stay",
+        "A public transport pass",
+        "A bank account type",
+        "A rental bond payment method"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Overseas Student Health Cover (OSHC) is the health insurance most student visa holders must hold for their stay.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "If your passport is lost or stolen in Sydney, what is the best first response?",
+      "options": [
+        "Use your student card as a passport replacement for international travel",
+        "Contact your consulate or embassy and report theft to police if relevant",
+        "Ignore it until the end of semester",
+        "Borrow a friend's passport"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Your consulate or embassy issues a replacement passport; report a theft to police so you have a record.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "What is the safest approach to a very cheap rental listing before you arrive in Sydney?",
+      "options": [
+        "Send passport scans to any advertiser who asks",
+        "Trust it if the photos look professional",
+        "Verify the listing and avoid paying before proper checks",
+        "Transfer the bond immediately"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Paying before you inspect is a common rental scam. Verify the listing and the agent before sending any money.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "Which document identifies your enrolled course and is commonly needed for student visa and enrolment processes?",
+      "options": [
+        "Coffee loyalty card",
+        "Cinema ticket",
+        "Beach parking permit",
+        "Confirmation of Enrolment"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The Confirmation of Enrolment (CoE) proves your enrolment and is needed for visa and university processes.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "Which Australian number should you call for an immediate life-threatening emergency?",
+      "options": [
+        "000",
+        "911",
+        "999",
+        "123"
+      ],
+      "correctAnswer": 0,
+      "explanation": "000 reaches police, fire and ambulance anywhere in Australia for life-threatening emergencies.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "What is a sensible way to store important arrival documents?",
+      "options": [
+        "Give originals to a new housemate for convenience",
+        "Keep secure digital copies and protect the originals",
+        "Leave originals loose in shared kitchen drawers",
+        "Post all originals overseas immediately"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Keep secure digital copies and protect the originals so you can recover quickly if documents are lost or stolen.",
+      "topic": "arrival",
+      "active": true
+    },
+    {
+      "questionText": "Which public transport modes are commonly part of Sydney's Opal network?",
+      "options": [
+        "Only long-distance flights",
+        "Only private bicycles",
+        "Train, metro, bus, light rail, and ferry",
+        "Only taxis"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The Opal network covers Sydney trains, metro, buses, light rail and ferries.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "When using contactless payment on Sydney public transport, what should you do?",
+      "options": [
+        "Tap on with one card and tap off with another",
+        "Only tap on for trains",
+        "Only tap off if an inspector asks",
+        "Tap on and tap off with the same card or device"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Tap on and off with the same card or device so the system can work out and charge the correct fare.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "What may happen if you forget to tap off on Sydney public transport?",
+      "options": [
+        "You may be charged a default fare",
+        "The trip always becomes free",
+        "Your visa is automatically cancelled",
+        "The station refunds you in cash"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Forgetting to tap off charges a higher default fare for that trip.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "If you are not eligible for a NSW student transport concession, which fare type should you expect to pay?",
+      "options": [
+        "Free travel on every service",
+        "Adult fare",
+        "Senior fare",
+        "Child fare"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Most international students are not eligible for a NSW transport concession and pay the adult fare.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "If you use a Concession Opal card, what should you be ready to show when asked?",
+      "options": [
+        "A shopping receipt",
+        "A friend's student card",
+        "Valid proof of concession entitlement",
+        "A gym pass"
+      ],
+      "correctAnswer": 2,
+      "explanation": "If you travel on a Concession Opal card, carry valid proof of entitlement to show when asked.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "What is the safest behaviour near a train or light rail platform edge?",
+      "options": [
+        "Lean over the edge to check the track",
+        "Run along the platform while boarding",
+        "Block the doors so friends can catch up",
+        "Stand behind the safety line until the service stops"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Stand behind the yellow safety line until the service stops to stay clear of the gap and the train.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "What should you check before relying on public transport late at night?",
+      "options": [
+        "The last service time and any trackwork or service changes",
+        "Only the weather forecast",
+        "The colour of the station seats",
+        "Whether your phone wallpaper matches the route map"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Late services are limited and trackwork is common, so check the last service time and any changes before relying on it.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "What should you do if a bus is replacing trains because of planned trackwork?",
+      "options": [
+        "Walk on the train tracks",
+        "Follow the replacement bus signs and allow extra travel time",
+        "Wait on the train platform without checking updates",
+        "Assume all fares are cancelled"
+      ],
+      "correctAnswer": 1,
+      "explanation": "When buses replace trains for trackwork, follow the replacement bus signs and allow extra travel time.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "Which habit helps avoid accidental double charging with contactless public transport payment?",
+      "options": [
+        "Tap every card in your wallet",
+        "Ask another passenger to tap for you",
+        "Use one card or device consistently for the whole trip",
+        "Switch between wallet cards at random"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Using one card or device for the whole trip avoids accidental double charges from tapping several cards.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "What is the best way to plan an unfamiliar Sydney public transport trip?",
+      "options": [
+        "Guess the route from the train colour",
+        "Board the first vehicle that arrives",
+        "Ask a random driver to change route",
+        "Use an official trip planner or reliable real-time transport app"
+      ],
+      "correctAnswer": 3,
+      "explanation": "An official trip planner or reliable real-time app gives accurate routes and live service changes.",
+      "topic": "transport",
+      "active": true
+    },
+    {
+      "questionText": "In NSW, how much rental bond can usually be required for a residential tenancy?",
+      "options": [
+        "Up to 4 weeks' rent",
+        "Up to 1 week's rent",
+        "Up to 6 months' rent",
+        "Any amount the agent requests"
+      ],
+      "correctAnswer": 0,
+      "explanation": "In NSW the maximum rental bond for most tenancies is four weeks' rent.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "What is the purpose of a condition report when moving into a rental property?",
+      "options": [
+        "To remove the need for paying rent",
+        "To record the property's condition at the start of the tenancy",
+        "To replace the lease agreement",
+        "To set the public transport fare"
+      ],
+      "correctAnswer": 1,
+      "explanation": "A condition report records the property's state at the start of the tenancy and helps protect your bond at the end.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "What should you do before returning a condition report?",
+      "options": [
+        "Throw it away after moving in",
+        "Let the previous tenant fill it out",
+        "Check it carefully, add issues, take photos, and keep a copy",
+        "Sign it without inspection"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Before returning it, check the report carefully, note every issue, take dated photos and keep a copy.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "Which statement best matches NSW rent bidding rules?",
+      "options": [
+        "Tenants must always bid above the advertised rent",
+        "All rental ads can legally say price by negotiation only",
+        "Rent bidding is required for student housing",
+        "Agents must not invite offers above the advertised rent"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Under NSW rules, agents must not invite or solicit offers above the advertised rent.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "What should you avoid before inspecting or verifying a rental property?",
+      "options": [
+        "Paying bond or rent to an unverified advertiser",
+        "Checking the address on a map",
+        "Reading the lease carefully",
+        "Asking for a written agreement"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Never pay bond or rent to an advertiser you have not verified or a property you have not inspected.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "If a product has a major problem under Australian Consumer Law, what remedy may the consumer be entitled to choose?",
+      "options": [
+        "A higher price for the same item",
+        "A refund or replacement",
+        "Nothing if the store displays a no-refunds sign",
+        "Only a social media apology"
+      ],
+      "correctAnswer": 1,
+      "explanation": "For a major fault, Australian Consumer Law lets the consumer choose a refund or a replacement.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "If you simply change your mind about a product, what is generally true under Australian Consumer Law?",
+      "options": [
+        "The police must arrange the refund",
+        "A student card guarantees a refund",
+        "There is usually no automatic legal right to a refund",
+        "Every store must refund you in cash"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Stores are not legally required to refund a simple change of mind.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "Who can NSW tenants contact for government tenancy information and complaint pathways?",
+      "options": [
+        "The airline that brought them to Australia",
+        "A random social media seller",
+        "The weather bureau",
+        "NSW Fair Trading"
+      ],
+      "correctAnswer": 3,
+      "explanation": "NSW Fair Trading provides tenancy information and handles consumer complaints.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "What is a safer way to pay rental bond in NSW?",
+      "options": [
+        "Use the official Rental Bonds Online process where available",
+        "Pay cash without a receipt",
+        "Transfer money to a personal account with no paperwork",
+        "Buy gift cards for the agent"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Paying through Rental Bonds Online keeps your bond lodged with the government rather than a private account.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "What should you do before signing a lease?",
+      "options": [
+        "Ignore the rent amount",
+        "Read the terms, ask questions, and keep a copy",
+        "Sign blank pages to save time",
+        "Let the agent keep the only copy"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Before signing a lease, read the terms, ask about anything unclear and keep your own copy.",
+      "topic": "housing",
+      "active": true
+    },
+    {
+      "questionText": "During study periods, what is the usual work limit for most student visa holders?",
+      "options": [
+        "Unlimited hours every week",
+        "No paid work at all",
+        "48 hours per fortnight",
+        "48 hours per week"
+      ],
+      "correctAnswer": 2,
+      "explanation": "During study periods, most student visa holders can work up to 48 hours per fortnight.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "During official course breaks, what is generally true about the student visa work hour limit?",
+      "options": [
+        "Students can only work 1 hour per week",
+        "Paid work is always banned",
+        "Only weekend work is allowed",
+        "The 48-hour-per-fortnight cap usually does not apply"
+      ],
+      "correctAnswer": 3,
+      "explanation": "The 48-hour-per-fortnight cap generally does not apply during official course breaks.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "What should you apply for before starting paid work in Australia?",
+      "options": [
+        "Tax File Number",
+        "Fishing licence",
+        "Library barcode",
+        "Surf club membership"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Apply for a Tax File Number (TFN) so you are not taxed at the higher no-TFN rate.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "Which agency provides information and help about minimum pay and workplace rights in Australia?",
+      "options": [
+        "Local cinema box office",
+        "Fair Work Ombudsman",
+        "Transport for NSW",
+        "Australian Border Force only"
+      ],
+      "correctAnswer": 1,
+      "explanation": "The Fair Work Ombudsman explains minimum pay rates and workplace rights.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "Which statement about international students at work is correct?",
+      "options": [
+        "They do not need payslips",
+        "They can only work for cash",
+        "They generally have the same basic workplace rights as other workers",
+        "They can always be paid below minimum wage"
+      ],
+      "correctAnswer": 2,
+      "explanation": "International students generally have the same basic workplace rights as other workers.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "What should you do if an employer says your visa means you can be paid below the minimum rate?",
+      "options": [
+        "Accept it because students have no rights",
+        "Pay the employer a fee to keep the job",
+        "Give up your payslips",
+        "Check your rights with the Fair Work Ombudsman"
+      ],
+      "correctAnswer": 3,
+      "explanation": "No visa allows below-minimum pay. Check your rights with the Fair Work Ombudsman.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "What is superannuation in Australia?",
+      "options": [
+        "Retirement savings paid by eligible employers",
+        "A public transport ticket",
+        "A type of student visa",
+        "A rental inspection report"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Superannuation is retirement savings that eligible employers must pay on top of your wage.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "What is the safest way to share your TFN with an employer?",
+      "options": [
+        "Write it on a noticeboard",
+        "Provide it through the employer's official onboarding process",
+        "Post it publicly online",
+        "Send it to every job advertisement"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Share your TFN only through an employer’s official onboarding process, never publicly.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "What should you keep after each paid shift or pay cycle?",
+      "options": [
+        "A photo of the weather",
+        "A bus timetable from last year",
+        "Payslips or records of hours and pay",
+        "Only a verbal promise"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Keep payslips and records of your hours so you can check you are paid correctly.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "For medical advice that is not an immediate emergency, what is usually better than calling 000?",
+      "options": [
+        "Wait until it becomes life-threatening",
+        "Ask a stranger on public transport",
+        "Call a restaurant",
+        "Contact a GP, health service, or nurse advice line"
+      ],
+      "correctAnswer": 3,
+      "explanation": "For non-emergencies, a GP, health service or nurse advice line is more appropriate than calling 000.",
+      "topic": "work",
+      "active": true
+    },
+    {
+      "questionText": "At patrolled Australian beaches, where should you swim?",
+      "options": [
+        "Between the red and yellow flags",
+        "Wherever the waves look biggest",
+        "Outside the flags to avoid other swimmers",
+        "At night when no lifesavers are present"
+      ],
+      "correctAnswer": 0,
+      "explanation": "The red and yellow flags mark the patrolled area that lifesavers watch, so swim between them.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "Which number is commonly used for non-urgent police assistance in NSW?",
+      "options": [
+        "13 11 14",
+        "131 444",
+        "000",
+        "911"
+      ],
+      "correctAnswer": 1,
+      "explanation": "131 444 is the NSW line for non-urgent police assistance.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "Which number is commonly used for SES storm and flood assistance in NSW?",
+      "options": [
+        "123 456",
+        "A supermarket helpline",
+        "132 500",
+        "000 for every minor leak"
+      ],
+      "correctAnswer": 2,
+      "explanation": "132 500 reaches the SES for storm and flood help.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "What should you do if someone calls claiming your visa will be cancelled unless you pay with gift cards?",
+      "options": [
+        "Buy the gift cards immediately",
+        "Share your banking password",
+        "Give them your one-time login codes",
+        "Do not pay; verify through official channels and report the scam"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Government agencies never demand payment in gift cards. It is always a scam, so do not pay; verify and report it.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "Which service is a common Australian channel for reporting scams?",
+      "options": [
+        "Scamwatch",
+        "A food delivery app",
+        "A beach kiosk",
+        "A cinema rewards desk"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Scamwatch is the national service for reporting scams.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "What is a safe response to a message asking for your banking password or verification code?",
+      "options": [
+        "Post the code in a group chat",
+        "Do not share it",
+        "Reply with the code quickly",
+        "Send a screenshot of your banking app"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Never share a banking password or verification code; legitimate services will not ask for them.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "If you or a friend is at immediate risk of suicide or serious harm, what should you do?",
+      "options": [
+        "Only post online and hope someone replies",
+        "Ignore it to avoid embarrassment",
+        "Call 000 immediately",
+        "Wait for the next business day"
+      ],
+      "correctAnswer": 2,
+      "explanation": "If someone is in immediate danger of serious harm, call 000 straight away.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "Which number is commonly used for Lifeline crisis support in Australia?",
+      "options": [
+        "131 444",
+        "132 500",
+        "000 for non-urgent counselling only",
+        "13 11 14"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Lifeline's 13 11 14 offers 24-hour crisis support.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "What should you do before clicking a link in a message that claims to be from a bank, delivery company, or government agency?",
+      "options": [
+        "Check the sender and use the official website or app instead",
+        "Click immediately because all urgent messages are genuine",
+        "Enter your password to see what happens",
+        "Forward it to everyone in your class"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Reach a bank, delivery company or agency through its official website or app instead of a link in an unexpected message.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "What is a safer habit when walking home late at night in an unfamiliar area?",
+      "options": [
+        "Accept lifts from unknown drivers without checking",
+        "Use well-lit routes, plan transport, and tell someone you trust",
+        "Keep your phone flat and tell nobody",
+        "Take shortcuts through isolated areas"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Well-lit routes, planned transport and telling someone you trust all make a late walk home safer.",
+      "topic": "safety",
+      "active": true
+    },
+    {
+      "questionText": "Which Sydney bird is affectionately nicknamed the 'bin chicken'?",
+      "options": [
+        "The rainbow lorikeet",
+        "The magpie",
+        "The Australian white ibis",
+        "The kookaburra"
+      ],
+      "correctAnswer": 2,
+      "explanation": "The Australian white ibis is a common city scavenger, which is how it earned the nickname 'bin chicken'.",
+      "topic": "culture",
+      "active": true
+    },
+    {
+      "questionText": "Which supermarket chain is generally the most budget-friendly for groceries in Sydney?",
+      "options": [
+        "A late-night convenience store",
+        "A hotel minibar",
+        "An airport food kiosk",
+        "Aldi"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Aldi is usually the cheapest major supermarket; Coles and Woolworths are widespread but tend to cost more.",
+      "topic": "money",
+      "active": true
+    },
+    {
+      "questionText": "Which inner-Sydney suburb near the University of Sydney is known for student-friendly cafes, food and nightlife?",
+      "options": [
+        "Newtown",
+        "A remote national park",
+        "An industrial estate",
+        "A container port"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Newtown, centred on King Street, is popular with students for affordable food and a lively scene.",
+      "topic": "culture",
+      "active": true
+    },
+    {
+      "questionText": "Why is sunscreen worth wearing even on mild days in Sydney?",
+      "options": [
+        "It works instead of drinking water",
+        "Australia has very high UV levels",
+        "Sunscreen keeps you warm",
+        "It is legally required to carry it"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Australia’s UV index is among the highest in the world, so skin can burn quickly even when it does not feel hot.",
+      "topic": "wellbeing",
+      "active": true
+    },
+    {
+      "questionText": "Why do many students in Sydney carry a reusable water bottle?",
+      "options": [
+        "Buying bottled water is banned",
+        "Cafes refuse to serve tap water",
+        "Tap water is safe and refill stations are common",
+        "Tap water is unsafe to drink"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Sydney tap water is safe to drink and free refill stations are widespread, which saves money and plastic.",
+      "topic": "wellbeing",
+      "active": true
+    },
+    {
+      "questionText": "What is worth keeping on hand given Sydney's changeable weather?",
+      "options": [
+        "Snow chains",
+        "A heavy winter parka all year",
+        "A beach umbrella only",
+        "A light jacket or umbrella"
+      ],
+      "correctAnswer": 3,
+      "explanation": "Sydney weather can shift from warm to wet within a day, so a light jacket or umbrella is handy most of the year.",
+      "topic": "wellbeing",
+      "active": true
+    },
+    {
+      "questionText": "How do most shops and cafes in Sydney expect you to pay?",
+      "options": [
+        "By card or phone tap",
+        "Only with gold coins",
+        "Only by cheque",
+        "Only in foreign currency"
+      ],
+      "correctAnswer": 0,
+      "explanation": "Australia is largely cashless, so contactless card or phone payments are accepted almost everywhere.",
+      "topic": "money",
+      "active": true
+    }
+  ]
+}

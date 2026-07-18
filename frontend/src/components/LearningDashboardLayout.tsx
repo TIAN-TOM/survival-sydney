@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import QuizWorldBackground from './quiz/QuizWorldBackground.tsx';
+import SydneyBackground from './quiz/SydneyBackground.tsx';
 
 /**
  * Shared shell for Quiz History and Learning Debrief — same background, width, and main rhythm.
@@ -14,7 +14,7 @@ export default function LearningDashboardLayout({
 }) {
   return (
     <div className="quiz-flow-scope quiz-review-shell hist-learning-page">
-      <QuizWorldBackground usePhotoBackdrop />
+      <SydneyBackground usePhotoBackdrop />
       {headerExtras}
       <main className="review-page quiz-review-page">
         <div className="rv-center">{children}</div>

@@ -1,6 +1,6 @@
 # Architecture
 
-OpenAssess is a full-stack TypeScript quiz platform built around one design goal: **the recorded result must be trustworthy even against a hostile client**. This document explains the system layout, the exam-integrity model, and the key design decisions.
+Survival Sydney is a full-stack TypeScript quiz app that tests how ready newcomers are for real life in Sydney. It is built around one design goal: **the recorded result must be trustworthy even against a hostile client** — otherwise the leaderboard and rank tiers mean nothing. This document explains the system layout, the exam-integrity model, and the key design decisions.
 
 ## System overview
 
@@ -27,7 +27,7 @@ flowchart LR
 
 ## The integrity model
 
-A quiz result is only meaningful if the client cannot influence scoring. OpenAssess enforces this with three cooperating mechanisms.
+A quiz result is only meaningful if the client cannot influence scoring. Survival Sydney enforces this with three cooperating mechanisms.
 
 ### 1. Signed attempt tokens
 

@@ -1,8 +1,6 @@
 // Single source of truth for user-visible product identity and copy.
-// White-labelling / de-branding = edit this file (or set VITE_APP_NAME at build time).
-//
-// The strings below are intentionally generic so the app ships brand-neutral.
-// Replace `name` (and, if you like, the copy blocks) to make it yours.
+// Survival Sydney is a quiz that helps international students handle real life
+// in Sydney. Rename it (or set VITE_APP_NAME at build time) to white-label.
 
 const envName = typeof import.meta !== 'undefined' && import.meta.env
   ? import.meta.env.VITE_APP_NAME
@@ -10,26 +8,26 @@ const envName = typeof import.meta !== 'undefined' && import.meta.env
 
 export const BRAND = {
   // The one product name that renders in the tab title, nav wordmark, and hero.
-  name: envName || 'OpenAssess',
+  name: envName || 'Survival Sydney',
 
   // Guest landing (/quiz gate).
-  gateTagline: 'How well do you know the material? Put it to the test.',
-  gateFooter: 'Test your knowledge. Track your progress.',
-  registerHint: 'New here? Register',
+  gateTagline: "New to Sydney? Find out if you're ready for real life here.",
+  gateFooter: 'The things nobody tells international students before they land.',
+  registerHint: 'New in town? Register',
 
   // Authenticated start screen.
-  startTagline: 'Ready when you are. Ten questions, one run.',
-  startFooter: 'Ten questions, one run — choose carefully and learn from every miss.',
+  startTagline: 'Ten questions on surviving Sydney. Ready when you are.',
+  startFooter: 'Ten real situations: transport, renting, work rights, safety. Learn from every miss.',
 
   // Question screen.
   questionLabel: 'Question',
   hintPhrases: [
-    'Choose carefully — only one option is correct.',
-    'Take your time; there is exactly one right answer.',
+    'One right answer — pick the safest move.',
+    'Only one option is correct. Think like a local.',
   ],
 
   // Result screen.
-  resultTopicsSubline: 'Where you were confident — and where to focus next.',
+  resultTopicsSubline: 'Where you would cope, and where Sydney might catch you out.',
 
   // Fallback category label when a question has no topic.
   defaultTopicLabel: 'General',
@@ -43,51 +41,52 @@ export interface ResultRankBand {
   lines: string[];
 }
 
-// Result-screen rank bands, highest threshold first. Neutral, configurable tiers.
+// Result-screen rank bands, highest threshold first. Sydney-survival tiers;
+// only the copy is themed — the score thresholds stay fixed.
 export const RESULT_RANK_BANDS: ResultRankBand[] = [
   {
     min: 85,
-    title: 'Expert',
-    tagline: 'You have a firm command of the material.',
+    title: 'Local Legend',
+    tagline: 'You could write the survival guide yourself.',
     lines: [
-      'Your recall and instincts are well aligned.',
-      'Review the debrief to lock in the edges.',
+      'Transport, tenancy, work rights — you have the lot down.',
+      'Skim the debrief to lock in the last few edge cases.',
     ],
   },
   {
     min: 65,
-    title: 'Proficient',
-    tagline: 'A strong run with room to sharpen.',
+    title: 'Settled In',
+    tagline: 'You know your way around Sydney.',
     lines: [
-      'Each miss is a clear signal for what to revisit.',
-      'The debrief will close the remaining gaps.',
+      'A strong run with a couple of gaps to tidy up.',
+      'Each miss points at exactly what to check next.',
     ],
   },
   {
     min: 45,
-    title: 'Developing',
-    tagline: 'You are building the right habits.',
+    title: 'Getting By',
+    tagline: 'You would manage, with a few close calls.',
     lines: [
-      'Open the debrief while the attempt is still fresh.',
-      'Consistency comes from returning with questions.',
+      'The basics are there; the details still trip you up.',
+      'Read the debrief while the questions are fresh.',
     ],
   },
   {
     min: 25,
-    title: 'Beginner',
-    tagline: 'Early attempts are meant to stretch you.',
+    title: 'Fresh Off the Plane',
+    tagline: 'Sydney still has plenty of surprises for you.',
     lines: [
-      'Let the explanations settle before the next run.',
-      'Speed follows clarity — walk the cards slowly once.',
+      'Plenty to learn before the city stops catching you out.',
+      'Walk through the explanations slowly, one by one.',
     ],
   },
   {
     min: 0,
-    title: 'Getting Started',
-    tagline: 'Everyone starts somewhere.',
+    title: 'Just Landed',
+    tagline: 'Everyone starts somewhere. Welcome to Sydney.',
     lines: [
-      'The debrief holds every correction you need.',
-      'When you are ready, reset and try again.',
+      'The debrief has every answer you just missed.',
+      'Reset and run it again when you are ready.',
     ],
   },
 ];

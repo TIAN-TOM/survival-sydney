@@ -22,7 +22,7 @@ export interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const STORAGE_KEY = 'openassess-theme';
+const STORAGE_KEY = 'survival-sydney-theme';
 
 function getInitialTheme(): Theme {
   if (typeof localStorage === 'undefined') {

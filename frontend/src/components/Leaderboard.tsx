@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext.tsx';
 import api from '../api/api.ts';
 import { QUIZ_LENGTH } from '../config/quizConfig.ts';
 import QuizFramedPanel from './quiz/QuizFramedPanel.tsx';
-import QuizWorldBackground from './quiz/QuizWorldBackground.tsx';
+import SydneyBackground from './quiz/SydneyBackground.tsx';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 /** Board denominator for display (fixed quiz length, shared with the backend). */
@@ -53,7 +53,7 @@ export default function Leaderboard() {
 
   return (
     <div className="quiz-flow-scope leaderboard-page">
-      <QuizWorldBackground usePhotoBackdrop />
+      <SydneyBackground usePhotoBackdrop />
       <div className="leaderboard-page-shell">
         <Link className="leaderboard-back-link" to="/quiz">
           ← Back to quiz

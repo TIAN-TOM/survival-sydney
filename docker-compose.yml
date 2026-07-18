@@ -1,7 +1,6 @@
 ####################################################################
-# One-command self-host for the Assess platform (formerly the
-# "Sydney Survival Quiz"). Brings up MongoDB, the Express API, and the
-# Vite-built frontend served by nginx (which also proxies /api).
+# One-command self-host for Survival Sydney. Brings up MongoDB, the Express
+# API, and the Vite-built frontend served by nginx (which also proxies /api).
 #
 # Quick start:
 #   1. cp .env.example .env   # then edit values below
@@ -44,7 +43,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: "5001"
-      MONGODB_URI: mongodb://mongo:27017/openassess
+      MONGODB_URI: mongodb://mongo:27017/survival_sydney
       # REQUIRED. Generate with: openssl rand -hex 32
       # The app fails fast at startup if this is missing, a known
       # placeholder, or shorter than 32 characters.
@@ -96,7 +95,7 @@ services:
     profiles: ["seed"]
     environment:
       NODE_ENV: production
-      MONGODB_URI: mongodb://mongo:27017/openassess
+      MONGODB_URI: mongodb://mongo:27017/survival_sydney
       # Not used by the seed script itself, but keeps config loading happy.
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required. Generate one with openssl rand -hex 32}"
     command: ["node", "dist/seeds/seed.js"]

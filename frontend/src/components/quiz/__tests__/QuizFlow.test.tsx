@@ -39,7 +39,7 @@ vi.mock('../QuizScreens.tsx', () => ({
   StartScreen: () => <div>start quiz</div>,
 }));
 
-vi.mock('../QuizWorldBackground.tsx', () => ({
+vi.mock('../SydneyBackground.tsx', () => ({
   default: () => <div data-testid="quiz-background" />,
 }));
 

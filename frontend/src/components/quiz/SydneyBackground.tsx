@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
  * Sydney sky / harbour skyline layer from sydney-quiz-prototype (no mascot).
  * usePhotoBackdrop: when true (non–gate/start quiz flow), full-bleed day/night photos replace the parchment-style sky.
  */
-export default function QuizWorldBackground({ usePhotoBackdrop = false }: { usePhotoBackdrop?: boolean }) {
+export default function SydneyBackground({ usePhotoBackdrop = false }: { usePhotoBackdrop?: boolean }) {
   const starsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

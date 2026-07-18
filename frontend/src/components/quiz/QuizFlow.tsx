@@ -9,7 +9,7 @@ import {
   ResultScreen,
   StartScreen,
 } from './QuizScreens.tsx';
-import QuizWorldBackground from './QuizWorldBackground.tsx';
+import SydneyBackground from './SydneyBackground.tsx';
 
 export default function QuizFlow() {
   const { state, finishQuiz, setPhase, resetToGate } = useQuiz();
@@ -49,7 +49,7 @@ export default function QuizFlow() {
 
   return (
     <>
-      <QuizWorldBackground usePhotoBackdrop={usePhotoBackdrop} />
+      <SydneyBackground usePhotoBackdrop={usePhotoBackdrop} />
       {screens[phase] ?? <QuizGateScreen />}
     </>
   );
